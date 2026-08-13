@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>愈康云诊所 - 登录</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #00A388;
+            --primary-dark: #007F6B;
+            --primary-light: #E6F6F2;
+            --blue: #2F80ED;
+            --danger-text: #E5484D;
+            --text: #1F2937;
+            --text-sub: #5F6B7A;
+            --text-faint: #9AA5B1;
+            --border: #E5EAF0;
+            --shadow: 0 20px 60px rgba(16,24,40,.18);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif; }
+        body {
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; padding: 20px;
+            background: linear-gradient(135deg, #0E9F8B 0%, #1E7FC4 55%, #2F80ED 100%);
+            background-attachment: fixed;
+            position: relative; overflow-x: hidden;
+        }
+        body::before, body::after {
+            content: ''; position: fixed; border-radius: 50%;
+            background: rgba(255,255,255,.08); pointer-events: none;
+        }
+        body::before { width: 420px; height: 420px; top: -120px; right: -100px; }
+        body::after { width: 320px; height: 320px; bottom: -110px; left: -80px; }
+
+        .login-wrap { width: 100%; max-width: 980px; display: flex; align-items: center; gap: 48px; position: relative; z-index: 1; }
+        .login-intro { flex: 1; color: #fff; display: none; }
+        .login-intro .logo-row { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+        .login-intro .logo-icon {
+            width: 48px; height: 48px; border-radius: 13px;
+            background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.25);
+            display: flex; align-items: center; justify-content: center; font-size: 22px;
+            backdrop-filter: blur(6px);
+        }
+        .login-intro h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+        .login-intro p { font-size: 14px; line-height: 1.8; opacity: .92; max-width: 380px; }
+        .login-intro .feat { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+        .login-intro .feat span {
+            font-size: 12px; padding: 6px 12px; border-radius: 20px;
+            background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.2);
+        }
+
+        .login-box {
+            width: 100%; max-width: 400px; background: #fff; border-radius: 18px;
+            padding: 34px 30px 26px; box-shadow: var(--shadow);
+        }
+        .login-box .mb-logo { display: none; }
+        .login-box h2 { text-align: center; color: var(--text); margin-bottom: 4px; font-size: 22px; }
+        .login-box .subtitle { text-align: center; color: var(--text-faint); font-size: 13px; margin-bottom: 22px; }
+        .login-box .login-tabs {
+            display: flex; margin-bottom: 20px; background: #F3F6F9;
+            border-radius: 10px; padding: 4px; gap: 4px;
+        }
+        .login-box .login-tabs span {
+            flex: 1; text-align: center; padding: 8px 0; cursor: pointer;
+            font-size: 14px; color: var(--text-sub); border-radius: 8px; transition: all .2s;
+        }
+        .login-box .login-tabs span.active { background: #fff; color: var(--primary); font-weight: 600; box-shadow: 0 1px 4px rgba(16,24,40,.08); }
+        .login-box .form-group { margin-bottom: 15px; }
+        .login-box .form-group label { display: block; font-size: 13px; color: var(--text-sub); margin-bottom: 5px; font-weight: 500; }
+        .login-box .form-group .input-box { position: relative; }
+        .login-box .form-group .input-box i {
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            color: var(--text-faint); font-size: 14px;
+        }
+        .login-box .form-group input {
+            width: 100%; padding: 11px 12px 11px 36px; border: 1px solid var(--border);
+            border-radius: 10px; outline: none; font-size: 14px; transition: all .2s; color: var(--text);
+        }
+        .login-box .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,163,136,.12); }
+        .login-box .btn-login {
+            width: 100%; padding: 12px; background: linear-gradient(135deg, var(--primary), #00B795);
+            color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600;
+            cursor: pointer; margin-top: 6px; transition: all .2s; box-shadow: 0 4px 12px rgba(0,163,136,.3);
+        }
+        .login-box .btn-login:hover { filter: brightness(1.05); box-shadow: 0 6px 16px rgba(0,163,136,.38); }
+        .login-box .btn-login:active { transform: translateY(1px); }
+        .login-box .login-error { color: var(--danger-text); font-size: 12px; text-align: center; margin-top: 10px; min-height: 16px; }
+        .server-hint { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); }
+        .server-hint .hint-label { font-size: 11px; color: var(--text-faint); margin-bottom: 6px; }
+        .server-hint input {
+            width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+            font-size: 12px; color: var(--text-sub); text-align: center; outline: none; transition: all .2s;
+        }
+        .server-hint input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(47,128,237,.12); }
+        .footer-note { text-align: center; margin-top: 14px; font-size: 11px; color: var(--text-faint); }
+
+        @media (min-width: 860px) { .login-intro { display: block; } }
+        @media (max-width: 859px) { .login-wrap { justify-content: center; } }
+        @media (max-width: 480px) {
+            .login-box { padding: 26px 20px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-wrap">
+        <div class="login-intro">
+            <div class="logo-row">
+                <span class="logo-icon"><i class="fas fa-clinic-medical"></i></span>
+                <div>
+                    <div style="font-size:18px; font-weight:700;">愈康云诊所</div>
+                    <div style="font-size:12px; opacity:.85;">YuKang Cloud Clinic</div>
+                </div>
+            </div>
+            <h1>让每一次接诊<br>更高效、更安心</h1>
+            <p>集挂号、门诊病历、电子处方、药房库存与经营统计于一体，适合个人医生与医生团队使用，支持电脑 / 手机多端实时同步。</p>
+            <div class="feat">
+                <span><i class="fas fa-check-circle"></i> 全流程接诊管理</span>
+                <span><i class="fas fa-check-circle"></i> 药房库存联动</span>
+                <span><i class="fas fa-check-circle"></i> 经营数据看板</span>
+                <span><i class="fas fa-check-circle"></i> 多端数据同步</span>
+            </div>
+        </div>
+
+        <div class="login-box">
+            <h2><i class="fas fa-clinic-medical" style="color:var(--primary);"></i> 愈康云诊所</h2>
+            <div class="subtitle">诊所管理系统</div>
+            <div class="login-tabs">
+                <span class="active" id="tabLogin" onclick="switchLoginTab('login')">登录</span>
+                <span id="tabRegister" onclick="switchLoginTab('register')">注册</span>
+            </div>
+            <!-- 登录表单 -->
+            <div id="loginForm">
+                <div class="form-group">
+                    <label>用户名</label>
+                    <div class="input-box">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="loginUsername" placeholder="请输入用户名" autocomplete="username">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <div class="input-box">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="loginPassword" placeholder="请输入密码" autocomplete="current-password">
+                    </div>
+                </div>
+                <button class="btn-login" onclick="doLogin()">登 录</button>
+                <div class="login-error" id="loginError"></div>
+            </div>
+            <!-- 注册表单 -->
+            <div id="registerForm" style="display:none;">
+                <div class="form-group">
+                    <label>用户名</label>
+                    <div class="input-box">
+                        <i class="fas fa-user-plus"></i>
+                        <input type="text" id="regUsername" placeholder="字母/数字/下划线，2-20字符" autocomplete="username">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <div class="input-box">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="regPassword" placeholder="至少4位" autocomplete="new-password">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>确认密码</label>
+                    <div class="input-box">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="regPassword2" placeholder="再次输入密码" autocomplete="new-password">
+                    </div>
+                </div>
+                <button class="btn-login" onclick="doRegister()">注 册</button>
+                <div class="login-error" id="registerError"></div>
+            </div>
+            <!-- 服务器地址配置（手机外网访问时用） -->
+            <div class="server-hint">
+                <div class="hint-label">服务器地址（手机外网访问时修改，默认 http://IP:3002）</div>
+                <input type="text" id="serverUrlInput" value="http://localhost:3002" placeholder="http://IP:3002">
+            </div>
+            <div class="footer-note">愈康云诊所 · 本地部署，数据自管</div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 服务器地址配置 ====================
+        const SERVER_URL = (localStorage.getItem('clinic_server_url') || window.location.origin).replace(/\/+$/, '');
+        const API_BASE = SERVER_URL + '/api';
+        document.getElementById('serverUrlInput').value = SERVER_URL === 'null' || SERVER_URL === 'file://' ? 'http://localhost:3002' : SERVER_URL;
+
+        // 输入框变化时保存地址
+        document.getElementById('serverUrlInput').addEventListener('change', () => {
+            const url = document.getElementById('serverUrlInput').value.trim().replace(/\/+$/, '');
+            if (url) {
+                localStorage.setItem('clinic_server_url', url);
+            }
+        });
+
+        // 已登录则直接跳转主页
+        if (localStorage.getItem('clinic_user') && localStorage.getItem('clinic_token')) {
+            window.location.href = 'index.html';
+        }
+
+        function switchLoginTab(tab) {
+            const tabLogin = document.getElementById('tabLogin');
+            const tabRegister = document.getElementById('tabRegister');
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            if (tab === 'login') {
+                tabLogin.classList.add('active'); tabRegister.classList.remove('active');
+                loginForm.style.display = 'block'; registerForm.style.display = 'none';
+            } else {
+                tabRegister.classList.add('active'); tabLogin.classList.remove('active');
+                registerForm.style.display = 'block'; loginForm.style.display = 'none';
+            }
+        }
+
+        function afterAuth(data, username) {
+            if (!data || !data.token) throw new Error('登录状态获取失败，请重试');
+            localStorage.setItem('clinic_user', username);
+            localStorage.setItem('clinic_token', data.token);
+            window.location.href = 'index.html';
+        }
+
+        async function doLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const errEl = document.getElementById('loginError');
+            errEl.innerText = '';
+            if (!username || !password) { errEl.innerText = '请输入用户名和密码'; return; }
+            try {
+                const res = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                if (!res.ok) { errEl.innerText = data.error || '登录失败'; return; }
+                afterAuth(data, username);
+            } catch (err) {
+                errEl.innerText = '连接服务器失败，请检查网络或服务器地址';
+            }
+        }
+
+        async function doRegister() {
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const password2 = document.getElementById('regPassword2').value;
+            const errEl = document.getElementById('registerError');
+            errEl.innerText = '';
+            if (!username || !password) { errEl.innerText = '请输入用户名和密码'; return; }
+            if (password !== password2) { errEl.innerText = '两次密码不一致'; return; }
+            try {
+                const res = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                if (!res.ok) { errEl.innerText = data.error || '注册失败'; return; }
+                afterAuth(data, username);
+            } catch (err) {
+                errEl.innerText = '连接服务器失败，请检查网络或服务器地址';
+            }
+        }
+
+        document.getElementById('loginUsername').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+        document.getElementById('loginPassword').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+        document.getElementById('regPassword2').addEventListener('keydown', e => { if(e.key==='Enter') doRegister(); });
+    </script>
+</body>
+</html>

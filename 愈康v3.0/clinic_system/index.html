@@ -1,0 +1,2740 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>愈康云诊所</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root { --primary: #5cb79f; --bg-color: #f0f4f4; --white: #ffffff; --text-sub: #666; --danger-text: #d32f2f; --danger-bg: #fce8ec; --warn-bg: #fff4e6; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "PingFang SC", "Microsoft YaHei", sans-serif; }
+        body { background: var(--bg-color); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        header { background: var(--primary); height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; color: white; flex-shrink: 0; }
+        .header-nav { display: flex; gap: 15px; font-size: 14px; overflow-x: auto; }
+        .header-nav span { cursor: pointer; padding: 5px 10px; border-radius: 4px; white-space: nowrap; transition: 0.3s; }
+        .header-nav span:hover, .header-nav span.active { background: rgba(255,255,255,0.2); }
+        .main-wrapper { flex: 1; overflow-y: auto; padding: 15px; }
+        .page-content { display: none; height: 100%; }
+        .page-content.active { display: block; }
+        .card { background: var(--white); border-radius: 8px; padding: 15px; margin-bottom: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .section-title { font-size: 16px; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+
+        /* ==================== 首页大盘样式 ==================== */
+        .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
+        @media(min-width: 600px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
+        @media(min-width: 900px) { .kpi-grid { grid-template-columns: repeat(6, 1fr); } }
+        @media(min-width: 1200px) { .kpi-grid { grid-template-columns: repeat(6, 1fr); } }
+        .kpi-card { border-radius: 8px; padding: 12px 10px; background: var(--white); font-size: 12px; text-align: center; }
+        .kpi-card .num { font-size: 20px; font-weight: bold; margin-top: 4px; color: #333; }
+        .kpi-card.warn { background: var(--danger-bg); }
+        .kpi-card.warn .num { color: var(--danger-text); }
+        .kpi-card.alert { background: var(--warn-bg); }
+        .kpi-card.alert .num { color: #e67e00; }
+
+        .revenue-section { margin-bottom: 15px; }
+        .revenue-section .section-title { margin-bottom: 10px; }
+        .period-filter { display: flex; gap: 4px; }
+        .period-filter span { padding: 3px 10px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #999; background: #f0f4f4; }
+        .period-filter span.active { background: var(--primary); color: white; }
+        .revenue-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        @media(min-width: 768px) { .revenue-grid { grid-template-columns: repeat(4, 1fr); } }
+        .rev-card { display: flex; gap: 10px; align-items: center; padding: 12px; background: var(--white); border-radius: 8px; }
+        .rev-card .icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .rev-card .info { flex: 1; }
+        .rev-card .label { font-size: 11px; color: #999; }
+        .rev-card .value { font-size: 16px; font-weight: bold; }
+
+        .chart-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        @media(min-width: 768px) { .chart-grid { grid-template-columns: repeat(3, 1fr); } }
+        .chart-card { background: var(--white); border-radius: 8px; padding: 15px; }
+        .chart-card .title { font-size: 13px; font-weight: bold; margin-bottom: 10px; text-align: center; }
+        .donut-container { display: flex; flex-direction: column; align-items: center; }
+        .donut-legend { margin-top: 8px; font-size: 11px; width: 100%; }
+        .donut-legend div { display: flex; justify-content: space-between; padding: 2px 0; }
+        .donut-legend .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+
+        .two-column { display: flex; flex-direction: column; gap: 12px; }
+        @media(min-width: 900px) { .two-column { flex-direction: row; height: calc(100vh - 140px); } }
+        .left-panel { width: 100%; background: var(--white); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; flex-shrink: 0; }
+        @media(min-width: 900px) { .left-panel { width: 280px; } }
+        .right-panel { flex: 1; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+        .calendar-wrapper { display: flex; flex-direction: column; gap: 8px; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: bold; }
+        .calendar-header button { background: none; border: none; cursor: pointer; color: #666; font-size: 16px; }
+        .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 12px; color: #999; padding: 4px 0; }
+        .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+        .day-cell { padding: 8px 0; text-align: center; font-size: 13px; border-radius: 4px; cursor: pointer; position: relative; }
+        .day-cell:hover { background: #f0f4f4; }
+        /* 【本次需求新增】样式：移除了原有的双色叠加，互斥点亮 */
+        .day-cell.today { background: var(--primary); color: white; font-weight: bold; }
+        .day-cell.has-data { background: #e2f5ef; color: #2d9d78; font-weight: bold; }
+        .day-cell.selected { background: var(--primary); color: white; font-weight: bold; }
+        .doctor-block { background: var(--primary); color: white; border-radius: 6px; padding: 10px; display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 13px; }
+
+        .clinic-three-col { display: flex; flex-direction: column; gap: 10px; height: calc(100vh - 80px); }
+        @media(min-width: 900px) { .clinic-three-col { flex-direction: row; } }
+        .clinic-left { width: 100%; background: var(--white); border-radius: 8px; padding: 12px; overflow-y: auto; flex-shrink: 0; }
+        @media(min-width: 900px) { .clinic-left { width: 240px; } }
+        .clinic-center { flex: 1; background: var(--white); border-radius: 8px; padding: 12px; overflow-y: auto; }
+        .clinic-right { width: 100%; background: var(--white); border-radius: 8px; padding: 12px; overflow-y: auto; flex-shrink: 0; }
+        @media(min-width: 900px) { .clinic-right { width: 220px; } }
+        .clinic-left .filter-tabs { display: flex; gap: 4px; margin-bottom: 8px; }
+        .clinic-left .filter-tabs span { flex: 1; text-align: center; padding: 4px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #999; background: #f0f4f4; }
+        .clinic-left .filter-tabs span.active { background: var(--primary); color: white; }
+        .patient-item { padding: 8px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 12px; }
+        .patient-item:hover, .patient-item.active { background: #e2f5ef; border-radius: 4px; }
+        .patient-item .name { font-weight: bold; }
+        .patient-item .info { font-size: 11px; color: #999; margin-top: 2px; }
+        .patient-item .status { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 10px; }
+        .patient-item .status.pending { background: #fff4e6; color: #e67e00; }
+        .patient-item .status.done { background: #e2f5ef; color: #2d9d78; }
+        .clinic-section { margin-bottom: 15px; }
+        .clinic-section .label { font-size: 12px; color: #666; margin-bottom: 4px; font-weight: bold; border-left: 3px solid var(--primary); padding-left: 6px; }
+        .clinic-section input, .clinic-section textarea, .clinic-section select { width: 100%; padding: 6px 8px; border: 1px solid #ddd; border-radius: 4px; outline: none; font-size: 13px; }
+        .clinic-section textarea { resize: vertical; }
+        .form-row { display: flex; gap: 8px; }
+        .form-row > * { flex: 1; }
+        .prescription-row { display: flex; gap: 4px; margin-bottom: 4px; align-items: center; }
+        .prescription-item { display: flex; justify-content: space-between; align-items: center; padding: 4px 8px; border-bottom: 1px dashed #eee; font-size: 12px; }
+        .prescription-item .remove-btn { color: var(--danger-text); cursor: pointer; font-size: 12px; }
+        .history-item { padding: 6px 0; border-bottom: 1px solid #f5f5f5; font-size: 11px; cursor: pointer; }
+        .history-item:hover { background: #f9fbfb; }
+        .history-item .date { color: #999; }
+        .history-item .diag { color: #333; margin-top: 2px; }
+
+        .pharma-layout { display: flex; gap: 0; height: calc(100vh - 80px); }
+        .pharma-sidebar { width: 140px; background: var(--white); border-radius: 8px 0 0 8px; padding: 10px 0; flex-shrink: 0; border-right: 1px solid #eee; }
+        @media(min-width: 600px) { .pharma-sidebar { width: 160px; } }
+        .pharma-sidebar .menu-item { padding: 10px 15px; cursor: pointer; font-size: 13px; color: #666; border-left: 3px solid transparent; }
+        .pharma-sidebar .menu-item:hover { background: #f9fbfb; }
+        .pharma-sidebar .menu-item.active { color: var(--primary); border-left-color: var(--primary); background: #e2f5ef; font-weight: bold; }
+        .pharma-main { flex: 1; background: var(--white); border-radius: 0 8px 8px 0; padding: 15px; overflow-y: auto; }
+        @media(max-width: 600px) { .pharma-layout { flex-direction: column; height: auto; } .pharma-sidebar { width: 100%; border-radius: 8px 8px 0 0; display: flex; overflow-x: auto; padding: 0; } .pharma-sidebar .menu-item { border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; } .pharma-sidebar .menu-item.active { border-bottom-color: var(--primary); border-left: none; } .pharma-main { border-radius: 0 0 8px 8px; } }
+        .pharma-tabs { display: flex; gap: 8px; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 10px; }
+        .pharma-tabs span { padding: 4px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #666; background: #f5f5f5; }
+        .pharma-tabs span.active { background: var(--primary); color: white; }
+        .badge { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 10px; }
+        .badge.warn { background: var(--danger-bg); color: var(--danger-text); }
+        .badge.ok { background: #e2f5ef; color: #2d9d78; }
+        .badge.expire { background: #fff4e6; color: #e67e00; }
+
+        .outpatient-tabs { display: flex; gap: 8px; border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 10px; overflow-x: auto; }
+        .outpatient-tabs span { padding: 4px 10px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #666; white-space: nowrap; }
+        .outpatient-tabs span.active { background: #e2f5ef; color: var(--primary); }
+        .table-mock { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .table-mock th, .table-mock td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; }
+        .table-mock th { background: #f9fbfb; color: #666; font-weight: normal; }
+        .table-mock .op-btn { color: var(--primary); border: 1px solid var(--primary); background: transparent; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .op-btn { color: var(--primary); border: 1px solid var(--primary); background: transparent; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .op-btn.danger { color: var(--danger-text); border-color: var(--danger-text); }
+        .btn-primary { padding: 5px 12px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); justify-content: center; align-items: center; z-index: 999; padding: 15px; }
+        .modal-content { background: white; width: 100%; max-width: 600px; max-height: 85vh; border-radius: 8px; padding: 15px; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 12px; }
+        .modal-form-group { margin-bottom: 12px; }
+        .modal-form-group label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
+        .modal-form-group input, .modal-form-group textarea, .modal-form-group select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; outline: none; font-size: 14px; }
+        .modal-actions { text-align: right; margin-top: 12px; border-top: 1px solid #eee; padding-top: 12px; }
+        .modal-actions button { padding: 6px 16px; border: none; border-radius: 4px; cursor: pointer; margin-left: 8px; }
+        .btn-close-modal { background: #eee; }
+        .btn-save-modal { background: var(--primary); color: white; }
+
+        .setting-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #eee; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .setting-item small { display: block; color: #999; font-size: 12px; margin-top: 2px; }
+        .toggle-switch { font-size: 24px; cursor: pointer; transition: 0.3s; }
+        .toggle-switch.on { color: var(--primary); }
+        .toggle-switch.off { color: #ccc; }
+        .server-input { padding: 6px; border: 1px solid #ddd; border-radius: 4px; width: 180px; font-size: 13px; }
+        .btn-small { padding: 5px 10px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .copy-btn { padding: 5px 10px; background: #eee; color: #333; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .copy-btn:active { background: #ddd; }
+
+        .loading-toast { position: fixed; top: 60px; right: 15px; background: #333; color: white; padding: 8px 14px; border-radius: 4px; font-size: 13px; display: none; z-index: 1000; }
+        .cal-filter-bar { display: flex; justify-content: space-between; align-items: center; background: #e2f5ef; padding: 6px 12px; border-radius: 4px; font-size: 12px; color: #2d9d78; margin-bottom: 8px; }
+        .cal-filter-bar .clear-btn { color: var(--danger-text); cursor: pointer; font-size: 12px; }
+        .user-info { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+        .user-info .logout-btn { background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; white-space: nowrap; }
+        .user-info .logout-btn:hover { background: rgba(255,255,255,0.35); }
+        #excelFileInput { display: none; }
+        .pharmacy-toolbar { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-bottom: 12px; }
+        .pharmacy-toolbar button { padding: 5px 12px; border-radius: 4px; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 12px; }
+        .pharmacy-toolbar button.primary { background: var(--primary); color: white; border: none; }
+
+        /* ==================== 统计页面 ==================== */
+        .stats-layout { display: flex; gap: 12px; height: 100%; }
+        .stats-sidebar { width: 160px; flex-shrink: 0; display: flex; flex-direction: column; gap: 6px; padding: 8px 0; }
+        .stats-menu-item { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-radius: 8px; cursor: pointer; font-size: 14px; color: #555; background: #fff; transition: all 0.2s; border: 1px solid #f0f0f0; }
+        .stats-menu-item i { width: 18px; text-align: center; font-size: 13px; }
+        .stats-menu-item:hover { background: #f5f9f8; color: var(--primary); }
+        .stats-menu-item.active { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 600; box-shadow: 0 2px 8px rgba(92,183,159,0.3); }
+        .stats-main { flex: 1; overflow-y: auto; min-width: 0; }
+        .stats-tab-bar { display: flex; align-items: center; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
+        .stats-tab { padding: 6px 16px; border-radius: 20px; cursor: pointer; font-size: 13px; color: #666; background: #f5f5f5; transition: all 0.2s; }
+        .stats-tab:hover { color: var(--primary); }
+        .stats-tab.active { background: var(--primary); color: #fff; font-weight: 600; }
+        .stats-time-filter { display: flex; gap: 4px; margin-left: auto; }
+        .stats-tf-btn { padding: 4px 12px; border-radius: 16px; cursor: pointer; font-size: 12px; color: #999; background: #f5f5f5; transition: all 0.2s; }
+        .stats-tf-btn:hover { color: var(--primary); }
+        .stats-tf-btn.active { color: var(--primary); font-weight: 600; background: #e8f5f1; }
+        .stats-tf-btn-group { display: flex; gap: 4px; }
+
+        .stats-cards-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 12px; }
+        .stat-card { background: #fff; border-radius: 10px; padding: 14px 16px; border: 1px solid #f0f0f0; transition: box-shadow 0.2s; }
+        .stat-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .stat-card .stat-name { font-size: 12px; color: #999; margin-bottom: 4px; }
+        .stat-card .stat-value { font-size: 22px; font-weight: 700; color: #333; }
+        .stat-card .stat-period { font-size: 11px; color: #ccc; margin-top: 4px; }
+
+        .stats-donut-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px; }
+        @media (max-width: 768px) { .stats-donut-row { grid-template-columns: 1fr; } .stats-layout { flex-direction: column; } .stats-sidebar { width: 100%; flex-direction: row; overflow-x: auto; } .stats-menu-item { white-space: nowrap; } }
+
+        .stats-line-area { display: flex; flex-direction: column; gap: 12px; }
+        .chart-card { background: #fff; border-radius: 10px; padding: 16px; border: 1px solid #f0f0f0; }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; font-weight: 600; color: #333; }
+        .chart-header small { font-size: 11px; color: #ccc; font-weight: 400; }
+        .donut-container { display: flex; align-items: center; gap: 12px; }
+        .donut-container canvas { flex-shrink: 0; }
+        .donut-legend { flex: 1; font-size: 12px; }
+        .donut-legend .legend-item { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; cursor: pointer; }
+        .donut-legend .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+        .donut-legend .legend-name { color: #666; flex: 1; }
+        .donut-legend .legend-val { color: #333; font-weight: 600; }
+
+        /* 【本次需求新增】运营分析卡片与图表容器 */
+        .op-dashboard-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+        @media (max-width: 600px) { .op-dashboard-cards { grid-template-columns: repeat(2, 1fr); } }
+        .op-card { background: #fff; border-radius: 10px; padding: 14px 16px; border: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+        .op-card-left .op-value { font-size: 20px; font-weight: bold; color: #333; }
+        .op-card-left .op-label { font-size: 12px; color: #999; margin-top: 4px; }
+        .op-card-left .op-date { font-size: 10px; color: #ccc; margin-top: 2px; }
+        .op-card-icon { font-size: 28px; color: #5cb79f; opacity: 0.6; padding: 8px; background: #e2f5ef; border-radius: 50%; }
+        .op-chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .op-chart-header .op-title { font-weight: bold; font-size: 14px; }
+        .op-chart-header .op-tabs { display: flex; gap: 6px; }
+        .op-chart-header .op-tabs span { padding: 2px 8px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #999; background: #f5f5f5; }
+        .op-chart-header .op-tabs span.active { background: #5cb79f; color: white; }
+        .op-chart-container { height: 220px; width: 100%; position: relative; }
+
+        /* 【本次需求新增】库存面板样式 */
+        .inv-panel-flex { display: flex; flex-wrap: wrap; gap: 20px; }
+        .inv-chart-area { flex: 1; min-width: 200px; text-align: center; }
+        .inv-table-area { flex: 2; min-width: 300px; }
+
+        .chart-tooltip { position: fixed; background: rgba(50,50,50,0.9); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 12px; pointer-events: none; z-index: 9999; white-space: nowrap; display: none; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .chart-tooltip .tt-title { font-weight: 600; margin-bottom: 2px; }
+        .chart-tooltip .tt-row { display: flex; justify-content: space-between; gap: 12px; }
+        .chart-tooltip .tt-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+
+        .toggle-switch { font-size: 24px; cursor: pointer; }
+        .toggle-switch.on { color: var(--primary); }
+        .toggle-switch.off { color: #ccc; }
+    </style>
+
+    <!-- ============ 愈康 v3.1 主题（ABC 医疗云风格：蓝绿配色 + 工作台式布局） ============ -->
+    <style>
+        :root {
+            --primary: #00A388;
+            --primary-dark: #007F6B;
+            --primary-light: #E6F6F2;
+            --primary-soft: #F2FBFA;
+            --blue: #2F80ED;
+            --blue-light: #EAF2FE;
+            --green: #27AE60;
+            --green-light: #E9F9F0;
+            --orange: #F5A623;
+            --orange-light: #FFF6E5;
+            --red: #E5484D;
+            --red-light: #FDECEE;
+            --purple: #9B51E0;
+            --purple-light: #F3ECFD;
+            --bg: #F3F6F9;
+            --card: #FFFFFF;
+            --border: #E5EAF0;
+            --text: #1F2937;
+            --text-sub: #5F6B7A;
+            --text-faint: #9AA5B1;
+            --radius: 12px;
+            --shadow-sm: 0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06);
+            --shadow-md: 0 6px 16px rgba(16,24,40,.10);
+        }
+        * { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif; }
+        body { background: var(--bg); }
+
+        /* ---------- 顶部导航 ---------- */
+        header {
+            background: var(--card);
+            height: 56px;
+            border-bottom: 1px solid var(--border);
+            padding: 0 18px;
+            box-shadow: 0 1px 3px rgba(16,24,40,.04);
+            gap: 18px;
+        }
+        .brand { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+        .brand .brand-icon {
+            width: 32px; height: 32px; border-radius: 9px;
+            background: linear-gradient(135deg, var(--primary), #00C2A2);
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            font-size: 15px; box-shadow: 0 2px 6px rgba(0,163,136,.35);
+        }
+        .brand .brand-text { display: flex; flex-direction: column; line-height: 1.15; }
+        .brand .brand-name { font-weight: 700; font-size: 15px; color: var(--text); }
+        .brand .brand-sub { font-size: 10px; color: var(--text-faint); letter-spacing: .5px; }
+        .header-nav { gap: 4px; font-size: 13px; }
+        .header-nav span { padding: 7px 14px; border-radius: 8px; color: var(--text-sub); font-weight: 500; }
+        .header-nav span:hover { background: var(--primary-soft); color: var(--primary); }
+        .header-nav span.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+        .user-info { color: var(--text-sub); }
+        .user-info .logout-btn { background: var(--red-light); color: var(--red); border-radius: 7px; }
+        .user-info .logout-btn:hover { background: #FBDADC; }
+
+        .main-wrapper { padding: 18px 20px; }
+
+        /* ---------- 通用卡片 ---------- */
+        .card, .left-panel, .right-panel, .clinic-left, .clinic-center, .clinic-right,
+        .chart-card, .stat-card, .op-card, .kpi-card, .rev-card, .pharma-main, .pharma-sidebar {
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+        .card { border-radius: var(--radius); }
+        .section-title { color: var(--text); }
+
+        /* ---------- 按钮 ---------- */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #00B795);
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,163,136,.28);
+            font-weight: 500;
+            transition: all .2s;
+        }
+        .btn-primary:hover { filter: brightness(1.05); box-shadow: 0 4px 10px rgba(0,163,136,.34); }
+        .op-btn { border-radius: 7px; }
+        .btn-save-modal { background: linear-gradient(135deg, var(--primary), #00B795); }
+        .copy-btn, .btn-close-modal, .pharmacy-toolbar button { border-radius: 7px; }
+        .btn-small { border-radius: 7px; }
+
+        /* ---------- 首页 KPI 工作台 ---------- */
+        .kpi-grid { gap: 10px; margin-bottom: 16px; }
+        .kpi-card {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 8px 10px;
+            transition: all .2s;
+        }
+        .kpi-card.clickable { cursor: pointer; }
+        .kpi-card.clickable:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--primary); }
+        .kpi-card .num { font-size: 22px; color: var(--text); margin-top: 2px; }
+        .kpi-icon {
+            width: 30px; height: 30px; border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; margin: 0 auto 6px;
+        }
+        .ic-green { background: var(--green-light); color: var(--green); }
+        .ic-blue { background: var(--blue-light); color: var(--blue); }
+        .ic-orange { background: var(--orange-light); color: var(--orange); }
+        .ic-red { background: var(--red-light); color: var(--red); }
+        .ic-purple { background: var(--purple-light); color: var(--purple); }
+        .ic-primary { background: var(--primary-light); color: var(--primary); }
+        .kpi-label { font-size: 11px; color: var(--text-sub); }
+        .kpi-card.warn { background: var(--red-light); border-color: #F6C9CC; }
+        .kpi-card.warn .num { color: var(--red); }
+        .kpi-card.alert { background: var(--orange-light); border-color: #F8DFB0; }
+        .kpi-card.alert .num { color: var(--orange); }
+
+        /* ---------- 快捷操作条 ---------- */
+        .quick-actions {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
+            gap: 10px; margin-bottom: 16px;
+        }
+        .quick-action {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 12px 14px; cursor: pointer;
+            transition: all .2s; box-shadow: var(--shadow-sm);
+        }
+        .quick-action:hover { border-color: var(--primary); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+        .quick-action .qa-icon {
+            width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; font-size: 15px; color: #fff;
+        }
+        .quick-action .qa-text { display: flex; flex-direction: column; line-height: 1.3; }
+        .quick-action .qa-title { font-size: 13px; font-weight: 600; color: var(--text); }
+        .quick-action .qa-desc { font-size: 11px; color: var(--text-faint); }
+
+        /* ---------- 营收卡片 ---------- */
+        .rev-card { border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
+        .rev-card .value { color: var(--text); }
+        .rev-card .icon { border-radius: 10px; }
+        .period-filter span.active { background: var(--primary); }
+
+        /* ---------- 图表卡片 ---------- */
+        .chart-card { border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-sm); }
+
+        /* ---------- 表格 ---------- */
+        .table-mock th {
+            background: #F7F9FC; color: var(--text-sub); font-weight: 600;
+            border-bottom: 1px solid var(--border);
+        }
+        .table-mock th, .table-mock td { padding: 9px 10px; border-bottom: 1px solid var(--border); }
+        .table-mock tbody tr:hover { background: #F9FBFD; }
+
+        /* ---------- 门诊三栏工作台 ---------- */
+        .clinic-left, .clinic-center, .clinic-right { border: 1px solid var(--border); border-radius: var(--radius); }
+        .patient-item.active { background: var(--primary-light); }
+        .patient-item .status.pending { background: var(--orange-light); color: var(--orange); }
+        .patient-item .status.done { background: var(--green-light); color: var(--green); }
+        .clinic-section .label { border-left: 3px solid var(--primary); }
+        .clinic-section input, .clinic-section textarea, .clinic-section select,
+        .modal-form-group input, .modal-form-group textarea, .modal-form-group select,
+        .server-input { border-radius: 7px; border-color: var(--border); }
+        .clinic-section input:focus, .clinic-section textarea:focus, .clinic-section select:focus,
+        .modal-form-group input:focus, .modal-form-group textarea:focus, .modal-form-group select:focus,
+        .server-input:focus, .login-box input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0,163,136,.12);
+        }
+        .doctor-block { background: linear-gradient(135deg, var(--primary), #00B795); border-radius: 10px; }
+
+        /* ---------- 药房 / 统计侧边栏 ---------- */
+        .pharma-sidebar { border-right: 1px solid var(--border); border-radius: 12px 0 0 12px; }
+        .pharma-main { border-radius: 0 12px 12px 0; }
+        .pharma-sidebar .menu-item.active { color: var(--primary); border-left-color: var(--primary); background: var(--primary-light); }
+        .pharma-tabs span.active { background: var(--primary); }
+        .stats-menu-item { border-color: var(--border); }
+        .stats-menu-item.active { background: linear-gradient(135deg, var(--primary), #00B795); box-shadow: 0 2px 8px rgba(0,163,136,.3); }
+        .stats-tab.active { background: var(--primary); }
+        .stats-tf-btn.active { color: var(--primary); background: var(--primary-light); }
+        .stat-card { border-color: var(--border); }
+        .op-card-icon { color: var(--primary); background: var(--primary-light); }
+        .op-chart-header .op-tabs span.active { background: var(--primary); }
+        .op-tab-btn.active { background: var(--primary) !important; color: #fff !important; }
+        .op-tab-btn:not(.active) { background: transparent !important; color: var(--text-sub) !important; }
+        .op-tab-btn:not(.active):hover { background: var(--primary-soft) !important; color: var(--primary) !important; }
+
+        /* ---------- 弹窗 / 提示 ---------- */
+        .modal-content { border-radius: 14px; box-shadow: 0 20px 50px rgba(16,24,40,.18); }
+        .modal-header { border-bottom-color: var(--border); }
+        .loading-toast { border-radius: 8px; top: 70px; }
+        .toast-wrap {
+            position: fixed; top: 70px; right: 18px; z-index: 2000;
+            display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+        }
+        .toast {
+            min-width: 230px; max-width: 360px;
+            background: var(--card); border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            border-radius: 10px; padding: 10px 14px;
+            font-size: 13px; color: var(--text);
+            box-shadow: var(--shadow-md);
+            display: flex; gap: 9px; align-items: flex-start;
+            animation: toastIn .25s ease;
+            pointer-events: auto;
+        }
+        .toast.success { border-left-color: var(--green); }
+        .toast.error { border-left-color: var(--red); }
+        .toast.warning { border-left-color: var(--orange); }
+        .toast .toast-close { margin-left: auto; cursor: pointer; color: var(--text-faint); font-size: 14px; }
+        .toast .toast-close:hover { color: var(--text); }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: none; } }
+
+        /* ---------- 设置 ---------- */
+        .setting-item small { color: var(--text-faint); }
+        .cal-filter-bar { background: var(--primary-light); color: var(--primary-dark); }
+
+        @media (max-width: 600px) {
+            .brand .brand-sub { display: none; }
+            header { padding: 0 10px; gap: 8px; }
+            .main-wrapper { padding: 12px 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-toast" id="loadingToast">同步中...</div>
+    <div class="chart-tooltip" id="chartTooltip"></div>
+    <header>
+        <div class="brand">
+            <span class="brand-icon"><i class="fas fa-clinic-medical"></i></span>
+            <span class="brand-text">
+                <span class="brand-name">愈康云诊所</span>
+                <span class="brand-sub">智慧诊所管理系统</span>
+            </span>
+        </div>
+        <div class="header-nav" id="mainNav">
+            <span class="active" data-target="page-home">首页</span>
+            <span data-target="page-registration">挂号</span>
+            <span data-target="page-outpatient">门诊</span>
+            <span data-target="page-statistics">统计</span>
+            <span data-target="page-pharmacy">药房</span>
+            <span data-target="page-settings">设置</span>
+        </div>
+        <div class="user-info">
+            <span><i class="fas fa-user-circle"></i> <span id="currentUsername">-</span></span>
+            <span class="logout-btn" onclick="doLogout()">退出</span>
+        </div>
+    </header>
+
+    <div class="main-wrapper">
+        <div id="page-home" class="page-content active">
+            <div class="quick-actions">
+                <div class="quick-action" onclick="openAddRegModal()">
+                    <span class="qa-icon" style="background:linear-gradient(135deg,#00A388,#00C2A2);"><i class="fas fa-calendar-plus"></i></span>
+                    <span class="qa-text"><span class="qa-title">快速挂号</span><span class="qa-desc">新建患者挂号</span></span>
+                </div>
+                <div class="quick-action" onclick="openDirectAddModal()">
+                    <span class="qa-icon" style="background:linear-gradient(135deg,#2F80ED,#5BA0F5);"><i class="fas fa-user-plus"></i></span>
+                    <span class="qa-text"><span class="qa-title">快速接诊</span><span class="qa-desc">新建门诊记录</span></span>
+                </div>
+                <div class="quick-action" onclick="gotoPage('page-pharmacy',{pharmaMenu:'inbound'})">
+                    <span class="qa-icon" style="background:linear-gradient(135deg,#F5A623,#FFC24D);"><i class="fas fa-box-open"></i></span>
+                    <span class="qa-text"><span class="qa-title">药品入库</span><span class="qa-desc">登记采购入库</span></span>
+                </div>
+                <div class="quick-action" onclick="gotoPage('page-pharmacy',{pharmaMenu:'warning'})">
+                    <span class="qa-icon" style="background:linear-gradient(135deg,#E5484D,#F07376);"><i class="fas fa-exclamation-triangle"></i></span>
+                    <span class="qa-text"><span class="qa-title">库存/效期预警</span><span class="qa-desc">查看异常药品</span></span>
+                </div>
+            </div>
+            <div class="section-title">今日数据</div>
+            <div class="kpi-grid">
+                <div class="kpi-card clickable" data-target="page-registration" onclick="gotoPage(this.dataset.target)">
+                    <div class="kpi-icon ic-primary"><i class="fas fa-clipboard-list"></i></div>
+                    <div class="kpi-label">挂号数</div><div class="num" id="dash_reg">0</div>
+                </div>
+                <div class="kpi-card clickable" data-target="page-outpatient" onclick="gotoPage(this.dataset.target)">
+                    <div class="kpi-icon ic-orange"><i class="fas fa-hourglass-half"></i></div>
+                    <div class="kpi-label">待接诊</div><div class="num" id="dash_wait">0</div>
+                </div>
+                <div class="kpi-card clickable" data-target="page-outpatient" onclick="gotoPage(this.dataset.target)">
+                    <div class="kpi-icon ic-green"><i class="fas fa-user-check"></i></div>
+                    <div class="kpi-label">门诊量</div><div class="num" id="dash_visits">0</div>
+                </div>
+                <div class="kpi-card clickable" data-target="page-outpatient" onclick="gotoPage(this.dataset.target)">
+                    <div class="kpi-icon ic-blue"><i class="fas fa-file-invoice-dollar"></i></div>
+                    <div class="kpi-label">待收费</div><div class="num" id="dash_bill">0</div>
+                </div>
+                <div class="kpi-card alert clickable" data-target="page-pharmacy" onclick="gotoPage('page-pharmacy',{pharmaMenu:'list'})">
+                    <div class="kpi-icon ic-orange"><i class="fas fa-pills"></i></div>
+                    <div class="kpi-label">待发药</div><div class="num" id="dash_med">0</div>
+                </div>
+                <div class="kpi-card warn clickable" data-target="page-pharmacy" onclick="gotoPage('page-pharmacy',{pharmaMenu:'warning'})">
+                    <div class="kpi-icon ic-red"><i class="fas fa-calendar-times"></i></div>
+                    <div class="kpi-label">效期预警</div><div class="num" id="dash_expiry">0</div>
+                </div>
+                <div class="kpi-card clickable" data-target="page-registration" onclick="gotoPage(this.dataset.target)">
+                    <div class="kpi-icon ic-purple"><i class="fas fa-calendar-check"></i></div>
+                    <div class="kpi-label">预约数</div><div class="num" id="dash_appt">0</div>
+                </div>
+                <div class="kpi-card clickable" data-target="page-outpatient" onclick="gotoPage(this.dataset.target)">
+                    <div class="kpi-icon ic-green"><i class="fas fa-user-md"></i></div>
+                    <div class="kpi-label">已接诊</div><div class="num" id="dash_visited">0</div>
+                </div>
+                <div class="kpi-card clickable" data-target="page-outpatient" onclick="gotoPage(this.dataset.target)">
+                    <div class="kpi-icon ic-blue"><i class="fas fa-prescription-bottle-alt"></i></div>
+                    <div class="kpi-label">处方量</div><div class="num" id="dash_presc">0</div>
+                </div>
+                <div class="kpi-card clickable" data-target="page-statistics" onclick="gotoPage(this.dataset.target)">
+                    <div class="kpi-icon ic-primary"><i class="fas fa-yen-sign"></i></div>
+                    <div class="kpi-label">已收费</div><div class="num" id="dash_billed">0</div>
+                </div>
+                <div class="kpi-card clickable" data-target="page-pharmacy" onclick="gotoPage('page-pharmacy',{pharmaMenu:'list'})">
+                    <div class="kpi-icon ic-green"><i class="fas fa-check-circle"></i></div>
+                    <div class="kpi-label">已发药</div><div class="num" id="dash_dispensed">0</div>
+                </div>
+                <div class="kpi-card warn clickable" data-target="page-pharmacy" onclick="gotoPage('page-pharmacy',{pharmaMenu:'warning'})">
+                    <div class="kpi-icon ic-red"><i class="fas fa-boxes"></i></div>
+                    <div class="kpi-label">库存预警</div><div class="num" id="dash_stockwarn">0</div>
+                </div>
+            </div>
+            <div class="revenue-section">
+                <div class="section-title">
+                    <span>营收统计</span>
+                    <div class="period-filter">
+                        <span class="active" data-period="today" onclick="switchPeriod('today')">今天</span>
+                        <span data-period="yesterday" onclick="switchPeriod('yesterday')">昨天</span>
+                        <span data-period="week" onclick="switchPeriod('week')">本周</span>
+                        <span data-period="month" onclick="switchPeriod('month')">本月</span>
+                    </div>
+                </div>
+                <div class="revenue-grid">
+                    <div class="rev-card"><div class="icon" style="background:#e2f5ef; color:var(--primary);"><i class="fas fa-yen-sign"></i></div><div class="info"><div class="label">营业收费</div><div class="value" id="rev_total">¥0.00</div></div></div>
+                    <div class="rev-card"><div class="icon" style="background:#e8f4fd; color:#2196f3;"><i class="fas fa-stethoscope"></i></div><div class="info"><div class="label">门诊收费</div><div class="value" id="rev_outpatient">¥0.00</div></div></div>
+                    <div class="rev-card"><div class="icon" style="background:#fff4e6; color:#e67e00;"><i class="fas fa-shopping-bag"></i></div><div class="info"><div class="label">零售收费</div><div class="value" id="rev_retail">¥0.00</div></div></div>
+                    <div class="rev-card"><div class="icon" style="background:#f3e8fd; color:#9c27b0;"><i class="fas fa-calendar-check"></i></div><div class="info"><div class="label">挂号预约收费</div><div class="value" id="rev_reg">¥0.00</div></div></div>
+                    <div class="rev-card"><div class="icon" style="background:#e2f5ef; color:var(--primary);"><i class="fas fa-users"></i></div><div class="info"><div class="label">门诊诊量</div><div class="value" id="rev_opcount">0</div></div></div>
+                    <div class="rev-card"><div class="icon" style="background:#fff4e6; color:#e67e00;"><i class="fas fa-user-tag"></i></div><div class="info"><div class="label">零售客量</div><div class="value" id="rev_retailcount">0</div></div></div>
+                    <div class="rev-card"><div class="icon" style="background:#e8f4fd; color:#2196f3;"><i class="fas fa-calculator"></i></div><div class="info"><div class="label">门诊客单价</div><div class="value" id="rev_opavg">¥0.00</div></div></div>
+                    <div class="rev-card"><div class="icon" style="background:#fff4e6; color:#e67e00;"><i class="fas fa-calculator"></i></div><div class="info"><div class="label">零售客单价</div><div class="value" id="rev_retailavg">¥0.00</div></div></div>
+                </div>
+            </div>
+            <div class="section-title">可视化分析</div>
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div class="title">支付方式占比</div>
+                    <div class="donut-container">
+                        <canvas id="donutPay" width="160" height="160"></canvas>
+                        <div class="donut-legend" id="legendPay"></div>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="title">费用分类占比</div>
+                    <div class="donut-container">
+                        <canvas id="donutFee" width="160" height="160"></canvas>
+                        <div class="donut-legend" id="legendFee"></div>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="title">明细分类占比</div>
+                    <div class="donut-container">
+                        <canvas id="donutDetail" width="160" height="160"></canvas>
+                        <div class="donut-legend" id="legendDetail"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-registration" class="page-content">
+            <div class="two-column">
+                <div class="left-panel">
+                    <div class="calendar-wrapper">
+                        <div class="calendar-header">
+                            <button onclick="changeCalMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                            <span id="calTitle">-</span>
+                            <button onclick="changeCalMonth(1)"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                        <div class="weekdays"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+                        <div class="days-grid" id="calendarDays"></div>
+                        <div style="margin-top:4px; font-size:11px; color:#999;">*绿色底色代表有挂号，绿色高亮为今天</div>
+                        <div class="doctor-block"><span><i class="fas fa-user-md"></i> 全部医生</span><div><span id="doctorCount" style="font-size:11px; background:rgba(255,255,255,0.3); padding:2px 6px; border-radius:10px;">约 0 位</span></div></div>
+                    </div>
+                </div>
+                <div class="right-panel">
+                    <div class="card">
+                        <div style="font-weight:bold; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                            <span>挂号详情</span>
+                            <button onclick="openAddRegModal()" class="btn-primary"><i class="fas fa-plus"></i> 新建</button>
+                        </div>
+                        <div class="cal-filter-bar" id="regFilterBar" style="display:none;">
+                            <span id="regFilterText">-</span>
+                            <span class="clear-btn" onclick="clearRegFilter()">清除筛选 ✕</span>
+                        </div>
+                        <div style="overflow-x:auto;">
+                            <table class="table-mock">
+                                <thead><tr><th>姓名</th><th>性别</th><th>年龄</th><th>电话</th><th>日期</th><th>状态</th><th>操作</th></tr></thead>
+                                <tbody id="regListContainer"><tr><td colspan="7" style="text-align:center;color:#999;">暂无记录</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-outpatient" class="page-content">
+            <div class="clinic-three-col">
+                <div class="clinic-left">
+                    <div style="font-weight:bold; margin-bottom:8px; font-size:13px;">患者列表</div>
+                    <div class="filter-tabs" id="opFilterTabs">
+                        <span class="active" data-filter="all">全部</span>
+                        <span data-filter="pending">待诊</span>
+                        <span data-filter="done">已诊</span>
+                    </div>
+                    <div id="clinicPatientList" style="flex:1; overflow-y:auto;"></div>
+                    <button class="btn-primary" style="width:100%; margin-top:8px;" onclick="openDirectAddModal()"><i class="fas fa-plus"></i> 新建患者接诊</button>
+                </div>
+                <div class="clinic-center" id="clinicCenterArea">
+                    <div style="text-align:center; color:#999; padding:40px 0;">
+                        <i class="fas fa-user-md" style="font-size:40px; opacity:0.3;"></i>
+                        <div style="margin-top:10px;">请从左侧选择患者，或新建患者接诊</div>
+                    </div>
+                </div>
+                <div class="clinic-right">
+                    <div style="font-weight:bold; margin-bottom:8px; font-size:13px;">就诊历史</div>
+                    <div id="clinicHistoryList" style="flex:1; overflow-y:auto;">
+                        <div style="text-align:center; color:#ccc; font-size:11px; padding:10px;">选择患者后显示</div>
+                    </div>
+                    <button class="btn-primary" style="width:100%; margin-top:8px;" onclick="aiAssist()"><i class="fas fa-robot"></i> AI 辅助诊断</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-statistics" class="page-content">
+            <div class="stats-layout">
+                <div class="stats-sidebar">
+                    <div class="stats-menu-item active" data-smenu="revenue"><i class="fas fa-chart-line"></i> 营收统计</div>
+                    <!-- 【本次需求新增】 删除了原有的业绩统计标签，新增库存统计与运营分析 -->
+                    <div class="stats-menu-item" data-smenu="inventory"><i class="fas fa-boxes"></i> 库存统计</div>
+                    <div class="stats-menu-item" data-smenu="analysis"><i class="fas fa-chart-pie"></i> 运营分析</div>
+                </div>
+                <div class="stats-main">
+                    <div class="stats-tab-bar">
+                        <span class="stats-tab active" data-stab="overview">营收概况</span>
+                        <span class="stats-tab" data-stab="detail">收费明细</span>
+                        <span class="stats-tab" data-stab="daily">收费日报</span>
+                        <span class="stats-tab" data-stab="project">收费项目统计</span>
+                        <div class="stats-time-filter">
+                            <span class="stats-tf-btn active" data-period="today">今天</span>
+                            <span class="stats-tf-btn" data-period="yesterday">昨天</span>
+                            <span class="stats-tf-btn" data-period="week">本周</span>
+                            <span class="stats-tf-btn" data-period="month">本月</span>
+                        </div>
+                    </div>
+
+                    <div id="stab-overview" class="stab-panel active">
+                        <div class="stats-cards-row" id="revenueCards">
+                            <div class="stat-card"><div class="stat-name">营业收费</div><div class="stat-value" id="rc_total">¥0.00</div><div class="stat-period" id="rc_period">今天</div></div>
+                            <div class="stat-card"><div class="stat-name">门诊收费</div><div class="stat-value" id="rc_op">¥0.00</div><div class="stat-period">今天</div></div>
+                            <div class="stat-card"><div class="stat-name">零售收费</div><div class="stat-value" id="rc_retail">¥0.00</div><div class="stat-period">今天</div></div>
+                            <div class="stat-card"><div class="stat-name">挂号预约</div><div class="stat-value" id="rc_reg">¥0.00</div><div class="stat-period">今天</div></div>
+                            <div class="stat-card"><div class="stat-name">门诊诊量</div><div class="stat-value" id="rc_opvisits">0</div><div class="stat-period">今天</div></div>
+                            <div class="stat-card"><div class="stat-name">零售客量</div><div class="stat-value" id="rc_retailcust">0</div><div class="stat-period">今天</div></div>
+                            <div class="stat-card"><div class="stat-name">门诊客单价</div><div class="stat-value" id="rc_opavg">¥0.00</div><div class="stat-period">今天</div></div>
+                            <div class="stat-card"><div class="stat-name">零售客单价</div><div class="stat-value" id="rc_retailavg">¥0.00</div><div class="stat-period">今天</div></div>
+                        </div>
+                        <div class="stats-donut-row">
+                            <div class="chart-card">
+                                <div class="chart-header"><span>支付方式</span><small id="donut1_date"></small></div>
+                                <div class="donut-container">
+                                    <canvas id="donutPay2" width="160" height="160"></canvas>
+                                    <div class="donut-legend" id="legendPay2"></div>
+                                </div>
+                            </div>
+                            <div class="chart-card">
+                                <div class="chart-header"><span>费用分类</span><small id="donut2_date"></small></div>
+                                <div class="donut-container">
+                                    <canvas id="donutFee2" width="160" height="160"></canvas>
+                                    <div class="donut-legend" id="legendFee2"></div>
+                                </div>
+                            </div>
+                            <div class="chart-card">
+                                <div class="chart-header"><span>明细分类</span><small id="donut3_date"></small></div>
+                                <div class="donut-container">
+                                    <canvas id="donutDetail2" width="160" height="160"></canvas>
+                                    <div class="donut-legend" id="legendDetail2"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stats-line-area">
+                            <div class="chart-card">
+                                <div class="chart-header">
+                                    <span>营业收费趋势</span>
+                                    <div class="stats-tf-btn-group">
+                                        <span class="stats-tf-btn active" data-range="1m">近一月</span>
+                                        <span class="stats-tf-btn" data-range="3m">近三月</span>
+                                        <span class="stats-tf-btn" data-range="6m">近半年</span>
+                                    </div>
+                                </div>
+                                <canvas id="revenueLineChart" style="width:100%; height:200px;"></canvas>
+                            </div>
+                            <div class="chart-card">
+                                <div class="chart-header">
+                                    <span>收费人次趋势</span>
+                                    <div class="stats-tf-btn-group">
+                                        <span class="stats-tf-btn active" data-range="1m">近一月</span>
+                                        <span class="stats-tf-btn" data-range="3m">近三月</span>
+                                        <span class="stats-tf-btn" data-range="6m">近半年</span>
+                                    </div>
+                                </div>
+                                <canvas id="visitsLineChart" style="width:100%; height:200px;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="stab-detail" class="stab-panel" style="display:none;">
+                        <div style="overflow-x:auto;">
+                            <table class="table-mock">
+                                <thead><tr><th>时间</th><th>患者</th><th>费用类型</th><th>支付方式</th><th>金额</th><th>备注</th></tr></thead>
+                                <tbody id="revenueDetailBody"><tr><td colspan="6" style="text-align:center;color:#999;padding:15px;">暂无数据</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="stab-daily" class="stab-panel" style="display:none;">
+                        <div style="overflow-x:auto;">
+                            <table class="table-mock">
+                                <thead><tr><th>日期</th><th>收费总额</th><th>门诊收费</th><th>零售收费</th><th>挂号收费</th><th>人次</th></tr></thead>
+                                <tbody id="revenueDailyBody"><tr><td colspan="6" style="text-align:center;color:#999;padding:15px;">暂无数据</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 【本次需求新增】 库存统计面板 -->
+                    <div id="stab-inventory" class="stab-panel" style="display:none;">
+                        <div class="section-title">库存概览与预警</div>
+                        <div class="inv-panel-flex">
+                            <div class="inv-chart-area">
+                                <div style="font-size:13px; color:#666; margin-bottom:8px;">库存状态健康度</div>
+                                <canvas id="invPieChart" width="200" height="200"></canvas>
+                                <div id="invLegend" style="font-size:12px; margin-top:10px; text-align:left;"></div>
+                            </div>
+                            <div class="inv-table-area">
+                                <table class="table-mock">
+                                    <thead>
+                                        <tr>
+                                            <th>药品名称</th>
+                                            <th>当前库存</th>
+                                            <th>效期</th>
+                                            <th>预警类型</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="invAlertBody">
+                                        <tr><td colspan="4" style="text-align:center;color:#999;">暂无药品预警</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 【本次需求新增】 运营分析面板 -->
+                    <div id="stab-analysis" class="stab-panel" style="display:none;">
+                        <div class="section-title" style="margin-bottom:10px;">
+                            <div style="display:flex; gap:8px; background:#f5f5f5; padding:4px; border-radius:20px;">
+                                <span class="op-tab-btn active" data-opstab="summary" style="padding:4px 12px; border-radius:12px; cursor:pointer; background:var(--primary); color:#fff;">运营概况</span>
+                                <span class="op-tab-btn" data-opstab="daily" style="padding:4px 12px; border-radius:12px; cursor:pointer; color:#666;">运营日报</span>
+                            </div>
+                            <div style="display:flex; gap:6px; align-items:center; font-weight:normal;">
+                                <span style="font-size:12px; color:#666;">今日日期: </span>
+                                <span id="opDateDisplay" style="font-size:12px; border:1px solid #eee; padding:2px 8px; border-radius:4px;"></span>
+                            </div>
+                        </div>
+
+                        <!-- 运营概况 -->
+                        <div id="op-summary-panel">
+                            <div class="op-dashboard-cards">
+                                <div class="op-card"><div class="op-card-left"><div class="op-value" id="op_visitCount">0</div><div class="op-label">到店次数</div><div class="op-date" id="op_date_1">-</div></div><div class="op-card-icon"><i class="fas fa-users"></i></div></div>
+                                <div class="op-card"><div class="op-card-left"><div class="op-value" id="op_newPatients">0</div><div class="op-label">门店新增患者</div><div class="op-date" id="op_date_2">-</div></div><div class="op-card-icon"><i class="fas fa-user-plus"></i></div></div>
+                                <div class="op-card"><div class="op-card-left"><div class="op-value" id="op_retailCount">0</div><div class="op-label">零售次数</div><div class="op-date" id="op_date_3">-</div></div><div class="op-card-icon"><i class="fas fa-shopping-cart"></i></div></div>
+                                <div class="op-card"><div class="op-card-left"><div class="op-value" id="op_finishedVisits">0</div><div class="op-label">完诊次数</div><div class="op-date" id="op_date_4">-</div></div><div class="op-card-icon"><i class="fas fa-user-check"></i></div></div>
+                            </div>
+
+                            <div class="card" style="margin-top:12px; padding:16px;">
+                                <div class="op-chart-header">
+                                    <div><span class="op-title">客流趋势</span> <span style="font-size:11px; color:#ccc; margin-left:8px;" id="op_trend_date_range">-</span></div>
+                                    <div class="op-tabs" id="opTrendTabs">
+                                        <span class="active" data-operiod="week">近一周</span>
+                                        <span data-operiod="month">近一月</span>
+                                        <span data-operiod="quarter">近三月</span>
+                                        <span data-operiod="half">近半年</span>
+                                    </div>
+                                </div>
+                                <div class="op-chart-container">
+                                    <canvas id="operationsChart" style="width:100%; height:100%;"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 运营日报 -->
+                        <div id="op-daily-panel" style="display:none;">
+                            <div style="overflow-x:auto;">
+                                <table class="table-mock">
+                                    <thead><tr><th>日期</th><th>到店次数</th><th>新增患者</th><th>零售次数</th><th>完诊次数</th></tr></thead>
+                                    <tbody id="opDailyBody"><tr><td colspan="5" style="text-align:center;color:#999;padding:15px;">选择时间查看日报</td></tr></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="stab-project" class="stab-panel" style="display:none;">
+                        <div id="projectStatsArea" style="padding:20px; text-align:center; color:#999;">选择时间范围后显示项目统计</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-pharmacy" class="page-content">
+            <div class="pharma-layout">
+                <div class="pharma-sidebar" id="pharmaSidebar">
+                    <div class="menu-item active" data-menu="list">药品列表</div>
+                    <div class="menu-item" data-menu="inbound">入库记录</div>
+                    <div class="menu-item" data-menu="outbound">出库记录</div>
+                    <div class="menu-item" data-menu="warning">效期/库存预警</div>
+                    <div class="menu-item" data-menu="suppliers">供应商管理</div>
+                </div>
+                <div class="pharma-main">
+                    <div id="pharma-panel-list" class="pharma-panel">
+                        <div class="section-title">
+                            <span>药房管理 <small style="font-weight:normal; font-size:12px; color:#666;">待发药: <b id="pharma_wait">0</b> 单</small></span>
+                            <div class="pharmacy-toolbar">
+                                <input type="file" id="excelFileInput" accept=".xlsx, .xls">
+                                <button onclick="document.getElementById('excelFileInput').click()"><i class="fas fa-file-import"></i> 导入</button>
+                                <button onclick="addPharmacyItem()" class="primary"><i class="fas fa-plus"></i> 新建处方</button>
+                                <button onclick="exportPharmacyData()"><i class="fas fa-file-export"></i> 导出</button>
+                            </div>
+                        </div>
+                        <div class="pharma-tabs" id="pharmaListTabs">
+                            <span class="active" data-tab="pending">待发药</span>
+                            <span data-tab="done">已发药</span>
+                            <span data-tab="all">全部</span>
+                        </div>
+                        <!-- 【本次需求新增】 重写药房表头，固定9列 -->
+                        <div style="overflow-x:auto;">
+                            <table class="table-mock">
+                                <thead>
+                                    <tr>
+                                        <th>序号</th>
+                                        <th>编码</th>
+                                        <th>药品名称</th>
+                                        <th>规格</th>
+                                        <th>生产厂家</th>
+                                        <th>药品类型</th>
+                                        <th>零售价</th>
+                                        <th>最近进价</th>
+                                        <th>库存预警</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pharmacyBody"><tr><td colspan="9" style="text-align:center;color:#999;padding:15px;">加载中...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="pharma-panel-inbound" class="pharma-panel" style="display:none;">
+                        <div class="section-title">
+                            <span>入库记录</span>
+                            <button onclick="openStockInModal()" class="btn-primary"><i class="fas fa-plus"></i> 药品入库</button>
+                        </div>
+                        <div style="overflow-x:auto;">
+                            <table class="table-mock">
+                                <thead><tr><th>药品名称</th><th>数量</th><th>批号</th><th>效期</th><th>供应商</th><th>成本</th><th>时间</th></tr></thead>
+                                <tbody id="inRecordBody"><tr><td colspan="7" style="text-align:center;color:#999;">暂无记录</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="pharma-panel-outbound" class="pharma-panel" style="display:none;">
+                        <div class="section-title"><span>出库记录</span></div>
+                        <div style="overflow-x:auto;">
+                            <table class="table-mock">
+                                <thead><tr><th>药品名称</th><th>数量</th><th>患者</th><th>类型</th><th>时间</th></tr></thead>
+                                <tbody id="outRecordBody"><tr><td colspan="5" style="text-align:center;color:#999;">暂无记录</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="pharma-panel-warning" class="pharma-panel" style="display:none;">
+                        <div class="pharma-tabs" id="warningTabs">
+                            <span class="active" data-wtab="expiry">效期预警</span>
+                            <span data-wtab="stock">库存预警</span>
+                        </div>
+                        <div id="warningExpiryPanel">
+                            <div style="font-size:13px; color:#666; margin-bottom:8px;">30天内即将过期的药品</div>
+                            <table class="table-mock">
+                                <thead><tr><th>药品名称</th><th>库存</th><th>批号</th><th>效期</th><th>状态</th></tr></thead>
+                                <tbody id="expiryBody"><tr><td colspan="5" style="text-align:center;color:#999;">暂无预警</td></tr></tbody>
+                            </table>
+                        </div>
+                        <div id="warningStockPanel" style="display:none;">
+                            <div style="font-size:13px; color:#666; margin-bottom:8px;">库存低于安全线的药品</div>
+                            <table class="table-mock">
+                                <thead><tr><th>药品名称</th><th>库存</th><th>安全线</th><th>单位</th><th>状态</th></tr></thead>
+                                <tbody id="lowStockBody"><tr><td colspan="5" style="text-align:center;color:#999;">暂无预警</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="pharma-panel-suppliers" class="pharma-panel" style="display:none;">
+                        <div class="section-title">
+                            <span>供应商管理</span>
+                            <button onclick="openSupplierModal()" class="btn-primary"><i class="fas fa-plus"></i> 新增供应商</button>
+                        </div>
+                        <table class="table-mock">
+                            <thead><tr><th>名称</th><th>联系人</th><th>电话</th><th>地址</th><th>操作</th></tr></thead>
+                            <tbody id="supplierBody"><tr><td colspan="5" style="text-align:center;color:#999;">暂无供应商</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-settings" class="page-content">
+            <div class="card">
+                <div class="section-title">系统配置</div>
+                <div class="setting-item">
+                    <div>
+                        <div>服务器地址</div>
+                        <small>用于API请求的基础地址，Cpolar映射时填外网地址</small>
+                    </div>
+                    <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                        <input type="text" id="serverUrlInput" class="server-input" value="http://localhost:3002" placeholder="http://IP:3002">
+                        <button class="btn-small" onclick="saveServerUrl()">保存</button>
+                    </div>
+                </div>
+                <div class="setting-item" onclick="toggleSetting('warningAlert')">
+                    <div>
+                        <div>药品效期预警提醒</div>
+                        <small>开启后首页显示过期预警</small>
+                    </div>
+                    <i id="switch_warningAlert" class="fas fa-toggle-off toggle-switch off"></i>
+                </div>
+                <div class="setting-item" onclick="toggleSetting('autoPharmacy')">
+                    <div>
+                        <div>门诊处方自动入库</div>
+                        <small>接诊后自动推送到药房</small>
+                    </div>
+                    <i id="switch_autoPharmacy" class="fas fa-toggle-on toggle-switch on" style="color:var(--primary);"></i>
+                </div>
+            </div>
+            <div class="card" style="margin-top:12px;">
+                <div class="section-title">手机端访问</div>
+                <div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap; margin-top:10px;">
+                    <div style="flex:1; min-width:250px;">
+                        <div style="font-size:12px; color:#999; margin-bottom:4px;">局域网内手机/平板访问地址（需与电脑连接同一WiFi）：</div>
+                        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                            <input type="text" id="mobileAccessUrl" class="server-input" value="获取中..." readonly style="flex:1; min-width:200px; background:#f5f5f5;">
+                            <button class="copy-btn" onclick="copyMobileUrl()"><i class="fas fa-copy"></i> 一键复制</button>
+                            <button class="copy-btn" onclick="window.refreshMobileAccess()" title="重新从后端获取局域网IP"><i class="fas fa-sync-alt"></i> 重新获取</button>
+                        </div>
+                        <div style="margin-top:8px; padding:8px 10px; background:#f0f9f6; border-radius:6px; font-size:12px; color:#5cb79f;">
+                            <i class="fas fa-info-circle"></i> 电脑端地址：<span id="currentAccessUrl">-</span>
+                        </div>
+                        <div style="margin-top:6px; font-size:11px; color:#aaa;">
+                            手机扫码或输入上方地址即可访问，电脑和手机数据实时同步
+                        </div>
+                    </div>
+                    <div style="text-align:center;">
+                        <img id="mobileQRCode" src="" alt="扫码访问" style="width:120px; height:120px; border:1px solid #eee; border-radius:8px; display:block;">
+                        <div style="font-size:11px; color:#999; margin-top:4px;">扫码访问</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals 省略... 保持与原生原有逻辑一致 -->
+    <div class="modal" id="modalReg">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header"><h3>新建挂号</h3><span style="cursor:pointer;" onclick="document.getElementById('modalReg').style.display='none'"><i class="fas fa-times"></i></span></div>
+            <div class="modal-form-group"><label>患者姓名</label><input type="text" id="reg_name"></div>
+            <div style="display:flex; gap:10px;">
+                <div class="modal-form-group" style="flex:1;"><label>性别</label><select id="reg_gender" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;"><option>男</option><option>女</option></select></div>
+                <div class="modal-form-group" style="flex:1;"><label>年龄</label><input type="number" id="reg_age" style="width:100%;"></div>
+            </div>
+            <div class="modal-form-group"><label>联系电话</label><input type="text" id="reg_phone"></div>
+            <div class="modal-actions">
+                <button class="btn-close-modal" onclick="document.getElementById('modalReg').style.display='none'">取消</button>
+                <button class="btn-save-modal" onclick="addRegistration()">确认挂号</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="modalDirectAdd">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header"><h3>新建门诊患者</h3><span style="cursor:pointer;" onclick="document.getElementById('modalDirectAdd').style.display='none'"><i class="fas fa-times"></i></span></div>
+            <div style="font-size:12px; color:#999; margin-bottom:8px;">可直接录入门诊病人信息，无需先挂号</div>
+            <div class="modal-form-group"><label>患者姓名</label><input type="text" id="direct_name"></div>
+            <div style="display:flex; gap:10px;">
+                <div class="modal-form-group" style="flex:1;"><label>性别</label><select id="direct_gender" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;"><option>男</option><option>女</option></select></div>
+                <div class="modal-form-group" style="flex:1;"><label>年龄</label><input type="number" id="direct_age" style="width:100%;"></div>
+            </div>
+            <div class="modal-form-group"><label>联系电话</label><input type="text" id="direct_phone"></div>
+            <div class="modal-form-group"><label>主诉</label><textarea id="direct_chief" rows="2" placeholder="患者主诉症状"></textarea></div>
+            <div class="modal-form-group"><label>诊断结果</label><input type="text" id="direct_diagnosis" placeholder="初步诊断"></div>
+            <div class="modal-actions">
+                <button class="btn-close-modal" onclick="document.getElementById('modalDirectAdd').style.display='none'">取消</button>
+                <button class="btn-save-modal" onclick="saveDirectPatient()">保存</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="modalStockIn">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header"><h3>药品入库</h3><span style="cursor:pointer;" onclick="document.getElementById('modalStockIn').style.display='none'"><i class="fas fa-times"></i></span></div>
+            <div class="modal-form-group"><label>药品名称</label><input type="text" id="si_drugName" placeholder="如：阿莫西林胶囊"></div>
+            <div style="display:flex; gap:10px;">
+                <div class="modal-form-group" style="flex:1;"><label>数量</label><input type="number" id="si_qty"></div>
+                <div class="modal-form-group" style="flex:1;"><label>单位</label><select id="si_unit" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;"><option>盒</option><option>瓶</option><option>袋</option><option>支</option></select></div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <div class="modal-form-group" style="flex:1;"><label>批号</label><input type="text" id="si_batchNo"></div>
+                <div class="modal-form-group" style="flex:1;"><label>效期</label><input type="date" id="si_expiry"></div>
+            </div>
+            <div class="modal-form-group"><label>供应商</label><input type="text" id="si_supplier"></div>
+            <div style="display:flex; gap:10px;">
+                <div class="modal-form-group" style="flex:1;"><label>成本价</label><input type="number" id="si_cost" placeholder="0.00"></div>
+                <div class="modal-form-group" style="flex:1;"><label>零售价</label><input type="number" id="si_price" placeholder="0.00"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-close-modal" onclick="document.getElementById('modalStockIn').style.display='none'">取消</button>
+                <button class="btn-save-modal" onclick="saveStockIn()">确认入库</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="modalSupplier">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header"><h3>新增供应商</h3><span style="cursor:pointer;" onclick="document.getElementById('modalSupplier').style.display='none'"><i class="fas fa-times"></i></span></div>
+            <div class="modal-form-group"><label>供应商名称</label><input type="text" id="sup_name"></div>
+            <div class="modal-form-group"><label>联系人</label><input type="text" id="sup_contact"></div>
+            <div class="modal-form-group"><label>电话</label><input type="text" id="sup_phone"></div>
+            <div class="modal-form-group"><label>地址</label><input type="text" id="sup_address"></div>
+            <div class="modal-actions">
+                <button class="btn-close-modal" onclick="document.getElementById('modalSupplier').style.display='none'">取消</button>
+                <button class="btn-save-modal" onclick="saveSupplier()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ==================== 服务器地址配置 ====================
+    const SERVER_URL = (localStorage.getItem('clinic_server_url') || window.location.origin).replace(/\/+$/, '');
+    const API_BASE = SERVER_URL + '/api';
+    let currentUser = localStorage.getItem('clinic_user') || '';
+    let authToken = localStorage.getItem('clinic_token') || '';
+    if (!currentUser || !authToken) { window.location.href = 'login.html'; }
+
+    async function apiFetch(url, options = {}) {
+        options.headers = options.headers || {};
+        options.headers['x-auth-token'] = authToken;
+        const res = await fetch(url, options);
+        if (res.status === 401) {
+            try { await res.json(); } catch (e) {}
+            showToast('登录已过期，请重新登录', 'warning');
+            doLogout();
+            throw new Error('未登录');
+        }
+        if (!res.ok) {
+            let msg = '请求失败';
+            try { const d = await res.json(); if (d && d.error) msg = d.error; } catch (e) {}
+            throw new Error(msg);
+        }
+        return res;
+    }
+
+    function doLogout() {
+        localStorage.removeItem('clinic_user');
+        localStorage.removeItem('clinic_token');
+        window.location.href = 'login.html';
+    }
+
+    // HTML 转义，防止患者姓名等用户输入造成 XSS 与页面错乱
+    function esc(s) {
+        return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
+    }
+
+    // 轻量 Toast 提示
+    function showToast(msg, type = 'success') {
+        let wrap = document.getElementById('toastWrap');
+        if (!wrap) {
+            wrap = document.createElement('div');
+            wrap.id = 'toastWrap';
+            wrap.className = 'toast-wrap';
+            document.body.appendChild(wrap);
+        }
+        const t = document.createElement('div');
+        t.className = 'toast ' + type;
+        const icon = type === 'success' ? '<i class="fas fa-check-circle" style="color:#27AE60"></i>'
+            : type === 'error' ? '<i class="fas fa-times-circle" style="color:#E5484D"></i>'
+            : '<i class="fas fa-exclamation-triangle" style="color:#F5A623"></i>';
+        t.innerHTML = `<span class="toast-icon">${icon}</span><span class="toast-body"></span><span class="toast-close">&times;</span>`;
+        t.querySelector('.toast-body').innerText = msg;
+        t.querySelector('.toast-close').onclick = () => t.remove();
+        wrap.appendChild(t);
+        setTimeout(() => {
+            t.style.opacity = '0';
+            t.style.transition = 'opacity .3s';
+            setTimeout(() => t.remove(), 350);
+        }, 3200);
+    }
+
+    // 统一页面切换（支持跨模块跳转，如首页 KPI → 药房预警）
+    function gotoPage(pageId, opts = {}) {
+        document.querySelectorAll('#mainNav span').forEach(n => n.classList.toggle('active', n.dataset.target === pageId));
+        document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+        const page = document.getElementById(pageId);
+        if (!page) return;
+        page.classList.add('active');
+        if (pageId === 'page-statistics') {
+            setTimeout(() => { loadStatsData(); loadTrendData(); }, 100);
+        }
+        if (pageId === 'page-home') {
+            loadDashboardStats();
+        }
+        if (pageId === 'page-pharmacy' && opts.pharmaMenu) {
+            const item = document.querySelector(`.pharma-sidebar .menu-item[data-menu="${opts.pharmaMenu}"]`);
+            if (item) item.click();
+        }
+        if (pageId === 'page-statistics' && opts.statsMenu) {
+            const item = document.querySelector(`.stats-menu-item[data-smenu="${opts.statsMenu}"]`);
+            if (item) item.click();
+        }
+    }
+    window.gotoPage = gotoPage;
+
+    let dbRegistration = [], dbOutpatient = [], dbPharmacy = [], dbRevenue = [];
+    let dbSettings = { warningAlert: false, autoPharmacy: true };
+    let dbDrugInventory = [], dbDrugInRecords = [], dbDrugOutRecords = [], dbSuppliers = [], dbMedicalTemplates = [];
+    let prescriptionTempList = [], editingOutpatientId = null, currentPatientId = null;
+    let calYear, calMonth, opCalYear, opCalMonth;
+    let regCalFilter = null, opCalFilter = null;
+    let currentPeriod = 'today';
+    let dashboardStats = null;
+
+    function initDate() {
+        const now = new Date();
+        calYear = opCalYear = now.getFullYear();
+        calMonth = opCalMonth = now.getMonth() + 1;
+    }
+    initDate();
+
+    function showLoading(show) { document.getElementById('loadingToast').style.display = show ? 'block' : 'none'; }
+
+    async function loadAllData() {
+        if (!currentUser) return;
+        showLoading(true);
+        try {
+            const [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10] = await Promise.all([
+                apiFetch(`${API_BASE}/registrations`),
+                apiFetch(`${API_BASE}/outpatients`),
+                apiFetch(`${API_BASE}/pharmacy`),
+                apiFetch(`${API_BASE}/revenue`),
+                apiFetch(`${API_BASE}/settings`),
+                apiFetch(`${API_BASE}/drugInventory`),
+                apiFetch(`${API_BASE}/drugInRecords`),
+                apiFetch(`${API_BASE}/drugOutRecords`),
+                apiFetch(`${API_BASE}/suppliers`),
+                apiFetch(`${API_BASE}/medicalTemplates`)
+            ]);
+            if(!r1.ok) throw new Error('连接失败');
+            dbRegistration = await r1.json();
+            dbOutpatient = await r2.json();
+            dbPharmacy = await r3.json();
+            dbRevenue = await r4.json();
+            dbSettings = await r5.json();
+            dbDrugInventory = await r6.json();
+            dbDrugInRecords = await r7.json();
+            dbDrugOutRecords = await r8.json();
+            dbSuppliers = await r9.json();
+            dbMedicalTemplates = await r10.json();
+            renderAll();
+            await loadDashboardStats();
+        } catch(err) {
+            console.error(err);
+            if (err.message !== '未登录') alert('连接后端失败！请检查服务器是否启动');
+        } finally { showLoading(false); }
+    }
+
+    async function loadDashboardStats() {
+        try {
+            const res = await apiFetch(`${API_BASE}/dashboard/stats?period=${currentPeriod}`);
+            if (!res.ok) return;
+            dashboardStats = await res.json();
+            renderDashboard();
+        } catch(err) { console.error('统计加载失败', err); }
+    }
+
+    function switchPeriod(period) {
+        currentPeriod = period;
+        document.querySelectorAll('.period-filter span').forEach(s => s.classList.toggle('active', s.dataset.period === period));
+        loadDashboardStats();
+    }
+
+    function renderDashboard() {
+        if (!dashboardStats) return;
+        const t = dashboardStats.today;
+        const r = dashboardStats.revenue;
+        document.getElementById('dash_reg').innerText = t.regCount;
+        document.getElementById('dash_wait').innerText = t.pendingVisit;
+        document.getElementById('dash_visits').innerText = t.visitCount;
+        document.getElementById('dash_bill').innerText = t.pendingBill;
+        document.getElementById('dash_med').innerText = t.pendingDrug;
+        document.getElementById('dash_expiry').innerText = t.expiryWarning;
+        document.getElementById('dash_appt').innerText = t.appointmentCount;
+        document.getElementById('dash_visited').innerText = t.visited;
+        document.getElementById('dash_presc').innerText = t.prescriptionCount;
+        document.getElementById('dash_billed').innerText = t.billed;
+        document.getElementById('dash_dispensed').innerText = t.dispensed;
+        document.getElementById('dash_stockwarn').innerText = t.stockWarning;
+
+        document.getElementById('rev_total').innerText = '¥' + r.total.toFixed(2);
+        document.getElementById('rev_outpatient').innerText = '¥' + r.outpatient.toFixed(2);
+        document.getElementById('rev_retail').innerText = '¥' + r.retail.toFixed(2);
+        document.getElementById('rev_reg').innerText = '¥' + r.registration.toFixed(2);
+        document.getElementById('rev_opcount').innerText = r.opVisits;
+        document.getElementById('rev_retailcount').innerText = r.retailCustomers;
+        document.getElementById('rev_opavg').innerText = '¥' + r.opAvgPrice.toFixed(2);
+        document.getElementById('rev_retailavg').innerText = '¥' + r.retailAvgPrice.toFixed(2);
+
+        renderDashboardDonuts();
+    }
+
+    function renderDashboardDonuts() {
+        if (!dashboardStats) return;
+        const charts = dashboardStats.charts || { payMethod: [], feeCategory: [], detailCategory: [] };
+        let payData = charts.payMethod || [];
+        if(!payData.length && dbRevenue.length) {
+            const map = {};
+            dbRevenue.forEach(r => { const m = r.payMethod || r.method || '未分类'; map[m] = (map[m]||0) + (r.amount||0); });
+            payData = Object.entries(map).map(([name, value]) => ({name, value}));
+        }
+        drawDonutWithTooltip('donutPay', payData, 'legendPay', '支付方式');
+        drawDonutWithTooltip('donutFee', charts.feeCategory || [], 'legendFee', '费用分类');
+        drawDonutWithTooltip('donutDetail', charts.detailCategory || [], 'legendDetail', '明细分类');
+    }
+
+    function drawDonut(canvasId, data, legendId) {
+        drawDonutWithTooltip(canvasId, data, legendId, '占比');
+    }
+
+    function renderAll() {
+        document.getElementById('currentUsername').innerText = currentUser;
+        renderRegTable();
+        renderClinicPatientList();
+        renderPharmacyList();
+        renderInventoryTables();
+        updateStatistics();
+        renderCalendar();
+        updateSwitches();
+    }
+
+    function updateSwitches() {
+        const wa = document.getElementById('switch_warningAlert');
+        const ap = document.getElementById('switch_autoPharmacy');
+        if(wa) wa.className = `fas fa-toggle-${dbSettings.warningAlert?'on':'off'} toggle-switch ${dbSettings.warningAlert?'on':'off'}`;
+        if(ap) ap.className = `fas fa-toggle-${dbSettings.autoPharmacy?'on':'off'} toggle-switch ${dbSettings.autoPharmacy?'on':'off'}`;
+    }
+
+    async function addRegistration() {
+        const name = document.getElementById('reg_name').value.trim();
+        const gender = document.getElementById('reg_gender').value;
+        const age = document.getElementById('reg_age').value;
+        const phone = document.getElementById('reg_phone').value.trim();
+        if(!name) return alert('请输入姓名');
+        if(age !== '' && (isNaN(parseInt(age)) || parseInt(age) < 0 || parseInt(age) > 150)) return alert('请输入有效年龄');
+        try {
+            const todayStr = getTodayStr();
+            const res = await apiFetch(`${API_BASE}/registrations`, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({name,gender,age,phone,date:todayStr,status:'待就诊'})
+            });
+            document.getElementById('modalReg').style.display='none';
+            document.getElementById('reg_name').value='';
+            await loadAllData();
+            showToast(`【${name}】挂号成功`);
+        } catch(err) { if(err.message!=='未登录') alert('挂号失败: '+err.message); }
+    }
+
+    async function deleteRegistration(id) {
+        if(!confirm('确定删除？')) return;
+        try {
+            await apiFetch(`${API_BASE}/registrations/${id}`, {method:'DELETE'});
+            await loadAllData();
+            showToast('挂号记录已删除');
+        } catch(err) { if(err.message!=='未登录') showToast(err.message || '删除失败', 'error'); }
+    }
+
+    function openAddRegModal() { document.getElementById('modalReg').style.display='flex'; }
+
+    function renderRegTable() {
+        const tb = document.getElementById('regListContainer');
+        let list = dbRegistration;
+        if (regCalFilter) list = list.filter(p => p.date === regCalFilter);
+        const filterBar = document.getElementById('regFilterBar');
+        if (regCalFilter) {
+            filterBar.style.display = 'flex';
+            document.getElementById('regFilterText').innerText = `筛选日期：${regCalFilter}（共 ${list.length} 条）`;
+        } else { filterBar.style.display = 'none'; }
+        if(!list.length) { tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:#999;">暂无记录</td></tr>'; return; }
+        tb.innerHTML = list.map(p=>`
+            <tr><td><b>${esc(p.name)}</b></td><td>${esc(p.gender)}</td><td>${esc(p.age)}</td><td>${esc(p.phone)}</td><td>${esc(p.date)}</td>
+            <td><span style="color:var(--orange);">${esc(p.status)}</span></td>
+            <td><button class="op-btn" onclick="deleteRegistration(${p.id})">删除</button></td></tr>`).join('');
+    }
+
+    function clearRegFilter() {
+        regCalFilter = null;
+        renderRegTable();
+        renderCalendar();
+    }
+
+    function renderClinicPatientList() {
+        const filter = document.querySelector('#opFilterTabs span.active').dataset.filter;
+        let data = [...dbRegistration.filter(r=>r.status==='待就诊'), ...dbOutpatient];
+        if(filter==='pending') data = dbRegistration.filter(r=>r.status==='待就诊');
+        else if(filter==='done') data = dbOutpatient;
+
+        const container = document.getElementById('clinicPatientList');
+        if(!data.length) {
+            container.innerHTML = '<div style="text-align:center;color:#999;padding:15px;font-size:12px;">暂无患者</div>';
+            return;
+        }
+        container.innerHTML = data.map(p => `
+            <div class="patient-item ${currentPatientId===p.id?'active':''}" onclick="selectClinicPatient(${p.id})">
+                <div class="name">${esc(p.name)} <span style="font-size:11px;color:#999;">${esc(p.gender||'')} ${esc(p.age||'')}岁</span></div>
+                <div class="info">${esc(p.phone||'无电话')}</div>
+                <span class="status ${p.status==='已就诊'?'done':'pending'}">${esc(p.status)}</span>
+            </div>
+        `).join('');
+    }
+
+    document.getElementById('opFilterTabs').addEventListener('click', e => {
+        if(e.target.tagName==='SPAN') {
+            document.querySelectorAll('#opFilterTabs span').forEach(s=>s.classList.remove('active'));
+            e.target.classList.add('active');
+            renderClinicPatientList();
+        }
+    });
+
+    function selectClinicPatient(id) {
+        currentPatientId = id;
+        editingOutpatientId = id;
+        const p = [...dbRegistration, ...dbOutpatient].find(i=>i.id===id);
+        if(!p) return;
+        renderClinicPatientList();
+        renderClinicCenter(p);
+        renderClinicHistory(p);
+    }
+
+    function renderClinicCenter(p) {
+        const area = document.getElementById('clinicCenterArea');
+        area.innerHTML = `
+            <div class="clinic-section">
+                <div class="label">患者信息</div>
+                <div style="padding:10px 12px; background:var(--primary-soft); border:1px solid var(--border); border-radius:8px; font-size:13px; color:var(--text);">
+                    <b>${esc(p.name)}</b> <span style="color:var(--text-sub);">| ${esc(p.gender||'-')} | ${esc(p.age||'-')}岁 | ${esc(p.phone||'-')}</span>
+                    <div style="margin-top:6px; color:var(--text-sub);">
+                        接诊医师：<span style="color:var(--primary); font-weight:600;">${esc(p.doctor||'待分配')}</span>
+                        &nbsp;|&nbsp; 类型：${esc(p.visitType||'初诊')} &nbsp;|&nbsp; 收费：${esc(p.feeType||'自费')}
+                    </div>
+                </div>
+            </div>
+            <div class="clinic-section">
+                <div class="label">病历信息</div>
+                <div class="form-row" style="margin-bottom:6px;">
+                    <div><label style="font-size:11px;color:#999;">初/复诊</label><select id="cf_visitType" style="width:100%;padding:4px;border:1px solid #ddd;border-radius:4px;"><option value="初诊">初诊</option><option value="复诊" ${p.visitType==='复诊'?'selected':''}>复诊</option></select></div>
+                    <div><label style="font-size:11px;color:#999;">收费类型</label><select id="cf_feeType" style="width:100%;padding:4px;border:1px solid #ddd;border-radius:4px;"><option ${p.feeType!=='医保'?'selected':''}>自费</option><option ${p.feeType==='医保'?'selected':''}>医保</option></select></div>
+                </div>
+                <input type="text" id="cf_chief" placeholder="患者主诉" value="${esc(p.chief||'')}" style="margin-bottom:6px;">
+                <textarea id="cf_history" rows="2" placeholder="现病史" style="margin-bottom:6px;">${esc(p.history||'')}</textarea>
+                <textarea id="cf_past" rows="2" placeholder="既往史" style="margin-bottom:6px;">${esc(p.past||'')}</textarea>
+                <input type="text" id="cf_allergy" placeholder="过敏史" value="${esc(p.allergy||'')}" style="margin-bottom:6px;">
+                <textarea id="cf_exam" rows="2" placeholder="体格检查" style="margin-bottom:6px;">${esc(p.exam||'')}</textarea>
+                <textarea id="cf_tcm" rows="2" placeholder="望闻问切" style="margin-bottom:6px;">${esc(p.tcm||'')}</textarea>
+                <input type="text" id="cf_diagnosis" placeholder="诊断结果" value="${esc(p.diagnosis||'')}" style="margin-bottom:6px;">
+                <input type="text" id="cf_syndrome" placeholder="辨证" value="${esc(p.syndrome||'')}" style="margin-bottom:6px;">
+                <div style="display:flex; gap:6px; margin-bottom:6px;">
+                    <button class="op-btn" onclick="saveTemplate()"><i class="fas fa-bookmark"></i> 保存模板</button>
+                    <button class="op-btn" onclick="loadTemplate()"><i class="fas fa-folder-open"></i> 调取模板</button>
+                </div>
+            </div>
+            <div class="clinic-section">
+                <div class="label">诊疗项目 / 处方</div>
+                <div class="prescription-row">
+                    <input type="text" id="cf_drug" list="cf_drugOptions" placeholder="药品名称（可从库存选择）" oninput="autoFillDrugPrice(this)" style="flex:2;padding:4px;border:1px solid #ddd;border-radius:4px;font-size:12px;">
+                    <input type="number" id="cf_qty" placeholder="数量" style="flex:1;padding:4px;border:1px solid #ddd;border-radius:4px;font-size:12px;">
+                    <input type="number" id="cf_price" placeholder="单价" style="flex:1;padding:4px;border:1px solid #ddd;border-radius:4px;font-size:12px;">
+                    <button class="btn-primary" onclick="addClinicPrescription()">添加</button>
+                </div>
+                <datalist id="cf_drugOptions">${dbDrugInventory.map(d=>`<option value="${esc(d.name)}" data-price="${Number(d.price)||0}"></option>`).join('')}</datalist>
+                <div id="cf_prescriptionList" style="margin-top:4px;"></div>
+                <div style="margin-top:6px; font-size:13px; color:var(--primary); font-weight:bold;">药品费用合计：¥<span id="cf_totalCost">0.00</span></div>
+            </div>
+            <div class="clinic-section">
+                <div class="label">医嘱事项</div>
+                <textarea id="cf_advice" rows="2" placeholder="医嘱">${esc(p.advice||'')}</textarea>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:10px;">
+                <button class="btn-primary" onclick="saveClinicData()"><i class="fas fa-save"></i> 保存接诊</button>
+                <button class="op-btn" onclick="printClinic()"><i class="fas fa-print"></i> 打印病历</button>
+            </div>
+        `;
+        prescriptionTempList = p.prescriptions ? [...p.prescriptions] : [];
+        renderClinicPrescription();
+    }
+
+    // 从库存药品库中自动带出零售价（仅在单价为空时填充）
+    function autoFillDrugPrice(input) {
+        const val = input.value.trim();
+        const priceEl = document.getElementById('cf_price');
+        if (!priceEl || priceEl.value) return;
+        const options = document.querySelectorAll('#cf_drugOptions option');
+        let found = null;
+        options.forEach(o => { if (o.value === val) found = o; });
+        if (found) priceEl.value = found.dataset.price || '0';
+    }
+
+    function renderClinicPrescription() {
+        const listEl = document.getElementById('cf_prescriptionList');
+        if(!listEl) return;
+        listEl.innerHTML = prescriptionTempList.map((d, i) => `
+            <div class="prescription-item">
+                <span>${esc(d.name)} x ${d.qty} @ ¥${(d.price||0).toFixed(2)} = ¥${(d.subtotal||0).toFixed(2)}</span>
+                <span class="remove-btn" onclick="removeClinicPrescription(${i})">删除</span>
+            </div>`).join('');
+        const total = prescriptionTempList.reduce((s,d)=>s+(d.subtotal||0),0);
+        const el = document.getElementById('cf_totalCost');
+        if(el) el.innerText = total.toFixed(2);
+    }
+
+    function addClinicPrescription() {
+        const drug = document.getElementById('cf_drug').value.trim();
+        const qty = parseInt(document.getElementById('cf_qty').value)||0;
+        const price = parseFloat(document.getElementById('cf_price').value)||0;
+        if(!drug||!qty) return alert('请输入药品名称和数量');
+        if(qty <= 0) return alert('数量必须大于0');
+        const inv = dbDrugInventory.find(i => i.name === drug);
+        if(inv && Number(inv.stock||0) < qty) {
+            return alert(`【库存不足】"${drug}" 当前库存仅 ${Number(inv.stock||0)} ${inv.unit||'盒'}，处方需要 ${qty}，请先入库或调整数量`);
+        }
+        const subtotal = qty * price;
+        prescriptionTempList.push({name:drug, qty, price, subtotal});
+        document.getElementById('cf_drug').value='';
+        document.getElementById('cf_qty').value='';
+        document.getElementById('cf_price').value='';
+        renderClinicPrescription();
+    }
+
+    function removeClinicPrescription(index) {
+        prescriptionTempList.splice(index, 1);
+        renderClinicPrescription();
+    }
+
+    function renderClinicHistory(p) {
+        const container = document.getElementById('clinicHistoryList');
+        const history = dbOutpatient.filter(o => o.id !== p.id && (o.name === p.name || (p.phone && o.phone === p.phone)));
+        if(!history.length) {
+            container.innerHTML = '<div style="text-align:center;color:#ccc;font-size:11px;padding:10px;">暂无历史记录</div>';
+            return;
+        }
+        container.innerHTML = history.map(h => `
+            <div class="history-item" onclick="selectClinicPatient(${h.id})">
+                <div class="date">${h.opDate||h.date||'-'}</div>
+                <div class="diag">${esc(h.diagnosis||'无诊断')}</div>
+            </div>
+        `).join('');
+    }
+
+    function openDirectAddModal() {
+        ['direct_name','direct_age','direct_phone','direct_chief','direct_diagnosis'].forEach(id=>document.getElementById(id).value='');
+        document.getElementById('direct_gender').selectedIndex = 0;
+        document.getElementById('modalDirectAdd').style.display = 'flex';
+    }
+
+    async function saveDirectPatient() {
+        const name = document.getElementById('direct_name').value.trim();
+        const gender = document.getElementById('direct_gender').value;
+        const age = document.getElementById('direct_age').value || '';
+        const phone = document.getElementById('direct_phone').value.trim();
+        const chief = document.getElementById('direct_chief').value.trim();
+        const diagnosis = document.getElementById('direct_diagnosis').value.trim();
+        if (!name) return alert('请输入患者姓名');
+        const today = getTodayStr();
+        try {
+            const res = await apiFetch(`${API_BASE}/outpatients`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, gender, age, phone, chief, diagnosis, status: '已就诊', date: today, opDate: today, source: 'direct', createdAt: new Date().toISOString() })
+            });
+            const result = await res.json();
+            document.getElementById('modalDirectAdd').style.display = 'none';
+            await loadAllData();
+            const savedId = result && result.data ? result.data.id : null;
+            if (savedId) {
+                currentPatientId = savedId;
+                editingOutpatientId = savedId;
+                selectClinicPatient(savedId);
+            }
+            gotoPage('page-outpatient');
+            showToast(`【${name}】门诊记录已保存`);
+        } catch (err) { if (err.message !== '未登录') alert('保存失败: ' + err.message); }
+    }
+
+    // 事务化保存接诊：挂号转门诊 / 更新门诊 + 收费 + 药房推送一次完成（服务端保证顺序写入）
+    async function saveClinicData() {
+        if(!editingOutpatientId) return alert('请先选择患者');
+        const p = dbRegistration.find(i=>i.id===editingOutpatientId);
+        const op = dbOutpatient.find(i=>i.id===editingOutpatientId);
+        const patientName = p ? p.name : (op ? op.name : '');
+        if(!patientName) return alert('患者信息缺失，请重新选择');
+
+        const patient = {
+            name: patientName,
+            gender: p ? p.gender : (op ? op.gender : ''),
+            age: p ? p.age : (op ? op.age : ''),
+            phone: p ? p.phone : (op ? op.phone : ''),
+            chief: document.getElementById('cf_chief')?.value || '',
+            history: document.getElementById('cf_history')?.value || '',
+            past: document.getElementById('cf_past')?.value || '',
+            allergy: document.getElementById('cf_allergy')?.value || '',
+            exam: document.getElementById('cf_exam')?.value || '',
+            tcm: document.getElementById('cf_tcm')?.value || '',
+            diagnosis: document.getElementById('cf_diagnosis')?.value || '',
+            syndrome: document.getElementById('cf_syndrome')?.value || '',
+            advice: document.getElementById('cf_advice')?.value || '',
+            visitType: document.getElementById('cf_visitType')?.value || '初诊',
+            feeType: document.getElementById('cf_feeType')?.value || '自费',
+        };
+
+        try {
+            const body = {
+                patient,
+                prescriptions: prescriptionTempList.map(d => ({
+                    name: d.name, qty: d.qty, price: d.price, subtotal: d.subtotal
+                }))
+            };
+            if (p) body.registrationId = p.id;
+            else if (op) body.outpatientId = op.id;
+
+            const res = await apiFetch(`${API_BASE}/visits/complete`, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify(body)
+            });
+            const result = await res.json();
+            const savedId = result.data ? result.data.id : editingOutpatientId;
+            await loadAllData();
+            currentPatientId = savedId;
+            editingOutpatientId = savedId;
+            const saved = dbOutpatient.find(i => i.id === savedId);
+            if (saved) {
+                renderClinicCenter(saved);
+                renderClinicHistory(saved);
+                renderClinicPatientList();
+            }
+            const drugTotal = prescriptionTempList.reduce((s,d)=>s+(Number(d.subtotal)||0), 0);
+            if (result.pharmacyPushed > 0) {
+                showToast(`接诊完成：门诊已保存，${result.pharmacyPushed} 条处方已推送药房，收费 ¥${(result.revenueAmount||0).toFixed(2)}`, 'success');
+            } else if (drugTotal > 0) {
+                showToast(`接诊完成：门诊已保存，收费 ¥${(result.revenueAmount||0).toFixed(2)}`, 'success');
+            } else {
+                showToast('接诊完成：门诊记录已保存', 'success');
+            }
+            prescriptionTempList = [];
+        } catch(err) { if(err.message!=='未登录') alert('保存失败: '+err.message); }
+    }
+
+    function printClinic() {
+        const p = [...dbRegistration, ...dbOutpatient].find(i=>i.id===editingOutpatientId);
+        if(!p) return;
+        const win = window.open('', '_blank');
+        win.document.write(`<html><head><title>病历打印 - ${esc(p.name)}</title></head><body style="font-family:sans-serif;padding:20px;">
+            <h2>愈康云诊所 - 病历记录</h2>
+            <hr><p><b>姓名：</b>${esc(p.name)} <b>性别：</b>${esc(p.gender||'-')} <b>年龄：</b>${esc(p.age||'-')} <b>日期：</b>${esc(p.opDate||p.date||'-')}</p>
+            <p><b>主诉：</b>${esc(document.getElementById('cf_chief')?.value||p.chief||'-')}</p>
+            <p><b>现病史：</b>${esc(document.getElementById('cf_history')?.value||p.history||'-')}</p>
+            <p><b>既往史：</b>${esc(document.getElementById('cf_past')?.value||'-')}</p>
+            <p><b>过敏史：</b>${esc(document.getElementById('cf_allergy')?.value||'-')}</p>
+            <p><b>体格检查：</b>${esc(document.getElementById('cf_exam')?.value||'-')}</p>
+            <p><b>望闻问切：</b>${esc(document.getElementById('cf_tcm')?.value||'-')}</p>
+            <p><b>诊断结果：</b>${esc(document.getElementById('cf_diagnosis')?.value||p.diagnosis||'-')}</p>
+            <p><b>辨证：</b>${esc(document.getElementById('cf_syndrome')?.value||'-')}</p>
+            <p><b>处方：</b>${esc(prescriptionTempList.map(d=>`${d.name} x${d.qty}`).join('， ')||'无')}</p>
+            <p><b>医嘱：</b>${esc(document.getElementById('cf_advice')?.value||'-')}</p>
+            <hr><p style="text-align:right;">医生签字：_____________</p>
+        </body></html>`);
+        win.document.close();
+        win.print();
+    }
+
+    async function saveTemplate() {
+        const name = prompt('请输入模板名称：');
+        if(!name) return;
+        try {
+            await apiFetch(`${API_BASE}/medicalTemplates`, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({
+                    name,
+                    chief: document.getElementById('cf_chief')?.value || '',
+                    history: document.getElementById('cf_history')?.value || '',
+                    diagnosis: document.getElementById('cf_diagnosis')?.value || '',
+                    advice: document.getElementById('cf_advice')?.value || ''
+                })
+            });
+            await loadAllData();
+            showToast('模板已保存');
+        } catch(err) { if(err.message!=='未登录') showToast(err.message || '保存失败', 'error'); }
+    }
+
+    async function loadTemplate() {
+        if(!dbMedicalTemplates.length) return alert('暂无模板');
+        const list = dbMedicalTemplates.map((t,i)=>`${i+1}. ${t.name}`).join('\n');
+        const idx = parseInt(prompt(`选择模板：\n${list}`))-1;
+        if(isNaN(idx) || idx<0 || idx>=dbMedicalTemplates.length) return;
+        const t = dbMedicalTemplates[idx];
+        if(document.getElementById('cf_chief')) document.getElementById('cf_chief').value = t.chief||'';
+        if(document.getElementById('cf_history')) document.getElementById('cf_history').value = t.history||'';
+        if(document.getElementById('cf_diagnosis')) document.getElementById('cf_diagnosis').value = t.diagnosis||'';
+        if(document.getElementById('cf_advice')) document.getElementById('cf_advice').value = t.advice||'';
+    }
+
+    function aiAssist() {
+        const p = [...dbRegistration, ...dbOutpatient].find(i=>i.id===editingOutpatientId);
+        if(!p) return alert('请先选择患者');
+        const chief = document.getElementById('cf_chief')?.value || p.chief || '';
+        if(!chief) return alert('请先填写患者主诉');
+        alert(`【AI辅助诊断参考】\n\n患者主诉：${chief}\n\n建议：\n1. 根据主诉症状，建议进一步检查确认\n2. 注意鉴别诊断\n3. 此功能为辅助参考，最终诊断请以医生判断为准`);
+    }
+
+    let statsPeriod = 'today';
+    let statsRange = '1m';
+    let statsData = null;
+    let trendData = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // 【本次需求新增】 完全重构统计侧边栏点击逻辑，移除旧业务统计标签
+        const statsSidebar = document.querySelector('.stats-sidebar');
+        if(statsSidebar) {
+            statsSidebar.addEventListener('click', e => {
+                const item = e.target.closest('.stats-menu-item');
+                if(!item) return;
+                statsSidebar.querySelectorAll('.stats-menu-item').forEach(m=>m.classList.remove('active'));
+                item.classList.add('active');
+                const menu = item.dataset.smenu;
+                
+                // 隐藏所有面板
+                document.querySelectorAll('.stab-panel').forEach(p => p.style.display = 'none');
+                if (menu === 'analysis') {
+                    document.getElementById('stab-analysis').style.display = 'block';
+                    loadOperationsData();
+                } else if (menu === 'inventory') {
+                    document.getElementById('stab-inventory').style.display = 'block';
+                    loadInventoryStats();
+                } else if (menu === 'revenue') {
+                    document.getElementById('stab-overview').style.display = 'block';
+                    document.querySelector('.stats-tab-bar .stats-tab.active')?.click();
+                } else {
+                    alert('该模块正在开发中');
+                    statsSidebar.querySelector('[data-smenu="revenue"]').classList.add('active');
+                }
+            });
+        }
+
+        // 顶部标签切换
+        document.querySelector('.stats-tab-bar')?.addEventListener('click', e => {
+            if(e.target.classList.contains('stats-tab')) {
+                document.querySelectorAll('.stats-tab').forEach(t=>t.classList.remove('active'));
+                e.target.classList.add('active');
+                const tab = e.target.dataset.stab;
+                document.querySelectorAll('.stab-panel').forEach(p => p.style.display = 'none');
+                const panel = document.getElementById('stab-'+tab);
+                if(panel) panel.style.display = 'block';
+                if(tab === 'detail') renderRevenueDetail();
+                if(tab === 'daily') renderRevenueDaily();
+                if(tab === 'project') renderProjectStats();
+            }
+            if(e.target.classList.contains('stats-tf-btn') && e.target.dataset.period) {
+                document.querySelectorAll('.stats-tab-bar .stats-tf-btn[data-period]').forEach(t=>t.classList.remove('active'));
+                e.target.classList.add('active');
+                statsPeriod = e.target.dataset.period;
+                loadStatsData();
+            }
+        });
+
+        // 折线图时间筛选
+        document.querySelectorAll('.stats-line-area .stats-tf-btn-group').forEach(group => {
+            group.addEventListener('click', e => {
+                if(e.target.classList.contains('stats-tf-btn')) {
+                    group.querySelectorAll('.stats-tf-btn').forEach(t=>t.classList.remove('active'));
+                    e.target.classList.add('active');
+                    statsRange = e.target.dataset.range;
+                    loadTrendData();
+                }
+            });
+        });
+    });
+
+    async function loadStatsData() {
+        try {
+            const resp = await apiFetch(`${API_BASE}/statistics/revenue?period=${statsPeriod}`);
+            statsData = await resp.json();
+            renderStatsCards();
+            renderStatsDonuts();
+            renderRevenueDetail();
+            renderRevenueDaily();
+        } catch(err) { console.error('统计加载失败:', err); }
+    }
+
+    function renderStatsCards() {
+        if(!statsData) return;
+        const cards = statsData.cards || [];
+        const ids = ['rc_total','rc_op','rc_retail','rc_reg','rc_opvisits','rc_retailcust','rc_opavg','rc_retailavg'];
+        cards.forEach((c, i) => {
+            const el = document.getElementById(ids[i]);
+            if(el) {
+                if(c.name.includes('价') || c.name.includes('收费')) el.innerText = '¥' + (c.value||0).toFixed(2);
+                else el.innerText = c.value || 0;
+            }
+        });
+        const periodLabel = statsData.label || '今天';
+        const periodEl = document.getElementById('rc_period');
+        if(periodEl) periodEl.innerText = periodLabel;
+        document.querySelectorAll('#revenueCards .stat-period').forEach(p => p.innerText = periodLabel);
+        const dateRange = statsData.dateRange || '';
+        ['donut1_date','donut2_date','donut3_date'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.innerText = dateRange;
+        });
+    }
+
+    function renderStatsDonuts() {
+        if(!statsData) return;
+        const charts = statsData.charts || {};
+        drawDonutWithTooltip('donutPay2', charts.payMethod || [], 'legendPay2', '支付方式');
+        drawDonutWithTooltip('donutFee2', charts.feeCategory || [], 'legendFee2', '费用分类');
+        drawDonutWithTooltip('donutDetail2', charts.detailCategory || [], 'legendDetail2', '明细分类');
+    }
+
+    function drawDonutWithTooltip(canvasId, data, legendId, title) {
+        const cvs = document.getElementById(canvasId);
+        if(!cvs) return;
+        const ctx = cvs.getContext('2d');
+        const size = 160;
+        cvs.width = size * 2; cvs.height = size * 2; cvs.style.width = size+'px'; cvs.style.height = size+'px';
+        ctx.scale(2, 2);
+        ctx.clearRect(0, 0, size, size);
+
+        if(!data.length) {
+            ctx.fillStyle = '#ccc'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText('暂无数据', size/2, size/2);
+            const legend = document.getElementById(legendId);
+            if(legend) legend.innerHTML = '<span style="color:#999;">暂无数据</span>';
+            return;
+        }
+
+        const colors = ['#00A388','#2F80ED','#27AE60','#F5A623','#9B51E0','#E5484D','#4DB6AC','#7986CB'];
+        const total = data.reduce((s,d) => s + (d.value||0), 0);
+        if(total === 0) {
+            const legend = document.getElementById(legendId);
+            if(legend) legend.innerHTML = '<span style="color:#999;">暂无数据</span>';
+            return;
+        }
+
+        let startAngle = -Math.PI / 2;
+        const cx = size/2, cy = size/2, outerR = 70, innerR = 38;
+        cvs._segments = [];
+
+        data.forEach((item, i) => {
+            const value = item.value || 0;
+            const angle = (value / total) * Math.PI * 2;
+            const endAngle = startAngle + angle;
+            const color = colors[i % colors.length];
+
+            ctx.beginPath();
+            ctx.arc(cx, cy, outerR, startAngle, endAngle);
+            ctx.arc(cx, cy, innerR, endAngle, startAngle, true);
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+
+            cvs._segments.push({ startAngle, endAngle, color, name: item.name, value, percent: (value/total*100).toFixed(1) });
+            startAngle = endAngle;
+        });
+
+        ctx.fillStyle = '#333'; ctx.font = 'bold 16px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('¥' + total.toFixed(0), cx, cy + 5);
+        ctx.fillStyle = '#999'; ctx.font = '10px sans-serif';
+        ctx.fillText(title, cx, cy + 20);
+
+        const legend = document.getElementById(legendId);
+        if(legend) {
+            legend.innerHTML = data.map((d, i) => {
+                const color = colors[i % colors.length];
+                const pct = total > 0 ? (d.value/total*100).toFixed(1) : 0;
+                return `<div class="legend-item" data-idx="${i}">
+                    <span class="legend-dot" style="background:${color}"></span>
+                    <span class="legend-name">${d.name}</span>
+                    <span class="legend-val">¥${(d.value||0).toFixed(2)} (${pct}%)</span>
+                </div>`;
+            }).join('');
+        }
+
+        if(!cvs._tooltipBound) {
+            cvs._tooltipBound = true;
+            cvs.addEventListener('mousemove', (e) => {
+                const rect = cvs.getBoundingClientRect();
+                const x = e.clientX - rect.left - size/2;
+                const y = e.clientY - rect.top - size/2;
+                const dist = Math.sqrt(x*x + y*y);
+                const tip = document.getElementById('chartTooltip');
+
+                if(dist >= innerR && dist <= outerR && cvs._segments) {
+                    let angle = Math.atan2(y, x);
+                    if(angle < -Math.PI/2) angle += Math.PI * 2;
+                    const seg = cvs._segments.find(s => angle >= s.startAngle && angle < s.endAngle);
+                    if(seg) {
+                        tip.style.display = 'block';
+                        tip.style.left = (e.clientX + 12) + 'px';
+                        tip.style.top = (e.clientY - 12) + 'px';
+                        tip.innerHTML = `<div class="tt-title"><span class="tt-dot" style="background:${seg.color}"></span>${seg.name}</div>
+                            <div class="tt-row"><span>金额</span><span>¥${seg.value.toFixed(2)}</span></div>
+                            <div class="tt-row"><span>占比</span><span>${seg.percent}%</span></div>`;
+                        return;
+                    }
+                }
+                tip.style.display = 'none';
+            });
+            cvs.addEventListener('mouseleave', () => {
+                document.getElementById('chartTooltip').style.display = 'none';
+            });
+        }
+    }
+
+    // 【本次需求新增】 运营分析数据获取与渲染
+    let opsData = null;
+    async function loadOperationsData() {
+        try {
+            const period = document.querySelector('#opTrendTabs span.active')?.dataset.operiod || 'week';
+            const resp = await apiFetch(`${API_BASE}/statistics/operations?period=${period}`);
+            const data = await resp.json();
+            if(data) {
+                opsData = data;
+                renderOperationsCards(data.cards);
+                drawOperationsChart(data.trend, data.period);
+                renderOperationsDaily();
+            }
+        } catch(err) { console.error('运营分析加载失败', err); }
+    }
+
+    function renderOperationsCards(cards) {
+        if(!cards) return;
+        const todayStr = new Date().toLocaleDateString('zh-CN');
+        document.getElementById('op_visitCount').innerText = cards.visitCount || 0;
+        document.getElementById('op_newPatients').innerText = cards.newPatients || 0;
+        document.getElementById('op_retailCount').innerText = cards.retailCount || 0;
+        document.getElementById('op_finishedVisits').innerText = cards.finishedVisits || 0;
+        ['op_date_1','op_date_2','op_date_3','op_date_4'].forEach(id => document.getElementById(id).innerText = todayStr);
+        const dateDisplay = document.getElementById('opDateDisplay');
+        if(dateDisplay) dateDisplay.innerText = todayStr;
+    }
+
+    // 运营日报表格
+    function renderOperationsDaily() {
+        const tb = document.getElementById('opDailyBody');
+        if(!tb) return;
+        const daily = (opsData && opsData.daily) || [];
+        if(!daily.length) {
+            tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;padding:15px;">暂无数据</td></tr>';
+            return;
+        }
+        tb.innerHTML = daily.slice().reverse().map(d => `
+            <tr><td>${esc(d.date)}</td><td>${d.visits||0}</td><td>${d.newPatients||0}</td><td>${d.retail||0}</td><td>${d.finished||0}</td></tr>
+        `).join('');
+    }
+
+    function drawOperationsChart(trend, periodLabel) {
+        const cvs = document.getElementById('operationsChart');
+        if(!cvs) return;
+        const ctx = cvs.getContext('2d');
+        const rect = cvs.getBoundingClientRect();
+        const w = rect.width, h = rect.height;
+        cvs.width = w * 2; cvs.height = h * 2; cvs.style.width = w+'px'; cvs.style.height = h+'px';
+        ctx.scale(2, 2);
+        ctx.clearRect(0, 0, w, h);
+
+        if(!trend || !trend.labels || !trend.labels.length) {
+            ctx.fillStyle = '#ccc'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText('暂无客流数据', w/2, h/2);
+            return;
+        }
+
+        const pad = { top: 20, right: 20, bottom: 30, left: 40 };
+        const cw = w - pad.left - pad.right, ch = h - pad.top - pad.bottom;
+        const maxVal = Math.max(...trend.visits, ...trend.finished, 1);
+        
+        const pointsVisit = trend.labels.map((l, i) => ({ x: pad.left + (cw / (trend.labels.length - 1 || 1)) * i, y: pad.top + ch - (trend.visits[i] / maxVal) * ch, val: trend.visits[i] }));
+        const pointsFinish = trend.labels.map((l, i) => ({ x: pad.left + (cw / (trend.labels.length - 1 || 1)) * i, y: pad.top + ch - (trend.finished[i] / maxVal) * ch, val: trend.finished[i] }));
+
+        ctx.strokeStyle = '#f0f0f0'; ctx.lineWidth = 1;
+        for(let i=0;i<=4;i++) {
+            const y = pad.top + (ch/4)*i;
+            ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
+            ctx.fillStyle = '#999'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+            ctx.fillText((maxVal - (maxVal/4)*i).toFixed(0), pad.left - 8, y + 3);
+        }
+
+        ctx.fillStyle = '#999'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+        const labelStep = Math.ceil(trend.labels.length / 6);
+        trend.labels.forEach((l, i) => {
+            if(i % labelStep === 0 || i === trend.labels.length - 1) {
+                const x = pad.left + (cw / (trend.labels.length - 1 || 1)) * i;
+                ctx.fillText(l, x, h - 10);
+            }
+        });
+
+        function drawLine(points, color) {
+            ctx.beginPath();
+            ctx.strokeStyle = color; ctx.lineWidth = 2;
+            points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+            ctx.stroke();
+            points.forEach(p => {
+                ctx.fillStyle = '#fff';
+                ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill();
+                ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+            });
+            ctx.beginPath();
+            points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+            ctx.lineTo(points[points.length-1].x, pad.top + ch);
+            ctx.lineTo(points[0].x, pad.top + ch);
+            ctx.closePath();
+            const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + ch);
+            grad.addColorStop(0, color + '40');
+            grad.addColorStop(1, color + '05');
+            ctx.fillStyle = grad; ctx.fill();
+        }
+
+        drawLine(pointsVisit, '#5cb79f');
+        drawLine(pointsFinish, '#3498db');
+        
+        cvs._data = { pointsVisit, pointsFinish, labels: trend.labels, color1: '#00A388', color2: '#2F80ED' };
+        if(!cvs._opBound) {
+            cvs._opBound = true;
+            cvs.addEventListener('mousemove', (e) => {
+                const rect = cvs.getBoundingClientRect();
+                const mx = e.clientX - rect.left;
+                const tip = document.getElementById('chartTooltip');
+                if(!cvs._data) { tip.style.display = 'none'; return; }
+                let nearest = null, minDist = Infinity;
+                [...cvs._data.pointsVisit, ...cvs._data.pointsFinish].forEach(p => {
+                    const d = Math.abs(p.x - mx);
+                    if(d < minDist) { minDist = d; nearest = p; }
+                });
+                if(nearest && minDist < 30) {
+                    const idx = cvs._data.pointsVisit.indexOf(nearest);
+                    const isVisit = idx !== -1;
+                    const actualIdx = isVisit ? idx : cvs._data.pointsFinish.indexOf(nearest);
+                    const visitVal = cvs._data.pointsVisit[actualIdx] ? cvs._data.pointsVisit[actualIdx].val : 0;
+                    const finishVal = cvs._data.pointsFinish[actualIdx] ? cvs._data.pointsFinish[actualIdx].val : 0;
+                    const dateLabel = cvs._data.labels[actualIdx] || '';
+
+                    tip.style.display = 'block';
+                    tip.style.left = (e.clientX + 12) + 'px';
+                    tip.style.top = (e.clientY - 30) + 'px';
+                    tip.innerHTML = `<div style="font-weight:bold;font-size:13px;margin-bottom:4px;">${dateLabel}</div>
+                        <div><span style="color:#00A388;">●</span> 到店 ${visitVal} 次</div>
+                        <div><span style="color:#2F80ED;">●</span> 完诊 ${finishVal} 次</div>`;
+                } else { tip.style.display = 'none'; }
+            });
+            cvs.addEventListener('mouseleave', () => { document.getElementById('chartTooltip').style.display = 'none'; });
+        }
+    }
+
+    // 【本次需求新增】 库存统计面板数据拉取与渲染
+    async function loadInventoryStats() {
+        try {
+            const resp = await apiFetch(`${API_BASE}/statistics/inventory-overview`);
+            const data = await resp.json();
+            if(!data.pieData) return;
+            // 渲染饼图
+            const cvs = document.getElementById('invPieChart');
+            const ctx = cvs.getContext('2d');
+            const size = 200;
+            cvs.width = size * 2; cvs.height = size * 2; cvs.style.width = size+'px'; cvs.style.height = size+'px';
+            ctx.scale(2, 2);
+            ctx.clearRect(0, 0, size, size);
+
+            const pieData = data.pieData;
+            const colors = ['#5cb79f', '#f1c40f', '#d32f2f', '#e67e00'];
+            let startAngle = -Math.PI / 2;
+            const total = pieData.reduce((s,d) => s + d.value, 0);
+            if(total === 0) {
+                ctx.fillStyle = '#ccc'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+                ctx.fillText('暂无库存数据', size/2, size/2);
+                return;
+            }
+            pieData.forEach((item, i) => {
+                const angle = (item.value / total) * Math.PI * 2;
+                ctx.beginPath();
+                ctx.moveTo(size/2, size/2);
+                ctx.arc(size/2, size/2, 70, startAngle, startAngle + angle);
+                ctx.closePath();
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.fill();
+                startAngle += angle;
+            });
+            // 图例
+            const legend = document.getElementById('invLegend');
+            legend.innerHTML = pieData.map((d, i) => `<div style="display:flex;justify-content:space-between;width:100%;padding:2px 0;"><span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${colors[i]};margin-right:6px;"></span>${d.name}</span><span>${d.value}种</span></div>`).join('');
+        } catch(err) { console.error('库存概览加载失败', err); }
+    }
+
+    async function loadTrendData() {
+        try {
+            const resp = await apiFetch(`${API_BASE}/statistics/trend?range=${statsRange}`);
+            trendData = await resp.json();
+            drawLineChart('revenueLineChart', trendData.revenue || [], '营业收费', '#5cb79f');
+            drawLineChart('visitsLineChart', trendData.visits || [], '收费人次', '#4DB6AC');
+        } catch(err) { console.error('趋势加载失败:', err); }
+    }
+
+    function drawLineChart(canvasId, dataArr, label, color) {
+        const cvs = document.getElementById(canvasId);
+        if(!cvs) return;
+        const ctx = cvs.getContext('2d');
+        const rect = cvs.getBoundingClientRect();
+        const w = rect.width, h = rect.height;
+        cvs.width = w * 2; cvs.height = h * 2; cvs.style.width = w+'px'; cvs.style.height = h+'px';
+        ctx.scale(2, 2);
+        ctx.clearRect(0, 0, w, h);
+
+        if(!dataArr.length) {
+            ctx.fillStyle = '#ccc'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText('暂无数据', w/2, h/2);
+            return;
+        }
+
+        const pad = { top: 20, right: 20, bottom: 30, left: 50 };
+        const cw = w - pad.left - pad.right, ch = h - pad.top - pad.bottom;
+        const values = dataArr.map(d => d.value);
+        const max = Math.max(...values, 1);
+        const minVal = Math.min(...values, 0);
+        const range = max - minVal || 1;
+
+        ctx.strokeStyle = '#f0f0f0'; ctx.lineWidth = 1;
+        for(let i = 0; i <= 4; i++) {
+            const y = pad.top + (ch/4)*i;
+            ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(w - pad.right, y); ctx.stroke();
+            ctx.fillStyle = '#999'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+            const val = max - (range/4)*i;
+            ctx.fillText(val.toFixed(0), pad.left - 8, y + 3);
+        }
+
+        const xStep = cw / Math.max(dataArr.length - 1, 1);
+        const labelStep = Math.ceil(dataArr.length / 6);
+        ctx.fillStyle = '#999'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+        dataArr.forEach((d, i) => {
+            if(i % labelStep === 0 || i === dataArr.length - 1) {
+                const x = pad.left + i * xStep;
+                const ds = d.date.split('/').slice(1).join('/');
+                ctx.fillText(ds, x, h - 10);
+            }
+        });
+
+        ctx.beginPath();
+        ctx.strokeStyle = color; ctx.lineWidth = 2;
+        const points = [];
+        dataArr.forEach((d, i) => {
+            const x = pad.left + i * xStep;
+            const y = pad.top + ch - ((d.value - minVal) / range) * ch;
+            points.push({ x, y, date: d.date, value: d.value });
+            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        ctx.beginPath();
+        points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+        ctx.lineTo(points[points.length-1].x, pad.top + ch);
+        ctx.lineTo(points[0].x, pad.top + ch);
+        ctx.closePath();
+        const grad = ctx.createLinearGradient(0, pad.top, 0, pad.top + ch);
+        grad.addColorStop(0, color + '30');
+        grad.addColorStop(1, color + '05');
+        ctx.fillStyle = grad; ctx.fill();
+
+        points.forEach(p => {
+            ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill();
+            ctx.strokeStyle = color; ctx.lineWidth = 2;
+            ctx.stroke();
+        });
+
+        cvs._points = points;
+        cvs._label = label;
+        cvs._color = color;
+
+        if(!cvs._lineTooltipBound) {
+            cvs._lineTooltipBound = true;
+            cvs.addEventListener('mousemove', (e) => {
+                const rect = cvs.getBoundingClientRect();
+                const mx = e.clientX - rect.left;
+                const tip = document.getElementById('chartTooltip');
+                if(!cvs._points || !cvs._points.length) { tip.style.display = 'none'; return; }
+
+                let nearest = null, minDist = Infinity;
+                cvs._points.forEach(p => {
+                    const d = Math.abs(p.x - mx);
+                    if(d < minDist) { minDist = d; nearest = p; }
+                });
+
+                if(nearest && minDist < 30) {
+                    tip.style.display = 'block';
+                    tip.style.left = (e.clientX + 12) + 'px';
+                    tip.style.top = (e.clientY - 30) + 'px';
+                    tip.innerHTML = `<div class="tt-title">${nearest.date}</div>
+                        <div class="tt-row"><span><span class="tt-dot" style="background:${cvs._color}"></span>${cvs._label}</span><span>${cvs._label.includes('收费') ? '¥' : ''}${nearest.value.toFixed(2)}</span></div>`;
+                } else {
+                    tip.style.display = 'none';
+                }
+            });
+            cvs.addEventListener('mouseleave', () => {
+                document.getElementById('chartTooltip').style.display = 'none';
+            });
+        }
+    }
+
+    function renderRevenueDetail() {
+        if(!statsData || !statsData.detailList) return;
+        const tb = document.getElementById('revenueDetailBody');
+        if(!tb) return;
+        const list = statsData.detailList;
+        if(!list.length) {
+            tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#999;padding:15px;">暂无数据</td></tr>';
+            return;
+        }
+        tb.innerHTML = list.map(r => `
+            <tr><td>${esc(r.date || '-')}</td><td>${esc(r.patient || '-')}</td><td>${esc(r.category || '-')}</td>
+            <td>${esc(r.payMethod || r.method || '-')}</td><td>¥${(r.amount||0).toFixed(2)}</td><td>${esc(r.desc || '-')}</td></tr>`).join('');
+    }
+
+    function renderRevenueDaily() {
+        if(!statsData || !statsData.detailList) return;
+        const tb = document.getElementById('revenueDailyBody');
+        if(!tb) return;
+        const dayMap = {};
+        statsData.detailList.forEach(r => {
+            const day = (r.date || '').split(' ')[0] || '未知';
+            if(!dayMap[day]) dayMap[day] = { total:0, op:0, retail:0, reg:0, count:0 };
+            dayMap[day].total += r.amount || 0;
+            if((r.desc||'').includes('门诊')) dayMap[day].op += r.amount || 0;
+            if((r.desc||'').includes('零售')) dayMap[day].retail += r.amount || 0;
+            if((r.desc||'').includes('挂号') || (r.desc||'').includes('预约')) dayMap[day].reg += r.amount || 0;
+            dayMap[day].count++;
+        });
+        const days = Object.keys(dayMap).sort().reverse();
+        if(!days.length) {
+            tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#999;padding:15px;">暂无数据</td></tr>';
+            return;
+        }
+        tb.innerHTML = days.map(d => `
+            <tr><td>${esc(d)}</td><td>¥${dayMap[d].total.toFixed(2)}</td><td>¥${dayMap[d].op.toFixed(2)}</td>
+            <td>¥${dayMap[d].retail.toFixed(2)}</td><td>¥${dayMap[d].reg.toFixed(2)}</td><td>${dayMap[d].count}</td></tr>`).join('');
+    }
+
+    function renderProjectStats() {
+        if(!statsData || !statsData.charts) return;
+        const area = document.getElementById('projectStatsArea');
+        if(!area) return;
+        const charts = statsData.charts;
+        const allItems = [...(charts.detailCategory || []), ...(charts.feeCategory || [])];
+        if(!allItems.length) {
+            area.innerHTML = '<div style="color:#999;">暂无数据</div>';
+            return;
+        }
+        const total = allItems.reduce((s,i)=>s+(i.value||0),0);
+        area.innerHTML = `<div class="stats-cards-row">` + allItems.map(item => `
+            <div class="stat-card">
+                <div class="stat-name">${esc(item.name)}</div>
+                <div class="stat-value">¥${(item.value||0).toFixed(2)}</div>
+                <div class="stat-period">占比 ${total>0?(item.value/total*100).toFixed(1):0}%</div>
+            </div>`).join('') + '</div>';
+    }
+
+    function updateStatistics() {
+        loadStatsData();
+        loadTrendData();
+    }
+
+    document.getElementById('pharmaSidebar').addEventListener('click', e => {
+        if(e.target.classList.contains('menu-item')) {
+            document.querySelectorAll('.pharma-sidebar .menu-item').forEach(m=>m.classList.remove('active'));
+            e.target.classList.add('active');
+            const menu = e.target.dataset.menu;
+            document.querySelectorAll('.pharma-panel').forEach(p => p.style.display = 'none');
+            document.getElementById(`pharma-panel-${menu}`).style.display = 'block';
+        }
+    });
+
+    document.getElementById('pharmaListTabs').addEventListener('click', e => {
+        if(e.target.tagName==='SPAN') {
+            document.querySelectorAll('#pharmaListTabs span').forEach(s=>s.classList.remove('active'));
+            e.target.classList.add('active');
+            renderPharmacyList();
+        }
+    });
+
+    document.getElementById('warningTabs').addEventListener('click', e => {
+        if(e.target.tagName==='SPAN') {
+            document.querySelectorAll('#warningTabs span').forEach(s=>s.classList.remove('active'));
+            e.target.classList.add('active');
+            const tab = e.target.dataset.wtab;
+            document.getElementById('warningExpiryPanel').style.display = tab==='expiry'?'block':'none';
+            document.getElementById('warningStockPanel').style.display = tab==='stock'?'block':'none';
+        }
+    });
+
+    // 【本次需求新增】 重写药房列表渲染逻辑，9列对齐与库存<=10黄字高亮
+    function renderPharmacyList() {
+        const active = document.querySelector('#pharmaListTabs span.active').dataset.tab;
+        let list = dbPharmacy;
+        if(active === 'pending') list = dbPharmacy.filter(p => p.status === '待发药');
+        else if(active === 'done') list = dbPharmacy.filter(p => p.status === '已发药');
+
+        const tb = document.getElementById('pharmacyBody');
+        if (active === 'all') {
+            if(!dbDrugInventory.length) { 
+                tb.innerHTML='<tr><td colspan="9" style="text-align:center;color:#999;padding:15px;">暂无库存数据</td></tr>'; 
+            } else {
+                tb.innerHTML = dbDrugInventory.map((d, idx) => `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td>${esc(d.code || '-')}</td>
+                        <td><b>${esc(d.name)}</b></td>
+                        <td>${esc(d.spec || '-')}</td>
+                        <td>${esc(d.manufacturer || d.supplier || '-')}</td>
+                        <td>${esc(d.category || '-')}</td>
+                        <td>¥${(d.price||0).toFixed(2)}</td>
+                        <td>¥${(d.costPrice||0).toFixed(2)}</td>
+                        <td style="color: ${Number(d.stock||0) <= 10 ? '#F5A623' : '#27AE60'}; font-weight:bold;">
+                            ${Number(d.stock||0) <= 10 ? '预警(库存不足)' : '正常'}
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        } else {
+            if(!list.length) { tb.innerHTML='<tr><td colspan="9" style="text-align:center;color:#999;padding:15px;">无记录</td></tr>'; }
+            else {
+                tb.innerHTML = list.map(p=>`
+                    <tr><td>-</td><td>-</td><td>${esc(p.drug)}</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+                    <td><span style="color:${p.status==='待发药'?'var(--orange)':'var(--green)'};">${esc(p.status)}</span>
+                    ${p.status==='待发药'?`<button class="op-btn" onclick="dispenseDrug(${p.id})">发药</button>`:''}</td></tr>
+                `).join('');
+            }
+        }
+        document.getElementById('pharma_wait').innerText = dbPharmacy.filter(p=>p.status==='待发药').length;
+    }
+
+    async function dispenseDrug(id) {
+        if(!confirm('确认发药？')) return;
+        try {
+            await apiFetch(`${API_BASE}/pharmacy/dispense/${id}`, {method:'POST'});
+            await loadAllData();
+            showToast('发药成功，库存已扣减');
+        } catch(err) { if(err.message!=='未登录') showToast(err.message || '发药失败', 'error'); }
+    }
+
+    async function addPharmacyItem() {
+        const patient=prompt('患者姓名：'); if(!patient) return;
+        const drug=prompt('药品名称：'); if(!drug) return;
+        const qty=parseFloat(prompt('数量：')); if(!qty || qty<=0) return alert('请输入有效数量');
+        try{ await apiFetch(`${API_BASE}/pharmacy`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({patient,drug,qty,status:'待发药',date:new Date().toLocaleString()})}); await loadAllData(); showToast('处方已添加'); }
+        catch(err){ if(err.message!=='未登录') showToast(err.message || '添加失败', 'error'); }
+    }
+
+    document.getElementById('excelFileInput').addEventListener('change', async function(e){
+        const file=e.target.files[0]; if(!file) return;
+        const reader=new FileReader();
+        reader.onload=async function(e){
+            try{
+                const data=new Uint8Array(e.target.result);
+                const wb=XLSX.read(data,{type:'array'});
+                const sheet=wb.Sheets[wb.SheetNames[0]];
+                const rows=XLSX.utils.sheet_to_json(sheet, {defval:''});
+                if(!rows.length){ alert('Excel文件中未检测到数据行'); return; }
+                // 列名自动映射关键字逻辑保持不变，见本次后端优化
+                const colMap = {
+                    name:      ['药名','名称','药品名称','品名','药品名','drug_name','name'],
+                    code:      ['药品编码','编码','code'],
+                    spec:      ['规格','spec'],
+                    unit:      ['包装单位','最小包装单位','单位','unit'],
+                    category:  ['类型','药品类型','分类','category'],
+                    manufacturer:['厂家','生产厂家','生产企业','manufacturer'],
+                    approvalNo:['批准文号','国药准字','approval'],
+                    price:     ['门店售价','零售价','售价','price','门店售价(拆零)'],
+                    costPrice: ['最近进价','进价','成本','cost'],
+                    stock:     ['当前库存','库存','stock','当前库存数(按大包装)'],
+                    expiry:    ['最近效期','效期','过期日期','expiry','有效期'],
+                    supplier:  ['最近供应商','供应商','supplier'],
+                    batchNo:   ['最近批次','批号','batchNo','批次']
+                };
+                const headers = Object.keys(rows[0]);
+                function findCol(names) {
+                    for (const n of names) {
+                        const found = headers.find(h => String(h).trim() === n || String(h).includes(n));
+                        if (found) return found;
+                    }
+                    return null;
+                }
+                const colIdx = {};
+                for (const [key, names] of Object.entries(colMap)) {
+                    colIdx[key] = findCol(names);
+                }
+                if(!colIdx.name){ alert('未找到药品名称列！请确认Excel包含"药名"或"名称"列。\n检测到的列：' + headers.join(', ')); return; }
+                const items = [];
+                for(const r of rows){
+                    const name = String(r[colIdx.name] || '').trim();
+                    if(!name || name === '药名' || name === '名称') continue;
+                    let stockVal = 0;
+                    if(colIdx.stock){
+                        const raw = String(r[colIdx.stock] || '0');
+                        const m = raw.match(/[\d.]+/);
+                        stockVal = m ? parseFloat(m[0]) : 0;
+                    }
+                    let priceVal = 0, costVal = 0;
+                    if(colIdx.price){
+                        const raw = String(r[colIdx.price] || '0');
+                        const m = raw.match(/[\d.]+/);
+                        priceVal = m ? parseFloat(m[0]) : 0;
+                    }
+                    if(colIdx.costPrice){
+                        const raw = String(r[colIdx.costPrice] || '0');
+                        const m = raw.match(/[\d.]+/);
+                        costVal = m ? parseFloat(m[0]) : 0;
+                    }
+                    items.push({
+                        name,
+                        code: colIdx.code ? String(r[colIdx.code] || '') : '',
+                        spec: colIdx.spec ? String(r[colIdx.spec] || '') : '',
+                        unit: colIdx.unit ? String(r[colIdx.unit] || '盒') : '盒',
+                        category: colIdx.category ? String(r[colIdx.category] || '') : '',
+                        manufacturer: colIdx.manufacturer ? String(r[colIdx.manufacturer] || '') : '',
+                        approvalNo: colIdx.approvalNo ? String(r[colIdx.approvalNo] || '') : '',
+                        price: priceVal,
+                        costPrice: costVal,
+                        stock: stockVal,
+                        expiry: colIdx.expiry ? String(r[colIdx.expiry] || '') : '',
+                        supplier: colIdx.supplier ? String(r[colIdx.supplier] || '') : '',
+                        batchNo: colIdx.batchNo ? String(r[colIdx.batchNo] || '') : ''
+                    });
+                }
+                if(!items.length){ alert('未解析到有效药品数据'); return; }
+                const resp = await apiFetch(`${API_BASE}/drug-inventory/batch-import`, {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body:JSON.stringify({ items })
+                });
+                const result = await resp.json();
+                if(result.success){
+                    await loadAllData();
+                    showToast(`导入成功！新增 ${result.added} 条，更新 ${result.updated} 条`);
+                } else { alert('导入失败：' + (result.error || '未知错误')); }
+            }catch(err){
+                console.error('导入异常:', err);
+                alert('导入异常：' + err.message);
+            }
+        };
+        reader.readAsArrayBuffer(file); e.target.value='';
+    });
+
+    function exportPharmacyData(){
+        if(dbDrugInventory && dbDrugInventory.length) {
+            const wsData = dbDrugInventory.map(d => ({
+                '药品名称': d.name || '', '编码': d.code || '', '规格': d.spec || '',
+                '单位': d.unit || '', '类型': d.category || '', '厂家': d.manufacturer || '',
+                '批准文号': d.approvalNo || '', '零售价': d.price || 0,
+                '最近进价': d.costPrice || 0, '当前库存': d.stock || 0,
+                '效期': d.expiry || '', '供应商': d.supplier || '', '批号': d.batchNo || ''
+            }));
+            const ws = XLSX.utils.json_to_sheet(wsData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '药品库存');
+            XLSX.writeFile(wb, `药品库存列表_${new Date().toISOString().split('T')[0]}.xlsx`);
+        } else if(dbPharmacy.length) {
+            const wsData = dbPharmacy.map(p => ({
+                '时间': p.date || '', '患者': p.patient || '', '药品': p.drug || '',
+                '数量': p.qty || 0, '状态': p.status || '', '来源': p.source || ''
+            }));
+            const ws = XLSX.utils.json_to_sheet(wsData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, '处方记录');
+            XLSX.writeFile(wb, `处方记录_${new Date().toISOString().split('T')[0]}.xlsx`);
+        } else { alert('暂无数据可导出'); }
+    }
+
+    function renderInventoryTables() {
+        const inTb = document.getElementById('inRecordBody');
+        if(dbDrugInRecords.length) {
+            inTb.innerHTML = dbDrugInRecords.map(r => `<tr>
+                <td>${esc(r.drugName)}</td><td>${esc(r.qty)}</td><td>${esc(r.batchNo||'-')}</td>
+                <td>${esc(r.expiry||'-')}</td><td>${esc(r.supplier||'-')}</td><td>¥${(r.cost||0).toFixed(2)}</td><td>${esc(r.date)}</td>
+            </tr>`).join('');
+        } else if(inTb) {
+            inTb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;">暂无记录</td></tr>';
+        }
+        const outTb = document.getElementById('outRecordBody');
+        if(dbDrugOutRecords.length) {
+            outTb.innerHTML = dbDrugOutRecords.map(r => `<tr>
+                <td>${esc(r.drugName)}</td><td>${esc(r.qty)}</td><td>${esc(r.patient||'-')}</td><td>${esc(r.type)}</td><td>${esc(r.date)}</td>
+            </tr>`).join('');
+        } else if(outTb) {
+            outTb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">暂无记录</td></tr>';
+        }
+        const expTb = document.getElementById('expiryBody');
+        const expiryList = (dashboardStats && dashboardStats.warnings && dashboardStats.warnings.expiryDrugs) || [];
+        if(expiryList.length) {
+            expTb.innerHTML = expiryList.map(d => `<tr>
+                <td>${esc(d.name)}</td><td>${esc(d.stock||d.quantity||0)}</td><td>${esc(d.batchNo||'-')}</td><td>${esc(d.expiry||'-')}</td>
+                <td><span class="badge expire">即将过期</span></td>
+            </tr>`).join('');
+        } else if(expTb) {
+            expTb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">暂无预警</td></tr>';
+        }
+        const stockTb = document.getElementById('lowStockBody');
+        const lowList = (dashboardStats && dashboardStats.warnings && dashboardStats.warnings.lowStockDrugs) || [];
+        if(lowList.length) {
+            stockTb.innerHTML = lowList.map(d => `<tr>
+                <td>${esc(d.name)}</td><td>${esc(d.stock||0)}</td><td>${esc(d.minStock||10)}</td><td>${esc(d.unit||'盒')}</td>
+                <td><span class="badge warn">库存不足</span></td>
+            </tr>`).join('');
+        } else if(stockTb) {
+            stockTb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">暂无预警</td></tr>';
+        }
+        const supTb = document.getElementById('supplierBody');
+        if(dbSuppliers.length) {
+            supTb.innerHTML = dbSuppliers.map(s => `<tr>
+                <td>${esc(s.name)}</td><td>${esc(s.contact||'-')}</td><td>${esc(s.phone||'-')}</td><td>${esc(s.address||'-')}</td>
+                <td><button class="op-btn danger" onclick="deleteSupplier(${s.id})">删除</button></td>
+            </tr>`).join('');
+        } else if(supTb) {
+            supTb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">暂无供应商</td></tr>';
+        }
+    }
+
+    function openStockInModal() {
+        ['si_drugName','si_qty','si_batchNo','si_expiry','si_supplier','si_cost','si_price'].forEach(id=>document.getElementById(id).value='');
+        document.getElementById('modalStockIn').style.display = 'flex';
+    }
+
+    async function saveStockIn() {
+        const drugName = document.getElementById('si_drugName').value.trim();
+        const qty = parseInt(document.getElementById('si_qty').value)||0;
+        if(!drugName||!qty||qty<=0) return alert('请填写药品名称和有效数量');
+        try {
+            await apiFetch(`${API_BASE}/drug-inventory/stock-in`, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({
+                    drugName, qty, unit: document.getElementById('si_unit').value,
+                    batchNo: document.getElementById('si_batchNo').value,
+                    expiry: document.getElementById('si_expiry').value,
+                    supplier: document.getElementById('si_supplier').value,
+                    cost: parseFloat(document.getElementById('si_cost').value)||0,
+                    price: parseFloat(document.getElementById('si_price').value)||0
+                })
+            });
+            document.getElementById('modalStockIn').style.display = 'none';
+            await loadAllData();
+            showToast('入库成功');
+        } catch(err) { if(err.message!=='未登录') showToast(err.message || '入库失败', 'error'); }
+    }
+
+    function openSupplierModal() {
+        ['sup_name','sup_contact','sup_phone','sup_address'].forEach(id=>document.getElementById(id).value='');
+        document.getElementById('modalSupplier').style.display = 'flex';
+    }
+
+    async function saveSupplier() {
+        const name = document.getElementById('sup_name').value.trim();
+        if(!name) return alert('请输入供应商名称');
+        try {
+            await apiFetch(`${API_BASE}/suppliers`, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({
+                    name, contact: document.getElementById('sup_contact').value,
+                    phone: document.getElementById('sup_phone').value,
+                    address: document.getElementById('sup_address').value
+                })
+            });
+            document.getElementById('modalSupplier').style.display = 'none';
+            await loadAllData();
+            showToast('供应商已保存');
+        } catch(err) { if(err.message!=='未登录') showToast(err.message || '保存失败', 'error'); }
+    }
+
+    async function deleteSupplier(id) {
+        if(!confirm('确定删除？')) return;
+        try { await apiFetch(`${API_BASE}/suppliers/${id}`, {method:'DELETE'}); await loadAllData(); showToast('供应商已删除'); }
+        catch(err) { if(err.message!=='未登录') showToast(err.message || '删除失败', 'error'); }
+    }
+
+    async function toggleSetting(key) {
+        const updated={...dbSettings,[key]:!dbSettings[key]};
+        try{
+            await apiFetch(`${API_BASE}/settings/1`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(updated)});
+            await loadAllData();
+            showToast(`已${updated[key]?'开启':'关闭'}`, updated[key] ? 'success' : 'warning');
+        }catch(err){ if(err.message!=='未登录') showToast(err.message || '保存失败', 'error'); }
+    }
+
+    function saveServerUrl() {
+        const url = document.getElementById('serverUrlInput').value.trim().replace(/\/+$/, '');
+        if(!url) return alert('地址不能为空');
+        localStorage.setItem('clinic_server_url', url);
+        alert('已保存！刷新页面后生效');
+        location.reload();
+    }
+
+    function copyMobileUrl() {
+        const url = document.getElementById('mobileAccessUrl').value;
+        if(!url || url === '获取中...') return alert('地址获取中，请稍候');
+        if(navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(()=>showToast('已复制：'+url));
+        } else {
+            const input = document.createElement('input');
+            input.value = url; document.body.appendChild(input); input.select();
+            document.execCommand('copy'); document.body.removeChild(input);
+            showToast('已复制：'+url);
+        }
+    }
+
+    // 【本次需求新增】 彻底修复日历双重高亮BUG，逻辑互斥
+    function toDateKey(d) {
+        if (!d) return null;
+        const m = String(d).match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+        if (m) return `${m[1]}/${String(+m[2]).padStart(2,'0')}/${String(+m[3]).padStart(2,'0')}`;
+        return null;
+    }
+    function renderCalendar(){
+        const grid=document.getElementById('calendarDays'); if(!grid) return;
+        grid.innerHTML='';
+        const first=new Date(calYear,calMonth-1,1).getDay();
+        const days=new Date(calYear,calMonth,0).getDate();
+        const todayStr=getTodayStr();
+        const todayDate = new Date();
+        const isCurrentMonth = (calYear===todayDate.getFullYear() && calMonth===todayDate.getMonth()+1);
+        const dates=new Set(dbRegistration.map(p=>toDateKey(p.date)));
+        const doctors = new Set([...dbRegistration, ...dbOutpatient].map(x => (x.doctor||'').trim()).filter(Boolean));
+        const dc = document.getElementById('doctorCount');
+        if(dc) dc.innerText = `约 ${doctors.size} 位`;
+        document.getElementById('calTitle').innerText=`${calYear}年 ${calMonth}月`;
+        for(let i=0;i<first;i++)grid.innerHTML+='<div class="day-cell"></div>';
+        for(let d=1;d<=days;d++){
+            const ds=formatDateStr(calYear,calMonth,d);
+            const hasData=dates.has(ds);
+            const isToday = isCurrentMonth && d === todayDate.getDate();
+            const isSelected=regCalFilter===ds;
+            let cls='day-cell';
+            if(isToday && !isSelected) cls+=' today'; // 仅当未被选中时，今日才高亮
+            if(isSelected) cls+=' selected'; // 选中时覆盖样式，移除今日高亮
+            else if(hasData && !isToday) cls+=' has-data';
+            grid.innerHTML+=`<div class="${cls}" onclick="selectCalDate('${ds}')">${d}</div>`;
+        }
+    }
+
+    function changeCalMonth(delta) {
+        let m = calMonth + delta;
+        let y = calYear;
+        if (m < 1) { m = 12; y--; }
+        else if (m > 12) { m = 1; y++; }
+        calYear = y;
+        calMonth = m;
+        renderCalendar();
+    }
+
+    function formatDateStr(year, month, day) {
+        return `${year}/${String(month).padStart(2,'0')}/${String(day).padStart(2,'0')}`;
+    }
+    function getTodayStr() {
+        const d = new Date();
+        return formatDateStr(d.getFullYear(), d.getMonth()+1, d.getDate());
+    }
+
+    function selectCalDate(dateStr) {
+        if (regCalFilter === dateStr) { regCalFilter = null; } else { regCalFilter = dateStr; }
+        renderRegTable();
+        renderCalendar();
+    }
+
+    document.getElementById('mainNav').addEventListener('click', e=>{
+        if(e.target.tagName==='SPAN' && e.target.dataset.target) gotoPage(e.target.dataset.target);
+    });
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const input = document.getElementById('serverUrlInput');
+        if(input) input.value = window.location.origin;
+
+        // 运营图表切换监听
+        document.querySelector('#opTrendTabs')?.addEventListener('click', function(e) {
+            if(e.target.tagName === 'SPAN') {
+                this.querySelectorAll('span').forEach(t=>t.classList.remove('active'));
+                e.target.classList.add('active');
+                loadOperationsData();
+            }
+        });
+
+        // 运营概况 / 运营日报 切换
+        document.querySelectorAll('.op-tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.op-tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const isSummary = btn.dataset.opstab === 'summary';
+                document.getElementById('op-summary-panel').style.display = isSummary ? 'block' : 'none';
+                document.getElementById('op-daily-panel').style.display = isSummary ? 'none' : 'block';
+                if (!isSummary) renderOperationsDaily();
+            });
+        });
+
+        const accessUrl = document.getElementById('currentAccessUrl');
+        const mobileUrl = document.getElementById('mobileAccessUrl');
+        const mobileQR = document.getElementById('mobileQRCode');
+
+        function isLocalhost(url) { return !url || url.includes('localhost') || url.includes('127.0.0.1'); }
+        function isValidUrl(url) { return url && url.startsWith('http') && !url.includes('获取失败') && !url.includes('请用'); }
+        function updateMobileAccess(url, isFallback) {
+            if(accessUrl) accessUrl.innerText = url;
+            if(mobileUrl) {
+                mobileUrl.value = url; mobileUrl.style.color = isFallback ? '#e67e00' : '#333';
+            }
+            if(mobileQR && isValidUrl(url) && !isLocalhost(url)) {
+                mobileQR.src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(url)}`;
+            }
+        }
+
+        function fetchLanUrl() {
+            if(mobileUrl) {
+                mobileUrl.value = '获取中...';
+                mobileUrl.style.color = '#999';
+            }
+            const apiUrl = window.location.origin + "/api/server-info";
+            console.log("[前端] 请求:", apiUrl);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
+            fetch(apiUrl, {
+                signal: controller.signal,
+                headers: { 'x-auth-token': authToken }
+            })
+                .then(resp => {
+                    clearTimeout(timeoutId);
+                    console.log("[前端] 响应状态:", resp.status);
+                    if(!resp.ok) throw new Error('HTTP ' + resp.status);
+                    return resp.json();
+                })
+                .then(data => {
+                    console.log("[前端] 返回数据:", data);
+                    const url = data.pcLanUrl;
+                    if(url && !isLocalhost(url)) {
+                        updateMobileAccess(url, false);
+                    } else {
+                        const origin = window.location.origin;
+                        if(!isLocalhost(origin)) {
+                            updateMobileAccess(origin, true);
+                        } else {
+                            showManualInput();
+                        }
+                    }
+                })
+                .catch(err => {
+                    clearTimeout(timeoutId);
+                    console.error("[前端] 获取失败:", err);
+                    const origin = window.location.origin;
+                    if(!isLocalhost(origin)) {
+                        updateMobileAccess(origin, true);
+                    } else {
+                        showManualInput();
+                    }
+                });
+        }
+
+        function showManualInput() {
+            if(accessUrl) accessUrl.innerHTML = '请手动输入电脑局域网IP，格式如：<b>http://192.168.1.100:3002</b>';
+            if(mobileUrl) {
+                mobileUrl.value = '';
+                mobileUrl.placeholder = 'http://192.168.x.x:3002';
+                mobileUrl.style.color = '#e67e00';
+                mobileUrl.readOnly = false;
+                mobileUrl.style.background = '#fff';
+            }
+            const btnContainer = mobileUrl.parentElement;
+            if(!document.getElementById('manualConfirmBtn')) {
+                const confirmBtn = document.createElement('button');
+                confirmBtn.id = 'manualConfirmBtn';
+                confirmBtn.className = 'copy-btn';
+                confirmBtn.innerHTML = '<i class="fas fa-check"></i> 确认';
+                confirmBtn.onclick = function() {
+                    const val = mobileUrl.value.trim();
+                    if(val && val.startsWith('http')) {
+                        updateMobileAccess(val, false);
+                        mobileUrl.readOnly = true;
+                        mobileUrl.style.background = '#f5f5f5';
+                        confirmBtn.remove();
+                    } else {
+                        alert('请输入正确的地址，如 http://192.168.1.100:3002');
+                    }
+                };
+                btnContainer.appendChild(confirmBtn);
+            }
+        }
+
+        fetchLanUrl();
+        window.refreshMobileAccess = fetchLanUrl;
+        document.getElementById('currentUsername').innerText = currentUser;
+        loadAllData();
+    });
+    </script>
+</body>
+</html>

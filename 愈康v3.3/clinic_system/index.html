@@ -448,6 +448,41 @@
             .main-wrapper { padding: 12px 10px; }
         }
     </style>
+<style>
+/* ===== v3.2 新增样式 ===== */
+.drug-name { cursor: pointer; border-bottom: 1px dashed #bbb; }
+#drugTooltip { position: fixed; z-index: 99999; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 8px 28px rgba(0,0,0,.14); max-width: 430px; max-height: 82vh; overflow-y: auto; font-size: 12px; display: none; pointer-events: none; }
+.patient-search-box { display: flex; gap: 8px; margin-bottom: 10px; }
+.patient-layout { display: grid; grid-template-columns: 300px 1fr; gap: 14px; }
+@media (max-width: 860px) { .patient-layout { grid-template-columns: 1fr; } }
+.patient-profile-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+.visit-item { border: 1px solid #f0f0f0; border-radius: 8px; padding: 10px; margin-bottom: 8px; background: #fbfcfc; }
+.visit-item .date { font-size: 12px; color: var(--primary); font-weight: bold; }
+.kb-toolbar { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
+.check-input { width: 70px; padding: 4px; border: 1px solid #ddd; border-radius: 4px; text-align: center; }
+.ai-suggest-row { border: 1px solid #eef2f5; border-radius: 8px; padding: 10px; margin-bottom: 8px; background: #fbfdff; }
+.ai-suggest-row .rx-name { font-weight: bold; color: var(--primary); }
+.ai-warn { background: #fff6e6; border: 1px solid #ffe1a8; border-radius: 8px; padding: 8px 10px; font-size: 12px; color: #8a5b00; margin-bottom: 8px; }
+.ai-risk { background: #fdeeee; border: 1px solid #f5c2c2; border-radius: 8px; padding: 8px 10px; font-size: 12px; color: #a02b2b; margin-bottom: 8px; }
+.ai-info { background: #eef7f4; border: 1px solid #c9e8df; border-radius: 8px; padding: 8px 10px; font-size: 12px; color: #1f6f5e; margin-bottom: 8px; }
+.bar-chart { display: flex; align-items: flex-end; gap: 2px; height: 150px; }
+.bar-chart .bar { flex: 1; background: linear-gradient(180deg,#5cb79f,#2f9d83); border-radius: 3px 3px 0 0; min-width: 2px; }
+.bar-chart .bar:hover { opacity: .8; }
+.bar-chart-wrap { overflow-x: auto; padding-top: 10px; }
+.kb-field label { display: block; font-size: 11px; color: #999; margin: 8px 0 3px; }
+.kb-field input, .kb-field textarea, .kb-field select { width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 5px; font-size: 13px; box-sizing: border-box; }
+.margin-low { color: #E5484D; font-weight: bold; }
+.rx-suggest-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+/* 【v3.3】 病历输入智能联想弹窗 */
+.record-term-popup { position: fixed; z-index: 9999; background: #fff; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.12); flex-direction: column; overflow: hidden; }
+.record-term-tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 8px; border-bottom: 1px solid #eee; background: #fafafa; }
+.record-term-tab { padding: 3px 10px; border-radius: 12px; font-size: 12px; color: #666; cursor: pointer; background: #f0f0f0; }
+.record-term-tab.active { background: var(--primary); color: #fff; font-weight: 600; }
+.record-term-body { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; }
+.record-term-item { padding: 4px 10px; border: 1px solid #dde5ea; border-radius: 14px; font-size: 12px; color: #333; cursor: pointer; background: #f8fbfc; }
+.record-term-item:hover { border-color: var(--primary); color: var(--primary); background: #eefaf7; }
+.record-term-footer { padding: 8px; border-top: 1px solid #eee; text-align: center; background: #fff; }
+</style>
 </head>
 <body>
     <div class="loading-toast" id="loadingToast">同步中...</div>
@@ -462,8 +497,8 @@
         </div>
         <div class="header-nav" id="mainNav">
             <span class="active" data-target="page-home">首页</span>
-            <span data-target="page-registration">挂号</span>
             <span data-target="page-outpatient">门诊</span>
+            <span data-target="page-patients">患者</span>
             <span data-target="page-statistics">统计</span>
             <span data-target="page-pharmacy">药房</span>
             <span data-target="page-settings">设置</span>
@@ -477,10 +512,6 @@
     <div class="main-wrapper">
         <div id="page-home" class="page-content active">
             <div class="quick-actions">
-                <div class="quick-action" onclick="openAddRegModal()">
-                    <span class="qa-icon" style="background:linear-gradient(135deg,#00A388,#00C2A2);"><i class="fas fa-calendar-plus"></i></span>
-                    <span class="qa-text"><span class="qa-title">快速挂号</span><span class="qa-desc">新建患者挂号</span></span>
-                </div>
                 <div class="quick-action" onclick="openDirectAddModal()">
                     <span class="qa-icon" style="background:linear-gradient(135deg,#2F80ED,#5BA0F5);"><i class="fas fa-user-plus"></i></span>
                     <span class="qa-text"><span class="qa-title">快速接诊</span><span class="qa-desc">新建门诊记录</span></span>
@@ -496,14 +527,6 @@
             </div>
             <div class="section-title">今日数据</div>
             <div class="kpi-grid">
-                <div class="kpi-card clickable" data-target="page-registration" onclick="gotoPage(this.dataset.target)">
-                    <div class="kpi-icon ic-primary"><i class="fas fa-clipboard-list"></i></div>
-                    <div class="kpi-label">挂号数</div><div class="num" id="dash_reg">0</div>
-                </div>
-                <div class="kpi-card clickable" data-target="page-outpatient" onclick="gotoPage(this.dataset.target)">
-                    <div class="kpi-icon ic-orange"><i class="fas fa-hourglass-half"></i></div>
-                    <div class="kpi-label">待接诊</div><div class="num" id="dash_wait">0</div>
-                </div>
                 <div class="kpi-card clickable" data-target="page-outpatient" onclick="gotoPage(this.dataset.target)">
                     <div class="kpi-icon ic-green"><i class="fas fa-user-check"></i></div>
                     <div class="kpi-label">门诊量</div><div class="num" id="dash_visits">0</div>
@@ -512,17 +535,13 @@
                     <div class="kpi-icon ic-blue"><i class="fas fa-file-invoice-dollar"></i></div>
                     <div class="kpi-label">待收费</div><div class="num" id="dash_bill">0</div>
                 </div>
-                <div class="kpi-card alert clickable" data-target="page-pharmacy" onclick="gotoPage('page-pharmacy',{pharmaMenu:'list'})">
+                <div class="kpi-card alert clickable" data-target="page-pharmacy" onclick="gotoPage('page-pharmacy',{pharmaMenu:'outbound'})">
                     <div class="kpi-icon ic-orange"><i class="fas fa-pills"></i></div>
                     <div class="kpi-label">待发药</div><div class="num" id="dash_med">0</div>
                 </div>
                 <div class="kpi-card warn clickable" data-target="page-pharmacy" onclick="gotoPage('page-pharmacy',{pharmaMenu:'warning'})">
                     <div class="kpi-icon ic-red"><i class="fas fa-calendar-times"></i></div>
                     <div class="kpi-label">效期预警</div><div class="num" id="dash_expiry">0</div>
-                </div>
-                <div class="kpi-card clickable" data-target="page-registration" onclick="gotoPage(this.dataset.target)">
-                    <div class="kpi-icon ic-purple"><i class="fas fa-calendar-check"></i></div>
-                    <div class="kpi-label">预约数</div><div class="num" id="dash_appt">0</div>
                 </div>
                 <div class="kpi-card clickable" data-target="page-outpatient" onclick="gotoPage(this.dataset.target)">
                     <div class="kpi-icon ic-green"><i class="fas fa-user-md"></i></div>
@@ -536,7 +555,7 @@
                     <div class="kpi-icon ic-primary"><i class="fas fa-yen-sign"></i></div>
                     <div class="kpi-label">已收费</div><div class="num" id="dash_billed">0</div>
                 </div>
-                <div class="kpi-card clickable" data-target="page-pharmacy" onclick="gotoPage('page-pharmacy',{pharmaMenu:'list'})">
+                <div class="kpi-card clickable" data-target="page-pharmacy" onclick="gotoPage('page-pharmacy',{pharmaMenu:'outbound'})">
                     <div class="kpi-icon ic-green"><i class="fas fa-check-circle"></i></div>
                     <div class="kpi-label">已发药</div><div class="num" id="dash_dispensed">0</div>
                 </div>
@@ -559,7 +578,6 @@
                     <div class="rev-card"><div class="icon" style="background:#e2f5ef; color:var(--primary);"><i class="fas fa-yen-sign"></i></div><div class="info"><div class="label">营业收费</div><div class="value" id="rev_total">¥0.00</div></div></div>
                     <div class="rev-card"><div class="icon" style="background:#e8f4fd; color:#2196f3;"><i class="fas fa-stethoscope"></i></div><div class="info"><div class="label">门诊收费</div><div class="value" id="rev_outpatient">¥0.00</div></div></div>
                     <div class="rev-card"><div class="icon" style="background:#fff4e6; color:#e67e00;"><i class="fas fa-shopping-bag"></i></div><div class="info"><div class="label">零售收费</div><div class="value" id="rev_retail">¥0.00</div></div></div>
-                    <div class="rev-card"><div class="icon" style="background:#f3e8fd; color:#9c27b0;"><i class="fas fa-calendar-check"></i></div><div class="info"><div class="label">挂号预约收费</div><div class="value" id="rev_reg">¥0.00</div></div></div>
                     <div class="rev-card"><div class="icon" style="background:#e2f5ef; color:var(--primary);"><i class="fas fa-users"></i></div><div class="info"><div class="label">门诊诊量</div><div class="value" id="rev_opcount">0</div></div></div>
                     <div class="rev-card"><div class="icon" style="background:#fff4e6; color:#e67e00;"><i class="fas fa-user-tag"></i></div><div class="info"><div class="label">零售客量</div><div class="value" id="rev_retailcount">0</div></div></div>
                     <div class="rev-card"><div class="icon" style="background:#e8f4fd; color:#2196f3;"><i class="fas fa-calculator"></i></div><div class="info"><div class="label">门诊客单价</div><div class="value" id="rev_opavg">¥0.00</div></div></div>
@@ -592,49 +610,12 @@
             </div>
         </div>
 
-        <div id="page-registration" class="page-content">
-            <div class="two-column">
-                <div class="left-panel">
-                    <div class="calendar-wrapper">
-                        <div class="calendar-header">
-                            <button onclick="changeCalMonth(-1)"><i class="fas fa-chevron-left"></i></button>
-                            <span id="calTitle">-</span>
-                            <button onclick="changeCalMonth(1)"><i class="fas fa-chevron-right"></i></button>
-                        </div>
-                        <div class="weekdays"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
-                        <div class="days-grid" id="calendarDays"></div>
-                        <div style="margin-top:4px; font-size:11px; color:#999;">*绿色底色代表有挂号，绿色高亮为今天</div>
-                        <div class="doctor-block"><span><i class="fas fa-user-md"></i> 全部医生</span><div><span id="doctorCount" style="font-size:11px; background:rgba(255,255,255,0.3); padding:2px 6px; border-radius:10px;">约 0 位</span></div></div>
-                    </div>
-                </div>
-                <div class="right-panel">
-                    <div class="card">
-                        <div style="font-weight:bold; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
-                            <span>挂号详情</span>
-                            <button onclick="openAddRegModal()" class="btn-primary"><i class="fas fa-plus"></i> 新建</button>
-                        </div>
-                        <div class="cal-filter-bar" id="regFilterBar" style="display:none;">
-                            <span id="regFilterText">-</span>
-                            <span class="clear-btn" onclick="clearRegFilter()">清除筛选 ✕</span>
-                        </div>
-                        <div style="overflow-x:auto;">
-                            <table class="table-mock">
-                                <thead><tr><th>姓名</th><th>性别</th><th>年龄</th><th>电话</th><th>日期</th><th>状态</th><th>操作</th></tr></thead>
-                                <tbody id="regListContainer"><tr><td colspan="7" style="text-align:center;color:#999;">暂无记录</td></tr></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div id="page-outpatient" class="page-content">
             <div class="clinic-three-col">
                 <div class="clinic-left">
                     <div style="font-weight:bold; margin-bottom:8px; font-size:13px;">患者列表</div>
                     <div class="filter-tabs" id="opFilterTabs">
                         <span class="active" data-filter="all">全部</span>
-                        <span data-filter="pending">待诊</span>
                         <span data-filter="done">已诊</span>
                     </div>
                     <div id="clinicPatientList" style="flex:1; overflow-y:auto;"></div>
@@ -656,6 +637,25 @@
             </div>
         </div>
 
+        <div id="page-patients" class="page-content">
+            <div class="patient-search-box">
+                <input type="text" id="patientSearchInput" class="server-input" style="flex:1; width:auto;" placeholder="按姓名或电话搜索患者档案…" oninput="patientSearch=this.value; renderPatientPage();">
+                <button class="btn-primary" onclick="syncPatientProfiles()"><i class="fas fa-sync"></i> 同步历史档案</button>
+            </div>
+            <div class="patient-layout">
+                <div>
+                    <div style="font-weight:bold; margin-bottom:8px; font-size:13px;">患者列表（<span id="patientCount">0</span>）</div>
+                    <div id="patientList" style="max-height:70vh; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:6px; background:#fff;"></div>
+                </div>
+                <div id="patientProfileArea">
+                    <div style="text-align:center; color:#999; padding:60px 0;">
+                        <i class="fas fa-address-book" style="font-size:40px; opacity:0.3;"></i>
+                        <div style="margin-top:10px;">选择左侧患者查看档案与历次就诊记录</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="page-statistics" class="page-content">
             <div class="stats-layout">
                 <div class="stats-sidebar">
@@ -663,6 +663,7 @@
                     <!-- 【本次需求新增】 删除了原有的业绩统计标签，新增库存统计与运营分析 -->
                     <div class="stats-menu-item" data-smenu="inventory"><i class="fas fa-boxes"></i> 库存统计</div>
                     <div class="stats-menu-item" data-smenu="analysis"><i class="fas fa-chart-pie"></i> 运营分析</div>
+                    <div class="stats-menu-item" data-smenu="enhanced"><i class="fas fa-pills"></i> 处方分析</div>
                 </div>
                 <div class="stats-main">
                     <div class="stats-tab-bar">
@@ -683,7 +684,6 @@
                             <div class="stat-card"><div class="stat-name">营业收费</div><div class="stat-value" id="rc_total">¥0.00</div><div class="stat-period" id="rc_period">今天</div></div>
                             <div class="stat-card"><div class="stat-name">门诊收费</div><div class="stat-value" id="rc_op">¥0.00</div><div class="stat-period">今天</div></div>
                             <div class="stat-card"><div class="stat-name">零售收费</div><div class="stat-value" id="rc_retail">¥0.00</div><div class="stat-period">今天</div></div>
-                            <div class="stat-card"><div class="stat-name">挂号预约</div><div class="stat-value" id="rc_reg">¥0.00</div><div class="stat-period">今天</div></div>
                             <div class="stat-card"><div class="stat-name">门诊诊量</div><div class="stat-value" id="rc_opvisits">0</div><div class="stat-period">今天</div></div>
                             <div class="stat-card"><div class="stat-name">零售客量</div><div class="stat-value" id="rc_retailcust">0</div><div class="stat-period">今天</div></div>
                             <div class="stat-card"><div class="stat-name">门诊客单价</div><div class="stat-value" id="rc_opavg">¥0.00</div><div class="stat-period">今天</div></div>
@@ -750,7 +750,7 @@
                     <div id="stab-daily" class="stab-panel" style="display:none;">
                         <div style="overflow-x:auto;">
                             <table class="table-mock">
-                                <thead><tr><th>日期</th><th>收费总额</th><th>门诊收费</th><th>零售收费</th><th>挂号收费</th><th>人次</th></tr></thead>
+                                <thead><tr><th>日期</th><th>收费总额</th><th>门诊收费</th><th>零售收费</th><th>人次</th></tr></thead>
                                 <tbody id="revenueDailyBody"><tr><td colspan="6" style="text-align:center;color:#999;padding:15px;">暂无数据</td></tr></tbody>
                             </table>
                         </div>
@@ -835,6 +835,25 @@
                     <div id="stab-project" class="stab-panel" style="display:none;">
                         <div id="projectStatsArea" style="padding:20px; text-align:center; color:#999;">选择时间范围后显示项目统计</div>
                     </div>
+                    <div id="stab-enhanced" class="stab-panel" style="display:none;">
+                        <div class="stats-cards-row" id="enhancedCards">
+                            <div class="stat-card"><div class="stat-name">处方量</div><div class="stat-value" id="en_rxTotal">0</div><div class="stat-period" id="en_range">近一月</div></div>
+                            <div class="stat-card"><div class="stat-name">药品毛利</div><div class="stat-value" id="en_gross">¥0.00</div><div class="stat-period">区间累计</div></div>
+                            <div class="stat-card"><div class="stat-name">就诊患者</div><div class="stat-value" id="en_patients">0</div><div class="stat-period">去重人数</div></div>
+                            <div class="stat-card"><div class="stat-name">复诊率</div><div class="stat-value" id="en_revisit">0%</div><div class="stat-period">就诊≥2次占比</div></div>
+                        </div>
+                        <div class="chart-card" style="margin-top:12px;">
+                            <div class="chart-header">
+                                <span>处方量趋势</span>
+                                <div class="stats-tf-btn-group" id="enRangeTabs">
+                                    <span class="stats-tf-btn active" data-range="1m">近一月</span>
+                                    <span class="stats-tf-btn" data-range="3m">近三月</span>
+                                    <span class="stats-tf-btn" data-range="6m">近半年</span>
+                                </div>
+                            </div>
+                            <div class="bar-chart-wrap"><div class="bar-chart" id="enBarChart"></div></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -846,12 +865,14 @@
                     <div class="menu-item" data-menu="inbound">入库记录</div>
                     <div class="menu-item" data-menu="outbound">出库记录</div>
                     <div class="menu-item" data-menu="warning">效期/库存预警</div>
+                    <div class="menu-item" data-menu="check">库存盘点</div>
+                    <div class="menu-item" data-menu="knowledge">药典知识库</div>
                     <div class="menu-item" data-menu="suppliers">供应商管理</div>
                 </div>
                 <div class="pharma-main">
                     <div id="pharma-panel-list" class="pharma-panel">
                         <div class="section-title">
-                            <span>药房管理 <small style="font-weight:normal; font-size:12px; color:#666;">待发药: <b id="pharma_wait">0</b> 单</small></span>
+                            <span>药品列表</span>
                             <div class="pharmacy-toolbar">
                                 <input type="file" id="excelFileInput" accept=".xlsx, .xls">
                                 <button onclick="document.getElementById('excelFileInput').click()"><i class="fas fa-file-import"></i> 导入</button>
@@ -860,27 +881,19 @@
                             </div>
                         </div>
                         <div class="pharma-tabs" id="pharmaListTabs">
-                            <span class="active" data-tab="pending">待发药</span>
-                            <span data-tab="done">已发药</span>
-                            <span data-tab="all">全部</span>
+                            <span class="active" data-tab="items">物品列表</span>
+                            <span data-tab="stock">库存列表</span>
                         </div>
-                        <!-- 【本次需求新增】 重写药房表头，固定9列 -->
-                        <div style="overflow-x:auto;">
+                        <div id="pharmaTabItems" style="overflow-x:auto;">
                             <table class="table-mock">
-                                <thead>
-                                    <tr>
-                                        <th>序号</th>
-                                        <th>编码</th>
-                                        <th>药品名称</th>
-                                        <th>规格</th>
-                                        <th>生产厂家</th>
-                                        <th>药品类型</th>
-                                        <th>零售价</th>
-                                        <th>最近进价</th>
-                                        <th>库存预警</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="pharmacyBody"><tr><td colspan="9" style="text-align:center;color:#999;padding:15px;">加载中...</td></tr></tbody>
+                                <thead><tr><th>序号</th><th>编码</th><th>名称</th><th>规格</th><th>厂家</th><th>类型</th><th>零售价</th><th>进价</th><th>库存</th><th>库存成本</th><th>毛利率</th></tr></thead>
+                                <tbody id="pharmacyItemBody"><tr><td colspan="11" style="text-align:center;color:#999;padding:15px;">加载中...</td></tr></tbody>
+                            </table>
+                        </div>
+                        <div id="pharmaTabStock" style="overflow-x:auto; display:none;">
+                            <table class="table-mock">
+                                <thead><tr><th>序号</th><th>编码</th><th>名称</th><th>类型</th><th>规格单位</th><th>厂家</th><th>国药准字</th><th>生产批号</th><th>生产日期</th><th>有效期</th><th>批次</th><th>库存</th><th>供货单位</th><th>进货价格</th><th>购进日期</th><th>销售价格</th></tr></thead>
+                                <tbody id="pharmacyStockBody"><tr><td colspan="16" style="text-align:center;color:#999;padding:15px;">暂无数据</td></tr></tbody>
                             </table>
                         </div>
                     </div>
@@ -897,7 +910,17 @@
                         </div>
                     </div>
                     <div id="pharma-panel-outbound" class="pharma-panel" style="display:none;">
-                        <div class="section-title"><span>出库记录</span></div>
+                        <div class="section-title">
+                            <span>出库记录 <small style="font-weight:normal; font-size:12px; color:#666;">待发药: <b id="pharma_wait">0</b> 单</small></span>
+                        </div>
+                        <div style="font-weight:bold; margin:10px 0 6px; font-size:13px;">待发药</div>
+                        <div style="overflow-x:auto;">
+                            <table class="table-mock">
+                                <thead><tr><th>患者</th><th>药品</th><th>数量</th><th>时间</th><th>状态</th><th>操作</th></tr></thead>
+                                <tbody id="pendingDispenseBody"><tr><td colspan="6" style="text-align:center;color:#999;">暂无待发药</td></tr></tbody>
+                            </table>
+                        </div>
+                        <div style="font-weight:bold; margin:16px 0 6px; font-size:13px;">出库记录</div>
                         <div style="overflow-x:auto;">
                             <table class="table-mock">
                                 <thead><tr><th>药品名称</th><th>数量</th><th>患者</th><th>类型</th><th>时间</th></tr></thead>
@@ -909,6 +932,7 @@
                         <div class="pharma-tabs" id="warningTabs">
                             <span class="active" data-wtab="expiry">效期预警</span>
                             <span data-wtab="stock">库存预警</span>
+                            <span data-wtab="margin">毛利预警</span>
                         </div>
                         <div id="warningExpiryPanel">
                             <div style="font-size:13px; color:#666; margin-bottom:8px;">30天内即将过期的药品</div>
@@ -924,6 +948,13 @@
                                 <tbody id="lowStockBody"><tr><td colspan="5" style="text-align:center;color:#999;">暂无预警</td></tr></tbody>
                             </table>
                         </div>
+                        <div id="warningMarginPanel" style="display:none;">
+                            <div style="font-size:13px; color:#666; margin-bottom:8px;">无毛利或毛利偏低的药品（售价 ≤ 进价×1.15）</div>
+                            <table class="table-mock">
+                                <thead><tr><th>药品名称</th><th>零售价</th><th>进价</th><th>毛利率</th><th>状态</th></tr></thead>
+                                <tbody id="marginBody"><tr><td colspan="5" style="text-align:center;color:#999;">暂无预警</td></tr></tbody>
+                            </table>
+                        </div>
                     </div>
                     <div id="pharma-panel-suppliers" class="pharma-panel" style="display:none;">
                         <div class="section-title">
@@ -934,6 +965,34 @@
                             <thead><tr><th>名称</th><th>联系人</th><th>电话</th><th>地址</th><th>操作</th></tr></thead>
                             <tbody id="supplierBody"><tr><td colspan="5" style="text-align:center;color:#999;">暂无供应商</td></tr></tbody>
                         </table>
+                    </div>
+                    <div id="pharma-panel-check" class="pharma-panel" style="display:none;">
+                        <div class="section-title">
+                            <span>库存盘点</span>
+                            <button class="btn-primary" onclick="saveInventoryCheck()"><i class="fas fa-check-circle"></i> 保存盘点结果</button>
+                        </div>
+                        <div style="font-size:12px; color:#999; margin-bottom:8px;">在“实盘数”列填入实际清点数量，留空表示未盘点；保存后自动调整库存并记录差异。</div>
+                        <div style="overflow-x:auto; max-height:62vh; overflow-y:auto;">
+                            <table class="table-mock">
+                                <thead><tr><th>药品名称</th><th>规格</th><th>账面库存</th><th>单位</th><th>实盘数</th></tr></thead>
+                                <tbody id="checkBody"><tr><td colspan="5" style="text-align:center;color:#999;">加载中...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="pharma-panel-knowledge" class="pharma-panel" style="display:none;">
+                        <div class="section-title"><span>药典知识库</span></div>
+                        <div class="kb-toolbar">
+                            <input type="text" id="kbSearchInput" class="server-input" style="flex:1; width:auto;" placeholder="搜索药名/别名/功效…" oninput="renderPharmacyKnowledge(this.value)">
+                            <button class="btn-primary" onclick="openKBModal()"><i class="fas fa-plus"></i> 新增条目</button>
+                            <button class="op-btn" onclick="importKB()"><i class="fas fa-file-import"></i> 批量导入</button>
+                        </div>
+                        <div style="font-size:12px; color:#999; margin-bottom:8px;">基础库共 <span id="kbStats">-</span> 条（本草典 v1 + 公开说明书整理，标注来源可追溯）；你新增/修改的条目会覆盖同名基础条目。</div>
+                        <div style="overflow-x:auto; max-height:60vh; overflow-y:auto;">
+                            <table class="table-mock">
+                                <thead><tr><th>药品名称</th><th>类别</th><th>功能/适应症</th><th>来源</th><th>操作</th></tr></thead>
+                                <tbody id="kbBody"><tr><td colspan="5" style="text-align:center;color:#999;">加载中...</td></tr></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -968,6 +1027,58 @@
                 </div>
             </div>
             <div class="card" style="margin-top:12px;">
+                <div class="section-title">AI 配置（AI 辅助诊断）</div>
+                <div style="font-size:12px; color:#666; margin-bottom:8px;">
+                    启用后，门诊开方页可使用“AI 辅助诊断”一键生成处方建议；AI 只从本诊所药品目录中选药，医生确认后才写入处方。
+                </div>
+                <div class="setting-item">
+                    <div>
+                        <div>启用 AI 辅助诊断</div>
+                        <small>关闭后门诊 AI 按钮不可用，不影响其他功能</small>
+                    </div>
+                    <input type="checkbox" id="ai_enabled" style="width:18px; height:18px;">
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+                    <div class="kb-field" style="flex:1; min-width:180px;">
+                        <label>服务商</label>
+                        <select id="ai_provider" onchange="onAIProviderChange()">
+                            <option value="zhipu">智谱 GLM（免费）</option>
+                            <option value="deepseek">DeepSeek</option>
+                            <option value="siliconflow">硅基流动</option>
+                            <option value="custom">自定义（OpenAI 兼容）</option>
+                        </select>
+                    </div>
+                    <div class="kb-field" style="flex:2; min-width:220px;">
+                        <label>接口地址 Base URL</label>
+                        <input type="text" id="ai_baseUrl" placeholder="https://open.bigmodel.cn/api/paas/v4">
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div class="kb-field" style="flex:2; min-width:220px;">
+                        <label>API Key（仅保存在本机）</label>
+                        <input type="password" id="ai_apiKey" placeholder="粘贴你的 API Key">
+                    </div>
+                    <div class="kb-field" style="flex:1; min-width:140px;">
+                        <label>模型名称</label>
+                        <input type="text" id="ai_model" placeholder="glm-4.7-flash">
+                    </div>
+                    <div class="kb-field" style="flex:1; min-width:120px;">
+                        <label>超时（秒）</label>
+                        <input type="number" id="ai_timeout" value="60">
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+                    <button class="btn-primary" onclick="saveAIConfig()"><i class="fas fa-save"></i> 保存 AI 配置</button>
+                    <button class="op-btn" onclick="testAIConfig()"><i class="fas fa-plug"></i> 测试连接</button>
+                </div>
+                <div class="ai-warn" style="margin-top:12px;">
+                    <b>隐私说明：</b>调用 AI 时，患者的症状、主诉、诊断等病历片段会发送到所选服务商的服务器（默认智谱，可切换）；本系统不会发送患者姓名和手机号。免费模型有每日调用次数限制，超限或断网时 AI 不可用，但正常开方不受影响。建议使用前征得患者同意。
+                </div>
+                <div style="font-size:11px; color:#999; margin-top:8px;">
+                    药典知识库数据来源：本草典 v1（CC BY-SA 4.0，本草典编辑部）+ 公开药品说明书整理。本草典数据按 CC BY-SA 4.0 协议使用，衍生作品需保留署名。
+                </div>
+            </div>
+            <div class="card" style="margin-top:12px;">
                 <div class="section-title">手机端访问</div>
                 <div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap; margin-top:10px;">
                     <div style="flex:1; min-width:250px;">
@@ -994,25 +1105,10 @@
     </div>
 
     <!-- Modals 省略... 保持与原生原有逻辑一致 -->
-    <div class="modal" id="modalReg">
-        <div class="modal-content" style="max-width: 400px;">
-            <div class="modal-header"><h3>新建挂号</h3><span style="cursor:pointer;" onclick="document.getElementById('modalReg').style.display='none'"><i class="fas fa-times"></i></span></div>
-            <div class="modal-form-group"><label>患者姓名</label><input type="text" id="reg_name"></div>
-            <div style="display:flex; gap:10px;">
-                <div class="modal-form-group" style="flex:1;"><label>性别</label><select id="reg_gender" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;"><option>男</option><option>女</option></select></div>
-                <div class="modal-form-group" style="flex:1;"><label>年龄</label><input type="number" id="reg_age" style="width:100%;"></div>
-            </div>
-            <div class="modal-form-group"><label>联系电话</label><input type="text" id="reg_phone"></div>
-            <div class="modal-actions">
-                <button class="btn-close-modal" onclick="document.getElementById('modalReg').style.display='none'">取消</button>
-                <button class="btn-save-modal" onclick="addRegistration()">确认挂号</button>
-            </div>
-        </div>
-    </div>
     <div class="modal" id="modalDirectAdd">
         <div class="modal-content" style="max-width: 450px;">
             <div class="modal-header"><h3>新建门诊患者</h3><span style="cursor:pointer;" onclick="document.getElementById('modalDirectAdd').style.display='none'"><i class="fas fa-times"></i></span></div>
-            <div style="font-size:12px; color:#999; margin-bottom:8px;">可直接录入门诊病人信息，无需先挂号</div>
+            <div style="font-size:12px; color:#999; margin-bottom:8px;">直接录入患者信息即可开始接诊</div>
             <div class="modal-form-group"><label>患者姓名</label><input type="text" id="direct_name"></div>
             <div style="display:flex; gap:10px;">
                 <div class="modal-form-group" style="flex:1;"><label>性别</label><select id="direct_gender" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;"><option>男</option><option>女</option></select></div>
@@ -1037,6 +1133,9 @@
             </div>
             <div style="display:flex; gap:10px;">
                 <div class="modal-form-group" style="flex:1;"><label>批号</label><input type="text" id="si_batchNo"></div>
+                <div class="modal-form-group" style="flex:1;"><label>生产日期</label><input type="date" id="si_productionDate"></div>
+            </div>
+            <div style="display:flex; gap:10px;">
                 <div class="modal-form-group" style="flex:1;"><label>效期</label><input type="date" id="si_expiry"></div>
             </div>
             <div class="modal-form-group"><label>供应商</label><input type="text" id="si_supplier"></div>
@@ -1047,6 +1146,36 @@
             <div class="modal-actions">
                 <button class="btn-close-modal" onclick="document.getElementById('modalStockIn').style.display='none'">取消</button>
                 <button class="btn-save-modal" onclick="saveStockIn()">确认入库</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="modalAI">
+        <div class="modal-content" style="max-width: 680px;">
+            <div class="modal-header"><h3>AI 辅助诊断</h3><span style="cursor:pointer;" onclick="document.getElementById('modalAI').style.display='none'"><i class="fas fa-times"></i></span></div>
+            <div id="aiModalBody" style="max-height: 72vh; overflow-y:auto; padding: 4px 0; font-size: 13px; line-height:1.6;"></div>
+            <div class="modal-actions">
+                <button class="btn-close-modal" onclick="document.getElementById('modalAI').style.display='none'">关闭</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="modalKB">
+        <div class="modal-content" style="max-width: 620px;">
+            <div class="modal-header"><h3 id="kbModalTitle">新增药典条目</h3><span style="cursor:pointer;" onclick="document.getElementById('modalKB').style.display='none'"><i class="fas fa-times"></i></span></div>
+            <div class="kb-field">
+                <label>药品名称（必填）</label><input type="text" id="kb_name">
+                <label>类别（如：西药 / 中成药 / 中药饮片）</label><input type="text" id="kb_category" placeholder="西药">
+                <label>功能 / 适应症</label><textarea id="kb_functions" rows="2"></textarea>
+                <label>用法用量</label><textarea id="kb_usage" rows="2"></textarea>
+                <label>禁忌</label><textarea id="kb_contraindications" rows="2"></textarea>
+                <label>不良反应</label><textarea id="kb_adverse" rows="2"></textarea>
+                <label>注意事项</label><textarea id="kb_notes" rows="2"></textarea>
+                <label>相互作用</label><textarea id="kb_interactions" rows="2"></textarea>
+                <label>贮藏</label><input type="text" id="kb_storage">
+                <label>来源（可写：公开说明书整理 / 本草典等）</label><input type="text" id="kb_source" placeholder="公开药品说明书整理">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-close-modal" onclick="document.getElementById('modalKB').style.display='none'">取消</button>
+                <button class="btn-save-modal" onclick="saveKBEntry()">保存条目</button>
             </div>
         </div>
     </div>
@@ -1152,21 +1281,15 @@
     }
     window.gotoPage = gotoPage;
 
-    let dbRegistration = [], dbOutpatient = [], dbPharmacy = [], dbRevenue = [];
+    let dbOutpatient = [], dbPharmacy = [], dbRevenue = [];
     let dbSettings = { warningAlert: false, autoPharmacy: true };
     let dbDrugInventory = [], dbDrugInRecords = [], dbDrugOutRecords = [], dbSuppliers = [], dbMedicalTemplates = [];
+    let dbPatients = [], dbDrugKnowledge = [], dbUserFormulas = [], dbFormulaLibrary = [];
+    let dbRecordTerms = {};
     let prescriptionTempList = [], editingOutpatientId = null, currentPatientId = null;
-    let calYear, calMonth, opCalYear, opCalMonth;
-    let regCalFilter = null, opCalFilter = null;
+    let patientSearch = '', selectedPatientKey = null, kbEditId = null;
     let currentPeriod = 'today';
     let dashboardStats = null;
-
-    function initDate() {
-        const now = new Date();
-        calYear = opCalYear = now.getFullYear();
-        calMonth = opCalMonth = now.getMonth() + 1;
-    }
-    initDate();
 
     function showLoading(show) { document.getElementById('loadingToast').style.display = show ? 'block' : 'none'; }
 
@@ -1174,8 +1297,7 @@
         if (!currentUser) return;
         showLoading(true);
         try {
-            const [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10] = await Promise.all([
-                apiFetch(`${API_BASE}/registrations`),
+            const [rOut, rPh, rRev, rSet, rInv, rIn, rOutRec, rSup, rTpl, rPat, rKb, rFml, rTerms] = await Promise.all([
                 apiFetch(`${API_BASE}/outpatients`),
                 apiFetch(`${API_BASE}/pharmacy`),
                 apiFetch(`${API_BASE}/revenue`),
@@ -1184,21 +1306,39 @@
                 apiFetch(`${API_BASE}/drugInRecords`),
                 apiFetch(`${API_BASE}/drugOutRecords`),
                 apiFetch(`${API_BASE}/suppliers`),
-                apiFetch(`${API_BASE}/medicalTemplates`)
+                apiFetch(`${API_BASE}/medicalTemplates`),
+                apiFetch(`${API_BASE}/patients`),
+                apiFetch(`${API_BASE}/drugKnowledge`),
+                apiFetch(`${API_BASE}/userFormulas`),
+                apiFetch(`${API_BASE}/recordTerms`)
             ]);
-            if(!r1.ok) throw new Error('连接失败');
-            dbRegistration = await r1.json();
-            dbOutpatient = await r2.json();
-            dbPharmacy = await r3.json();
-            dbRevenue = await r4.json();
-            dbSettings = await r5.json();
-            dbDrugInventory = await r6.json();
-            dbDrugInRecords = await r7.json();
-            dbDrugOutRecords = await r8.json();
-            dbSuppliers = await r9.json();
-            dbMedicalTemplates = await r10.json();
+            if(!rOut.ok) throw new Error('连接失败');
+            dbOutpatient = await rOut.json();
+            dbPharmacy = await rPh.json();
+            dbRevenue = await rRev.json();
+            dbSettings = await rSet.json();
+            dbDrugInventory = await rInv.json();
+            dbDrugInRecords = await rIn.json();
+            dbDrugOutRecords = await rOutRec.json();
+            dbSuppliers = await rSup.json();
+            dbMedicalTemplates = await rTpl.json();
+            dbPatients = await rPat.json();
+            dbDrugKnowledge = await rKb.json();
+            dbUserFormulas = await rFml.json();
+            dbRecordTerms = (await rTerms.json()) || {};
             renderAll();
             await loadDashboardStats();
+            // 历史数据幂等迁移为患者档案
+            try {
+                await apiFetch(`${API_BASE}/patients/migrate`, { method: 'POST' });
+                const pr = await apiFetch(`${API_BASE}/patients`);
+                dbPatients = await pr.json();
+                renderPatientPage();
+            } catch(e) { console.error('患者迁移失败', e); }
+            try {
+                const fr = await apiFetch(`${API_BASE}/formulas/library`);
+                dbFormulaLibrary = await fr.json();
+            } catch(e) { console.error('方剂库加载失败', e); }
         } catch(err) {
             console.error(err);
             if (err.message !== '未登录') alert('连接后端失败！请检查服务器是否启动');
@@ -1224,13 +1364,10 @@
         if (!dashboardStats) return;
         const t = dashboardStats.today;
         const r = dashboardStats.revenue;
-        document.getElementById('dash_reg').innerText = t.regCount;
-        document.getElementById('dash_wait').innerText = t.pendingVisit;
         document.getElementById('dash_visits').innerText = t.visitCount;
         document.getElementById('dash_bill').innerText = t.pendingBill;
         document.getElementById('dash_med').innerText = t.pendingDrug;
         document.getElementById('dash_expiry').innerText = t.expiryWarning;
-        document.getElementById('dash_appt').innerText = t.appointmentCount;
         document.getElementById('dash_visited').innerText = t.visited;
         document.getElementById('dash_presc').innerText = t.prescriptionCount;
         document.getElementById('dash_billed').innerText = t.billed;
@@ -1240,7 +1377,6 @@
         document.getElementById('rev_total').innerText = '¥' + r.total.toFixed(2);
         document.getElementById('rev_outpatient').innerText = '¥' + r.outpatient.toFixed(2);
         document.getElementById('rev_retail').innerText = '¥' + r.retail.toFixed(2);
-        document.getElementById('rev_reg').innerText = '¥' + r.registration.toFixed(2);
         document.getElementById('rev_opcount').innerText = r.opVisits;
         document.getElementById('rev_retailcount').innerText = r.retailCustomers;
         document.getElementById('rev_opavg').innerText = '¥' + r.opAvgPrice.toFixed(2);
@@ -1269,13 +1405,16 @@
 
     function renderAll() {
         document.getElementById('currentUsername').innerText = currentUser;
-        renderRegTable();
         renderClinicPatientList();
         renderPharmacyList();
         renderInventoryTables();
+        renderPatientPage();
+        renderPharmacyCheck();
+        renderPharmacyKnowledge();
+        renderMarginWarnings();
         updateStatistics();
-        renderCalendar();
         updateSwitches();
+        fillAISettings();
     }
 
     function updateSwitches() {
@@ -1285,64 +1424,10 @@
         if(ap) ap.className = `fas fa-toggle-${dbSettings.autoPharmacy?'on':'off'} toggle-switch ${dbSettings.autoPharmacy?'on':'off'}`;
     }
 
-    async function addRegistration() {
-        const name = document.getElementById('reg_name').value.trim();
-        const gender = document.getElementById('reg_gender').value;
-        const age = document.getElementById('reg_age').value;
-        const phone = document.getElementById('reg_phone').value.trim();
-        if(!name) return alert('请输入姓名');
-        if(age !== '' && (isNaN(parseInt(age)) || parseInt(age) < 0 || parseInt(age) > 150)) return alert('请输入有效年龄');
-        try {
-            const todayStr = getTodayStr();
-            const res = await apiFetch(`${API_BASE}/registrations`, {
-                method:'POST', headers:{'Content-Type':'application/json'},
-                body: JSON.stringify({name,gender,age,phone,date:todayStr,status:'待就诊'})
-            });
-            document.getElementById('modalReg').style.display='none';
-            document.getElementById('reg_name').value='';
-            await loadAllData();
-            showToast(`【${name}】挂号成功`);
-        } catch(err) { if(err.message!=='未登录') alert('挂号失败: '+err.message); }
-    }
-
-    async function deleteRegistration(id) {
-        if(!confirm('确定删除？')) return;
-        try {
-            await apiFetch(`${API_BASE}/registrations/${id}`, {method:'DELETE'});
-            await loadAllData();
-            showToast('挂号记录已删除');
-        } catch(err) { if(err.message!=='未登录') showToast(err.message || '删除失败', 'error'); }
-    }
-
-    function openAddRegModal() { document.getElementById('modalReg').style.display='flex'; }
-
-    function renderRegTable() {
-        const tb = document.getElementById('regListContainer');
-        let list = dbRegistration;
-        if (regCalFilter) list = list.filter(p => p.date === regCalFilter);
-        const filterBar = document.getElementById('regFilterBar');
-        if (regCalFilter) {
-            filterBar.style.display = 'flex';
-            document.getElementById('regFilterText').innerText = `筛选日期：${regCalFilter}（共 ${list.length} 条）`;
-        } else { filterBar.style.display = 'none'; }
-        if(!list.length) { tb.innerHTML='<tr><td colspan="7" style="text-align:center;color:#999;">暂无记录</td></tr>'; return; }
-        tb.innerHTML = list.map(p=>`
-            <tr><td><b>${esc(p.name)}</b></td><td>${esc(p.gender)}</td><td>${esc(p.age)}</td><td>${esc(p.phone)}</td><td>${esc(p.date)}</td>
-            <td><span style="color:var(--orange);">${esc(p.status)}</span></td>
-            <td><button class="op-btn" onclick="deleteRegistration(${p.id})">删除</button></td></tr>`).join('');
-    }
-
-    function clearRegFilter() {
-        regCalFilter = null;
-        renderRegTable();
-        renderCalendar();
-    }
-
     function renderClinicPatientList() {
         const filter = document.querySelector('#opFilterTabs span.active').dataset.filter;
-        let data = [...dbRegistration.filter(r=>r.status==='待就诊'), ...dbOutpatient];
-        if(filter==='pending') data = dbRegistration.filter(r=>r.status==='待就诊');
-        else if(filter==='done') data = dbOutpatient;
+        let data = dbOutpatient;
+        if(filter==='done') data = dbOutpatient.filter(o => o.status === '已就诊');
 
         const container = document.getElementById('clinicPatientList');
         if(!data.length) {
@@ -1369,7 +1454,7 @@
     function selectClinicPatient(id) {
         currentPatientId = id;
         editingOutpatientId = id;
-        const p = [...dbRegistration, ...dbOutpatient].find(i=>i.id===id);
+        const p = dbOutpatient.find(i=>i.id===id);
         if(!p) return;
         renderClinicPatientList();
         renderClinicCenter(p);
@@ -1377,6 +1462,7 @@
     }
 
     function renderClinicCenter(p) {
+        closeRecordTermPopup();
         const area = document.getElementById('clinicCenterArea');
         area.innerHTML = `
             <div class="clinic-section">
@@ -1403,13 +1489,18 @@
                 <textarea id="cf_tcm" rows="2" placeholder="望闻问切" style="margin-bottom:6px;">${esc(p.tcm||'')}</textarea>
                 <input type="text" id="cf_diagnosis" placeholder="诊断结果" value="${esc(p.diagnosis||'')}" style="margin-bottom:6px;">
                 <input type="text" id="cf_syndrome" placeholder="辨证" value="${esc(p.syndrome||'')}" style="margin-bottom:6px;">
-                <div style="display:flex; gap:6px; margin-bottom:6px;">
-                    <button class="op-btn" onclick="saveTemplate()"><i class="fas fa-bookmark"></i> 保存模板</button>
-                    <button class="op-btn" onclick="loadTemplate()"><i class="fas fa-folder-open"></i> 调取模板</button>
+                <div style="display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap;">
+                    <select id="cf_templateSelect" style="flex:2; min-width:160px; padding:4px; border:1px solid #ddd; border-radius:4px; font-size:12px;"><option value="">— 选择病历模板 —</option>${dbMedicalTemplates.map(t=>`<option value="${esc(t.name)}">${esc(t.name)}</option>`).join('')}</select>
+                    <button class="op-btn" onclick="applyTemplateSelect()"><i class="fas fa-file-import"></i> 插入模板</button>
+                    <button class="op-btn" onclick="saveTemplate()"><i class="fas fa-bookmark"></i> 保存当前</button>
                 </div>
             </div>
             <div class="clinic-section">
                 <div class="label">诊疗项目 / 处方</div>
+                <div style="display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap;">
+                    <select id="cf_formulaSelect" style="flex:2; min-width:160px; padding:4px; border:1px solid #ddd; border-radius:4px; font-size:12px;"><option value="">— 选择方剂组套（经方/验方） —</option>${dbFormulaLibrary.map(f=>`<option value="${esc(f.name)}">${esc(f.name)}</option>`).join('')}</select>
+                    <button class="op-btn" onclick="applyFormula()"><i class="fas fa-prescription-bottle"></i> 应用组套</button>
+                </div>
                 <div class="prescription-row">
                     <input type="text" id="cf_drug" list="cf_drugOptions" placeholder="药品名称（可从库存选择）" oninput="autoFillDrugPrice(this)" style="flex:2;padding:4px;border:1px solid #ddd;border-radius:4px;font-size:12px;">
                     <input type="number" id="cf_qty" placeholder="数量" style="flex:1;padding:4px;border:1px solid #ddd;border-radius:4px;font-size:12px;">
@@ -1427,6 +1518,7 @@
             <div style="display:flex; gap:8px; margin-top:10px;">
                 <button class="btn-primary" onclick="saveClinicData()"><i class="fas fa-save"></i> 保存接诊</button>
                 <button class="op-btn" onclick="printClinic()"><i class="fas fa-print"></i> 打印病历</button>
+                <button class="op-btn" onclick="aiReviewRx()"><i class="fas fa-shield-alt"></i> AI 审方</button>
             </div>
         `;
         prescriptionTempList = p.prescriptions ? [...p.prescriptions] : [];
@@ -1449,7 +1541,7 @@
         if(!listEl) return;
         listEl.innerHTML = prescriptionTempList.map((d, i) => `
             <div class="prescription-item">
-                <span>${esc(d.name)} x ${d.qty} @ ¥${(d.price||0).toFixed(2)} = ¥${(d.subtotal||0).toFixed(2)}</span>
+                <span><b class="drug-name" data-drug-name="${esc(d.name)}">${esc(d.name)}</b> x ${d.qty} @ ¥${(d.price||0).toFixed(2)} = ¥${(d.subtotal||0).toFixed(2)}</span>
                 <span class="remove-btn" onclick="removeClinicPrescription(${i})">删除</span>
             </div>`).join('');
         const total = prescriptionTempList.reduce((s,d)=>s+(d.subtotal||0),0);
@@ -1487,12 +1579,32 @@
             container.innerHTML = '<div style="text-align:center;color:#ccc;font-size:11px;padding:10px;">暂无历史记录</div>';
             return;
         }
-        container.innerHTML = history.map(h => `
+        const rxHistory = history.filter(h => h.prescriptions && h.prescriptions.length);
+        const toolbar = rxHistory.length
+            ? '<div style="margin-bottom:8px;"><button class="op-btn" style="width:100%;" onclick="copyLastPrescription()"><i class="fas fa-copy"></i> 一键复制上次处方</button></div>'
+            : '';
+        container.innerHTML = toolbar + history.map(h => `
             <div class="history-item" onclick="selectClinicPatient(${h.id})">
                 <div class="date">${h.opDate||h.date||'-'}</div>
                 <div class="diag">${esc(h.diagnosis||'无诊断')}</div>
             </div>
         `).join('');
+    }
+
+    function copyLastPrescription() {
+        const p = dbOutpatient.find(i=>i.id===editingOutpatientId);
+        if(!p) return alert('请先选择患者');
+        const history = dbOutpatient.filter(o =>
+            o.id !== p.id && (o.name === p.name || (p.phone && o.phone === p.phone)) &&
+            o.prescriptions && o.prescriptions.length
+        );
+        const last = history[history.length-1];
+        if(!last) return alert('该患者暂无历史处方');
+        prescriptionTempList = (last.prescriptions||[]).map(d => ({
+            name: d.name, qty: Number(d.qty)||1, price: Number(d.price)||0, subtotal: Number(d.subtotal)||0
+        }));
+        renderClinicPrescription();
+        showToast(`已复制上次处方（${last.prescriptions.length} 种药品），请核对后保存`);
     }
 
     function openDirectAddModal() {
@@ -1529,19 +1641,18 @@
         } catch (err) { if (err.message !== '未登录') alert('保存失败: ' + err.message); }
     }
 
-    // 事务化保存接诊：挂号转门诊 / 更新门诊 + 收费 + 药房推送一次完成（服务端保证顺序写入）
+    // 事务化保存接诊：更新门诊 + 收费 + 药房推送一次完成（服务端保证顺序写入）
     async function saveClinicData() {
         if(!editingOutpatientId) return alert('请先选择患者');
-        const p = dbRegistration.find(i=>i.id===editingOutpatientId);
         const op = dbOutpatient.find(i=>i.id===editingOutpatientId);
-        const patientName = p ? p.name : (op ? op.name : '');
+        const patientName = op ? op.name : '';
         if(!patientName) return alert('患者信息缺失，请重新选择');
 
         const patient = {
             name: patientName,
-            gender: p ? p.gender : (op ? op.gender : ''),
-            age: p ? p.age : (op ? op.age : ''),
-            phone: p ? p.phone : (op ? op.phone : ''),
+            gender: op ? op.gender : '',
+            age: op ? op.age : '',
+            phone: op ? op.phone : '',
             chief: document.getElementById('cf_chief')?.value || '',
             history: document.getElementById('cf_history')?.value || '',
             past: document.getElementById('cf_past')?.value || '',
@@ -1562,8 +1673,7 @@
                     name: d.name, qty: d.qty, price: d.price, subtotal: d.subtotal
                 }))
             };
-            if (p) body.registrationId = p.id;
-            else if (op) body.outpatientId = op.id;
+            if (op) body.outpatientId = op.id;
 
             const res = await apiFetch(`${API_BASE}/visits/complete`, {
                 method:'POST', headers:{'Content-Type':'application/json'},
@@ -1593,7 +1703,7 @@
     }
 
     function printClinic() {
-        const p = [...dbRegistration, ...dbOutpatient].find(i=>i.id===editingOutpatientId);
+        const p = dbOutpatient.find(i=>i.id===editingOutpatientId);
         if(!p) return;
         const win = window.open('', '_blank');
         win.document.write(`<html><head><title>病历打印 - ${esc(p.name)}</title></head><body style="font-family:sans-serif;padding:20px;">
@@ -1646,12 +1756,611 @@
         if(document.getElementById('cf_advice')) document.getElementById('cf_advice').value = t.advice||'';
     }
 
-    function aiAssist() {
-        const p = [...dbRegistration, ...dbOutpatient].find(i=>i.id===editingOutpatientId);
-        if(!p) return alert('请先选择患者');
-        const chief = document.getElementById('cf_chief')?.value || p.chief || '';
-        if(!chief) return alert('请先填写患者主诉');
-        alert(`【AI辅助诊断参考】\n\n患者主诉：${chief}\n\n建议：\n1. 根据主诉症状，建议进一步检查确认\n2. 注意鉴别诊断\n3. 此功能为辅助参考，最终诊断请以医生判断为准`);
+    // ==================== v3.2 全局药典悬浮窗 ====================
+    const kbCache = new Map();
+    let tooltipEl = null, tooltipTimer = null;
+
+    function ensureTooltipEl() {
+        if (tooltipEl) return tooltipEl;
+        tooltipEl = document.createElement('div');
+        tooltipEl.id = 'drugTooltip';
+        document.body.appendChild(tooltipEl);
+        return tooltipEl;
+    }
+
+    function hideTooltip() { if (tooltipEl) tooltipEl.style.display = 'none'; }
+
+    function positionTooltip(ev, el) {
+        const pad = 12;
+        let x = ev.clientX + pad, y = ev.clientY + pad;
+        const r = el.getBoundingClientRect();
+        if (x + r.width > window.innerWidth - 8) x = ev.clientX - r.width - pad;
+        if (y + r.height > window.innerHeight - 8) y = ev.clientY - r.height - pad;
+        el.style.left = Math.max(4, x) + 'px';
+        el.style.top = Math.max(4, y) + 'px';
+    }
+
+    function showTooltipHTML(html, ev) {
+        clearTimeout(tooltipTimer);
+        const el = ensureTooltipEl();
+        el.innerHTML = html;
+        positionTooltip(ev, el);
+        el.style.display = 'block';
+    }
+
+    function buildDrugTooltipHTML(name, entry, inv) {
+        const rows = [];
+        if (entry) {
+            rows.push(['类别', entry.category || '-']);
+            if (entry.nature || (entry.flavors||[]).length) rows.push(['性味', (entry.nature||'') + (entry.flavors||[]).join('、')]);
+            rows.push(['功能/适应症', entry.functions || entry.indications || '-']);
+            if (entry.usage) rows.push(['用法用量', entry.usage]);
+            if (entry.contraindications) rows.push(['禁忌', entry.contraindications]);
+            if (entry.adverseReactions) rows.push(['不良反应', entry.adverseReactions]);
+            if (entry.notes) rows.push(['注意事项', entry.notes]);
+            if (entry.interactions) rows.push(['相互作用', entry.interactions]);
+            if (entry.storage) rows.push(['贮藏', entry.storage]);
+        }
+        let html = '<div style="padding:12px 14px; min-width:270px; max-width:420px;">';
+        html += '<div style="font-weight:bold; font-size:14px;">' + esc(name) + '</div>';
+        if (entry && entry.category) html += '<div style="font-size:11px; color:#888; margin-top:2px;">' + esc(entry.category) + '</div>';
+        if (!entry) {
+            html += '<div style="margin:8px 0; padding:8px; background:#fff8e6; border-radius:6px; font-size:12px; color:#a06b00;">药典知识库暂无该药详情，可在【药房 → 药典知识库】中补充</div>';
+        }
+        for (const pair of rows) {
+            if (!pair[1]) continue;
+            html += '<div style="margin-top:7px;"><div style="font-size:11px; color:#999;">' + pair[0] + '</div><div style="font-size:12px; line-height:1.5; color:#333;">' + esc(pair[1]) + '</div></div>';
+        }
+        if (inv) {
+            html += '<div style="margin-top:9px; padding-top:8px; border-top:1px dashed #eee; font-size:11px; color:#666;">';
+            html += '本店：库存 <b>' + esc(inv.stock||0) + '</b> ' + esc(inv.unit||'盒') + ' ｜ 零售 ¥' + (Number(inv.price)||0).toFixed(2);
+            if (inv.costPrice !== undefined && inv.costPrice !== '') html += ' ｜ 进价 ¥' + (Number(inv.costPrice)||0).toFixed(2);
+            if (inv.expiry) html += ' ｜ 效期 ' + esc(inv.expiry);
+            if (inv.batchNo) html += ' ｜ 批号 ' + esc(inv.batchNo);
+            if (inv.supplier) html += ' ｜ 供应商 ' + esc(inv.supplier);
+            html += '</div>';
+        }
+        if (entry && entry.source) html += '<div style="margin-top:8px; font-size:10px; color:#bbb;">来源：' + esc(entry.source) + '</div>';
+        html += '</div>';
+        return html;
+    }
+
+    async function showDrugTooltip(name, ev) {
+        clearTimeout(tooltipTimer);
+        const el = ensureTooltipEl();
+        el.innerHTML = '<div style="padding:12px 14px;"><b>' + esc(name) + '</b><div style="margin-top:6px; color:#999;">加载药典详情…</div></div>';
+        positionTooltip(ev, el);
+        el.style.display = 'block';
+        try {
+            let entry = kbCache.get(name);
+            if (entry === undefined) {
+                const res = await apiFetch(`${API_BASE}/pharmacopoeia/lookup?name=${encodeURIComponent(name)}`);
+                const d = await res.json();
+                entry = d && d.found ? d.entry : null;
+                kbCache.set(name, entry);
+            }
+            const inv = dbDrugInventory.find(i => i.name === name);
+            el.innerHTML = buildDrugTooltipHTML(name, entry, inv);
+        } catch (err) {
+            if (err.message !== '未登录') {
+                el.innerHTML = '<div style="padding:12px 14px;"><b>' + esc(name) + '</b><div style="margin-top:6px; color:#999;">详情加载失败</div></div>';
+            } else {
+                hideTooltip();
+            }
+        }
+    }
+
+    document.addEventListener('mouseover', e => {
+        const t = e.target.closest('[data-drug-name]');
+        if (t) {
+            const name = t.getAttribute('data-drug-name');
+            clearTimeout(tooltipTimer);
+            tooltipTimer = setTimeout(() => showDrugTooltip(name, e), 300);
+        }
+    });
+    document.addEventListener('mouseout', e => {
+        if (e.target.closest('[data-drug-name]')) {
+            clearTimeout(tooltipTimer);
+            hideTooltip();
+        }
+    });
+    document.addEventListener('click', e => {
+        if (!e.target.closest('#drugTooltip')) hideTooltip();
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') hideTooltip(); });
+
+    // ==================== v3.2 AI 辅助诊断 ====================
+    function openAiModal(html) {
+        const body = document.getElementById('aiModalBody');
+        body.innerHTML = html;
+        document.getElementById('modalAI').style.display = 'flex';
+    }
+
+    function collectPatientPayload() {
+        const p = dbOutpatient.find(i => i.id === editingOutpatientId) || {};
+        return {
+            id: p.id || null,
+            gender: document.getElementById('cf_gender') ? document.getElementById('cf_gender').value : (p.gender || ''),
+            age: p.age || '',
+            allergy: document.getElementById('cf_allergy') ? document.getElementById('cf_allergy').value : (p.allergy || ''),
+            chief: document.getElementById('cf_chief') ? document.getElementById('cf_chief').value : (p.chief || ''),
+            history: document.getElementById('cf_history') ? document.getElementById('cf_history').value : (p.history || ''),
+            past: document.getElementById('cf_past') ? document.getElementById('cf_past').value : (p.past || ''),
+            exam: document.getElementById('cf_exam') ? document.getElementById('cf_exam').value : (p.exam || ''),
+            tcm: document.getElementById('cf_tcm') ? document.getElementById('cf_tcm').value : (p.tcm || ''),
+            diagnosis: document.getElementById('cf_diagnosis') ? document.getElementById('cf_diagnosis').value : (p.diagnosis || ''),
+            syndrome: document.getElementById('cf_syndrome') ? document.getElementById('cf_syndrome').value : (p.syndrome || ''),
+            visitType: document.getElementById('cf_visitType') ? document.getElementById('cf_visitType').value : (p.visitType || '初诊'),
+            feeType: document.getElementById('cf_feeType') ? document.getElementById('cf_feeType').value : (p.feeType || '自费')
+        };
+    }
+
+    async function aiAssist() {
+        const p = dbOutpatient.find(i => i.id === editingOutpatientId);
+        if (!p) return alert('请先选择患者');
+        const patient = collectPatientPayload();
+        if (!patient.chief && !patient.diagnosis) return alert('请先填写患者主诉或诊断');
+        openAiModal('<div class="ai-info"><i class="fas fa-spinner fa-spin"></i> 正在调用 AI 生成处方建议，请稍候…（免费额度有限，如失败请稍后重试）</div>');
+        try {
+            const res = await apiFetch(`${API_BASE}/ai/generate-prescription`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ patient, prescriptions: prescriptionTempList })
+            });
+            const d = await res.json();
+            renderAiSuggestions(d);
+        } catch (err) {
+            if (err.message !== '未登录') renderAiError(err.message);
+        }
+    }
+
+    function renderAiSuggestions(d) {
+        let html = '';
+        if (d.rationale) html += '<div class="ai-info"><b>开方思路：</b>' + esc(d.rationale) + '</div>';
+        if (d.warnings && d.warnings.length) {
+            html += d.warnings.map(w => '<div class="ai-warn"><i class="fas fa-exclamation-triangle"></i> ' + esc(w) + '</div>').join('');
+        }
+        if (!d.suggestions || !d.suggestions.length) {
+            html += '<div class="ai-risk">AI 未给出可用处方建议，请调整主诉/诊断后重试，或检查药房药品目录。</div>';
+        } else {
+            html += '<div style="margin:6px 0;"><b>AI 建议处方（' + d.suggestions.length + ' 种）：</b> <button class="op-btn" onclick="applyAllAiSuggestions()">全部应用</button></div>';
+            html += d.suggestions.map((s, i) => `
+                <div class="ai-suggest-row">
+                    <div class="rx-suggest-item">
+                        <div><span class="rx-name drug-name" data-drug-name="${esc(s.name)}">${esc(s.name)}</span>
+                        <span style="color:#666;"> × ${s.qty} ｜ ¥${(s.price||0).toFixed(2)} = ¥${(s.subtotal||0).toFixed(2)}</span></div>
+                        <button class="op-btn" onclick="applyAiSuggestion(${i})">应用</button>
+                    </div>
+                    <div style="margin-top:4px; font-size:12px; color:#666;">${esc([s.dose,s.frequency,s.days].filter(Boolean).join('，') || '用法用量：知识库未收录，请医生判断')}</div>
+                    ${s.note ? '<div style="margin-top:3px; font-size:12px; color:#888;">' + esc(s.note) + '</div>' : ''}
+                </div>`).join('');
+        }
+        html += '<div style="margin-top:10px; font-size:11px; color:#aaa;">AI 建议仅供参考，用药请以医生判断为准；应用后仍可修改数量与价格。</div>';
+        openAiModal(html);
+        window.__aiSuggestions = d.suggestions || [];
+    }
+
+    function applyAiSuggestion(i) {
+        const s = (window.__aiSuggestions || [])[i];
+        if (!s) return;
+        const inv = dbDrugInventory.find(d => d.name === s.name);
+        if (inv && Number(inv.stock||0) < Number(s.qty||0)) {
+            return alert(`【库存不足】"${s.name}" 当前库存仅 ${Number(inv.stock||0)} ${inv.unit||'盒'}，请先入库或调整数量`);
+        }
+        if (prescriptionTempList.some(x => x.name === s.name)) {
+            if (!confirm(`"${s.name}" 已在处方中，是否再添加一次？`)) return;
+        }
+        prescriptionTempList.push({ name: s.name, qty: Number(s.qty)||1, price: Number(s.price)||0, subtotal: Number(s.subtotal)||0 });
+        renderClinicPrescription();
+        showToast('已应用：' + s.name);
+    }
+
+    function applyAllAiSuggestions() {
+        const list = (window.__aiSuggestions || []).slice();
+        for (let i = 0; i < list.length; i++) applyAiSuggestion(i);
+        showToast('AI 处方已全部应用，请核对');
+    }
+
+    async function aiReviewRx() {
+        if (!prescriptionTempList.length) return alert('请先添加处方再审核');
+        const patient = collectPatientPayload();
+        openAiModal('<div class="ai-info"><i class="fas fa-spinner fa-spin"></i> 正在审核处方（过敏/禁忌/相互作用/配伍）…</div>');
+        try {
+            const res = await apiFetch(`${API_BASE}/ai/review-prescription`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ patient, prescriptions: prescriptionTempList })
+            });
+            const d = await res.json();
+            renderAiReview(d);
+        } catch (err) {
+            if (err.message !== '未登录') renderAiError(err.message);
+        }
+    }
+
+    function renderAiReview(d) {
+        let html = '<div class="ai-info"><b>审核结果：</b>' + (d.risks && d.risks.length ? '发现 ' + d.risks.length + ' 条风险提示' : '未发现明确风险') +
+            (d.llmUsed ? '（含 AI 复核）' : '（知识库规则检查）') + '</div>';
+        if (d.risks && d.risks.length) {
+            html += d.risks.map(r => `<div class="ai-risk"><b>[${esc(r.severity||'提示')}]</b> ${esc(r.drug||'')}：${esc(r.issue)} <span style="color:#aaa;">（依据：${esc(r.source||'-')}）</span></div>`).join('');
+        }
+        html += '<div style="margin-top:10px; font-size:11px; color:#aaa;">审方结果基于药典知识库与公开说明书，最终判断请以医生专业意见为准。</div>';
+        openAiModal(html);
+    }
+
+    function renderAiError(msg) {
+        openAiModal('<div class="ai-risk"><b>AI 调用失败：</b>' + esc(msg) + '</div>' +
+            '<div class="ai-warn">请检查：① 设置页已启用 AI 并填写正确的 API Key；② 服务商可用/额度未超限；③ 本机可联网。AI 不可用不影响正常开方。</div>');
+    }
+
+    // ==================== v3.2 患者档案 ====================
+    function renderPatientPage() {
+        const list = document.getElementById('patientList');
+        if (!list) return;
+        const q = patientSearch.trim().toLowerCase();
+        const data = (dbPatients || []).filter(p => !q ||
+            (p.name||'').toLowerCase().includes(q) || (p.phone||'').includes(q));
+        const count = document.getElementById('patientCount');
+        if (count) count.innerText = data.length;
+        list.innerHTML = data.length ? data.map(p => `
+            <div class="patient-item ${selectedPatientKey===p.key?'active':''}" onclick="selectPatientProfile('${esc(p.key)}')">
+                <div class="name">${esc(p.name)} <span style="font-size:11px;color:#999;">${esc(p.gender||'')} ${esc(p.age||'')}岁</span></div>
+                <div class="info">${esc(p.phone||'无电话')} ｜ 就诊 ${p.visitCount||0} 次</div>
+                <span class="status done">档案</span>
+            </div>`).join('')
+            : '<div style="text-align:center;color:#999;padding:15px;font-size:12px;">暂无患者档案，点击右上角“同步历史档案”可从历史就诊生成</div>';
+    }
+
+    function selectPatientProfile(key) {
+        selectedPatientKey = key;
+        const p = (dbPatients || []).find(x => x.key === key);
+        renderPatientPage();
+        const area = document.getElementById('patientProfileArea');
+        if (!p) { area.innerHTML = '<div style="color:#999;padding:30px;text-align:center;">未找到该患者</div>'; return; }
+        let html = '<div class="patient-profile-card">';
+        html += '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">';
+        html += '<div><b style="font-size:15px;">' + esc(p.name) + '</b> <span style="color:#666; font-size:12px;">' + esc(p.gender||'-') + ' ｜ ' + esc(p.age||'-') + ' 岁 ｜ ' + esc(p.phone||'无电话') + '</span></div>';
+        html += '<div><button class="op-btn" onclick="editPatientProfile()"><i class="fas fa-edit"></i> 编辑档案</button> <button class="op-btn" onclick="syncPatientProfiles()"><i class="fas fa-sync"></i> 同步历史</button></div>';
+        html += '</div>';
+        html += '<div style="margin-top:10px; font-size:12px; color:#555; line-height:1.8;">';
+        html += '<div><b>过敏史：</b>' + esc(p.allergy || '无') + '</div>';
+        html += '<div><b>既往史：</b>' + esc(p.past || '无') + '</div>';
+        html += '<div><b>累计就诊：</b>' + (p.visitCount||0) + ' 次 ｜ 最近就诊：' + esc(p.lastVisit || '-') + '</div>';
+        html += '</div></div>';
+        const visits = (p.visits || []).slice().reverse();
+        html += '<div style="font-weight:bold; margin:12px 0 8px; font-size:13px;">历次就诊（' + visits.length + '）</div>';
+        if (!visits.length) html += '<div style="color:#999; font-size:12px;">暂无就诊记录</div>';
+        html += visits.map(v => {
+            const rx = (v.prescriptions || []).map(r => `<span class="drug-name" data-drug-name="${esc(r.name)}">${esc(r.name)}</span>×${r.qty}`).join('、');
+            return `<div class="visit-item">
+                <div class="date">${esc(v.date||'-')}</div>
+                <div style="font-size:12px; margin-top:3px;"><b>诊断：</b>${esc(v.diagnosis||'未记录')}</div>
+                <div style="font-size:12px; margin-top:3px;"><b>处方：</b>${rx || '无'}</div>
+            </div>`;
+        }).join('');
+        area.innerHTML = html;
+    }
+
+    function editPatientProfile() {
+        const p = (dbPatients || []).find(x => x.key === selectedPatientKey);
+        if (!p) return;
+        const allergy = prompt('过敏史：', p.allergy || '');
+        if (allergy === null) return;
+        const past = prompt('既往史：', p.past || '');
+        if (past === null) return;
+        const phone = prompt('联系电话：', p.phone || '');
+        if (phone === null) return;
+        const id = p.id || p.key;
+        apiFetch(`${API_BASE}/patients/${id}`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ allergy, past, phone })
+        }).then(async () => {
+            await loadAllData();
+            showToast('患者档案已更新');
+        }).catch(err => { if (err.message !== '未登录') showToast(err.message || '保存失败', 'error'); });
+    }
+
+    async function syncPatientProfiles() {
+        try {
+            await apiFetch(`${API_BASE}/patients/migrate`, { method: 'POST' });
+            const pr = await apiFetch(`${API_BASE}/patients`);
+            dbPatients = await pr.json();
+            renderPatientPage();
+            if (selectedPatientKey) selectPatientProfile(selectedPatientKey);
+            showToast('患者档案已同步');
+        } catch (err) { if (err.message !== '未登录') showToast(err.message || '同步失败', 'error'); }
+    }
+
+    // ==================== v3.2 病历模板 / 方剂组套 ====================
+    function applyTemplateSelect() {
+        const sel = document.getElementById('cf_templateSelect');
+        if (!sel || !sel.value) return alert('请先选择模板');
+        const t = dbMedicalTemplates.find(x => x.name === sel.value);
+        if (!t) return;
+        if (document.getElementById('cf_chief')) document.getElementById('cf_chief').value = t.chief || '';
+        if (document.getElementById('cf_history')) document.getElementById('cf_history').value = t.history || '';
+        if (document.getElementById('cf_diagnosis')) document.getElementById('cf_diagnosis').value = t.diagnosis || '';
+        if (document.getElementById('cf_advice')) document.getElementById('cf_advice').value = t.advice || '';
+        showToast('已插入模板：' + t.name);
+    }
+
+    function applyFormula() {
+        const sel = document.getElementById('cf_formulaSelect');
+        if (!sel || !sel.value) return alert('请先选择方剂组套');
+        const f = (dbFormulaLibrary || []).find(x => x.name === sel.value);
+        if (!f) return;
+        const missing = [];
+        let added = 0;
+        for (const c of (f.composition || [])) {
+            const inv = dbDrugInventory.find(d => d.name === c.name);
+            if (!inv) { missing.push(c.name); continue; }
+            const m = String(c.amount || '').match(/(\d+(?:\.\d+)?)/);
+            const qty = m ? Number(m[1]) : 1;
+            if (prescriptionTempList.some(x => x.name === inv.name)) continue;
+            prescriptionTempList.push({ name: inv.name, qty, price: Number(inv.price)||0, subtotal: +(qty * (Number(inv.price)||0)).toFixed(2) });
+            added++;
+        }
+        renderClinicPrescription();
+        let msg = `已应用组套「${f.name}」，添加 ${added} 味药`;
+        if (missing.length) msg += '；以下药味不在库存中，请先入库：' + missing.join('、');
+        alert(msg);
+    }
+
+    // ==================== v3.2 药房盘点 ====================
+    function renderPharmacyCheck() {
+        const tb = document.getElementById('checkBody');
+        if (!tb) return;
+        if (!dbDrugInventory.length) {
+            tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;padding:15px;">暂无库存数据</td></tr>';
+            return;
+        }
+        tb.innerHTML = dbDrugInventory.map(d => `
+            <tr>
+                <td><span class="drug-name" data-drug-name="${esc(d.name)}">${esc(d.name)}</span></td>
+                <td>${esc(d.spec||'-')}</td>
+                <td>${esc(d.stock||0)}</td>
+                <td>${esc(d.unit||'盒')}</td>
+                <td><input type="number" class="check-input" id="check_qty_${d.id}" placeholder="${esc(d.stock||0)}"></td>
+            </tr>`).join('');
+    }
+
+    async function saveInventoryCheck() {
+        const items = [];
+        for (const d of dbDrugInventory) {
+            const input = document.getElementById('check_qty_' + d.id);
+            if (!input || input.value === '') continue;
+            const actual = Number(input.value);
+            if (!Number.isFinite(actual) || actual < 0) continue;
+            if (actual !== Number(d.stock||0)) items.push({ id: d.id, actual });
+        }
+        if (!items.length) return alert('没有需要调整的药品（请填写变化的实盘数）');
+        try {
+            const res = await apiFetch(`${API_BASE}/inventory/check`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ items })
+            });
+            const d = await res.json();
+            await loadAllData();
+            showToast(`盘点完成：${d.changed} 种药品库存已调整`);
+        } catch (err) { if (err.message !== '未登录') showToast(err.message || '盘点失败', 'error'); }
+    }
+
+    // ==================== v3.2 药典知识库管理 ====================
+    async function renderPharmacyKnowledge(q) {
+        const tb = document.getElementById('kbBody');
+        if (!tb) return;
+        const kw = (q === undefined ? (document.getElementById('kbSearchInput') ? document.getElementById('kbSearchInput').value : '') : q) || '';
+        try {
+            const res = await apiFetch(`${API_BASE}/pharmacopoeia/search?q=${encodeURIComponent(kw)}&limit=40`);
+            const d = await res.json();
+            const statsRes = await apiFetch(`${API_BASE}/pharmacopoeia/stats`);
+            const st = await statsRes.json();
+            const statsEl = document.getElementById('kbStats');
+            if (statsEl) statsEl.innerText = st.pharma;
+            if (!d.items || !d.items.length) {
+                tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;padding:15px;">未找到条目，可点击“新增条目”补充</td></tr>';
+                return;
+            }
+            tb.innerHTML = d.items.map(e => `
+                <tr>
+                    <td><span class="drug-name" data-drug-name="${esc(e.name)}">${esc(e.name)}</span>${e.isUser ? ' <span class="badge" style="background:#e8f5ee;color:#1f6f5e;">我的</span>' : ''}</td>
+                    <td>${esc(e.category||'-')}</td>
+                    <td style="max-width:260px;">${esc((e.functions||'').slice(0,50)||'-')}</td>
+                    <td style="font-size:11px;color:#999;">${esc((e.source||'').slice(0,24)||'-')}</td>
+                    <td>
+                        <button class="op-btn" onclick="openKBModal('${esc(e.name)}', ${e.isUser ? e.id : 'null'})">编辑</button>
+                        ${e.isUser ? `<button class="op-btn danger" onclick="deleteKBEntry(${e.id})">删除</button>` : ''}
+                    </td>
+                </tr>`).join('');
+        } catch (err) {
+            if (err.message !== '未登录') tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#E5484D;">加载失败</td></tr>';
+        }
+    }
+
+    async function openKBModal(name, id) {
+        kbEditId = id || null;
+        document.getElementById('kbModalTitle').innerText = id ? '编辑药典条目（我的）' : (name ? '编辑药典条目（将保存为我的条目）' : '新增药典条目');
+        let base = id ? (dbDrugKnowledge.find(x => String(x.id) === String(id)) || null) : null;
+        if (name && !id) {
+            try {
+                const res = await apiFetch(`${API_BASE}/pharmacopoeia/lookup?name=${encodeURIComponent(name)}`);
+                const d = await res.json();
+                base = d && d.found ? d.entry : null;
+            } catch (e) {}
+        }
+        const fill = (field, val) => { document.getElementById('kb_' + field).value = val || ''; };
+        fill('name', base ? base.name : (name || ''));
+        fill('category', base ? base.category : '');
+        fill('functions', base ? base.functions : '');
+        fill('usage', base ? base.usage : '');
+        fill('contraindications', base ? base.contraindications : '');
+        fill('adverse', base ? base.adverseReactions : '');
+        fill('notes', base ? base.notes : '');
+        fill('interactions', base ? base.interactions : '');
+        fill('storage', base ? base.storage : '');
+        fill('source', base ? base.source : '公开药品说明书整理');
+        document.getElementById('modalKB').style.display = 'flex';
+    }
+
+    async function saveKBEntry() {
+        const name = document.getElementById('kb_name').value.trim();
+        if (!name) return alert('药品名称不能为空');
+        const payload = {
+            name,
+            aliases: [],
+            category: document.getElementById('kb_category').value.trim(),
+            functions: document.getElementById('kb_functions').value.trim(),
+            usage: document.getElementById('kb_usage').value.trim(),
+            contraindications: document.getElementById('kb_contraindications').value.trim(),
+            adverseReactions: document.getElementById('kb_adverse').value.trim(),
+            notes: document.getElementById('kb_notes').value.trim(),
+            interactions: document.getElementById('kb_interactions').value.trim(),
+            storage: document.getElementById('kb_storage').value.trim(),
+            source: document.getElementById('kb_source').value.trim() || '用户补充',
+            updatedAt: new Date().toISOString().slice(0,10)
+        };
+        try {
+            if (kbEditId) {
+                await apiFetch(`${API_BASE}/drugKnowledge/${kbEditId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            } else {
+                await apiFetch(`${API_BASE}/drugKnowledge`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            }
+            document.getElementById('modalKB').style.display = 'none';
+            await loadAllData();
+            showToast('药典条目已保存');
+        } catch (err) { if (err.message !== '未登录') showToast(err.message || '保存失败', 'error'); }
+    }
+
+    async function deleteKBEntry(id) {
+        if (!confirm('确定删除这条自定义条目？')) return;
+        try {
+            await apiFetch(`${API_BASE}/drugKnowledge/${id}`, { method: 'DELETE' });
+            await loadAllData();
+            showToast('条目已删除');
+        } catch (err) { if (err.message !== '未登录') showToast(err.message || '删除失败', 'error'); }
+    }
+
+    function importKB() {
+        const text = prompt('粘贴 JSON 数组（每条至少含 name；可含 category/functions/usage/contraindications/adverseReactions/notes/interactions/storage）。示例：[{"name":"阿莫西林胶囊","category":"西药","functions":"抗菌药","usage":"一次0.5g，一日3次"}]');
+        if (!text) return;
+        let arr;
+        try { arr = JSON.parse(text); } catch (e) { return alert('JSON 格式不正确，请检查后重试'); }
+        if (!Array.isArray(arr) || !arr.length) return alert('至少需要一条数据');
+        if (arr.length > 50) return alert('单次最多导入 50 条');
+        let ok = 0;
+        const run = async () => {
+            for (const it of arr) {
+                if (!it || !String(it.name || '').trim()) continue;
+                try {
+                    await apiFetch(`${API_BASE}/drugKnowledge`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...it, source: it.source || '批量导入', updatedAt: new Date().toISOString().slice(0,10) }) });
+                    ok++;
+                } catch (e) {}
+            }
+            await loadAllData();
+            showToast(`批量导入完成：成功 ${ok} 条`);
+        };
+        run();
+    }
+
+    // ==================== v3.2 处方分析（增强统计） ====================
+    let enhancedRange = '1m';
+    async function loadEnhancedStats(range) {
+        enhancedRange = range || enhancedRange;
+        try {
+            const res = await apiFetch(`${API_BASE}/statistics/enhanced?range=${enhancedRange}`);
+            const d = await res.json();
+            document.getElementById('en_rxTotal').innerText = d.rxTotal;
+            document.getElementById('en_gross').innerText = '¥' + (d.grossProfit||0).toFixed(2);
+            document.getElementById('en_patients').innerText = d.totalPatients;
+            document.getElementById('en_revisit').innerText = (d.revisitRate||0) + '%';
+            document.getElementById('en_range').innerText = d.label;
+            renderBarChart('enBarChart', d.rxTrend || []);
+        } catch (err) { if (err.message !== '未登录') showToast('处方分析加载失败', 'error'); }
+    }
+
+    function renderBarChart(id, data) {
+        const wrap = document.getElementById(id);
+        if (!wrap) return;
+        const max = Math.max(...data.map(x => x.value), 1);
+        wrap.innerHTML = data.map(x => {
+            const h = Math.max(2, Math.round(x.value / max * 150));
+            return `<div class="bar" style="height:${h}px;" title="${esc(x.date)}：${x.value} 张处方"></div>`;
+        }).join('');
+        if (!data.length) wrap.innerHTML = '<div style="color:#999; font-size:12px; padding:20px 0;">暂无处方数据</div>';
+    }
+
+    document.addEventListener('click', e => {
+        const btn = e.target.closest('#enRangeTabs .stats-tf-btn');
+        if (btn) {
+            document.querySelectorAll('#enRangeTabs .stats-tf-btn').forEach(s => s.classList.remove('active'));
+            btn.classList.add('active');
+            loadEnhancedStats(btn.dataset.range);
+        }
+    });
+
+    // ==================== v3.2 AI 设置 ====================
+    function fillAISettings() {
+        const cfg = (dbSettings && dbSettings.aiConfig) || {};
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v === undefined || v === null ? '' : v; };
+        const ck = document.getElementById('ai_enabled');
+        if (ck) ck.checked = !!cfg.enabled;
+        set('ai_provider', cfg.provider || 'zhipu');
+        set('ai_baseUrl', cfg.baseUrl || '');
+        set('ai_apiKey', cfg.apiKey || '');
+        set('ai_model', cfg.model || '');
+        set('ai_timeout', cfg.timeoutMs ? Math.round(cfg.timeoutMs/1000) : 60);
+    }
+
+    function onAIProviderChange() {
+        const p = document.getElementById('ai_provider').value;
+        const presets = {
+            zhipu: { url: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4.7-flash' },
+            deepseek: { url: 'https://api.deepseek.com', model: 'deepseek-chat' },
+            siliconflow: { url: 'https://api.siliconflow.cn/v1', model: 'THUDM/glm-4-9b-chat' },
+            custom: { url: '', model: '' }
+        };
+        const pr = presets[p] || presets.zhipu;
+        const urlEl = document.getElementById('ai_baseUrl');
+        const modelEl = document.getElementById('ai_model');
+        if (p === 'custom') {
+            if (urlEl) urlEl.placeholder = 'https://你的接口地址/v1';
+            if (modelEl) modelEl.placeholder = '模型名称';
+        } else {
+            if (urlEl) { urlEl.value = pr.url; urlEl.placeholder = pr.url; }
+            if (modelEl) { modelEl.value = pr.model; modelEl.placeholder = pr.model; }
+        }
+    }
+
+    function collectAIConfigForm() {
+        return {
+            enabled: document.getElementById('ai_enabled').checked,
+            provider: document.getElementById('ai_provider').value,
+            baseUrl: document.getElementById('ai_baseUrl').value.trim(),
+            apiKey: document.getElementById('ai_apiKey').value.trim(),
+            model: document.getElementById('ai_model').value.trim(),
+            timeoutMs: (Number(document.getElementById('ai_timeout').value) || 60) * 1000
+        };
+    }
+
+    async function saveAIConfig() {
+        const aiConfig = collectAIConfigForm();
+        try {
+            await apiFetch(`${API_BASE}/settings/1`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aiConfig }) });
+            const r = await apiFetch(`${API_BASE}/settings`);
+            dbSettings = await r.json();
+            fillAISettings();
+            showToast('AI 配置已保存');
+        } catch (err) { if (err.message !== '未登录') showToast(err.message || '保存失败', 'error'); }
+    }
+
+    async function testAIConfig() {
+        const aiConfig = collectAIConfigForm();
+        try {
+            await apiFetch(`${API_BASE}/settings/1`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aiConfig }) });
+            const res = await apiFetch(`${API_BASE}/ai/test`, { method: 'POST' });
+            const d = await res.json();
+            showToast(`连接成功：${d.provider||''}（${d.model||''}）`);
+        } catch (err) {
+            if (err.message !== '未登录') showToast('测试失败：' + err.message, 'error');
+        }
     }
 
     let statsPeriod = 'today';
@@ -1672,6 +2381,9 @@
                 
                 // 隐藏所有面板
                 document.querySelectorAll('.stab-panel').forEach(p => p.style.display = 'none');
+                // 营收选项卡仅在“营收统计”菜单下显示，避免与库存/运营/处方分析混淆
+                const tabBar = document.querySelector('.stats-tab-bar');
+                if (tabBar) tabBar.style.display = menu === 'revenue' ? '' : 'none';
                 if (menu === 'analysis') {
                     document.getElementById('stab-analysis').style.display = 'block';
                     loadOperationsData();
@@ -1681,6 +2393,9 @@
                 } else if (menu === 'revenue') {
                     document.getElementById('stab-overview').style.display = 'block';
                     document.querySelector('.stats-tab-bar .stats-tab.active')?.click();
+                } else if (menu === 'enhanced') {
+                    document.getElementById('stab-enhanced').style.display = 'block';
+                    loadEnhancedStats();
                 } else {
                     alert('该模块正在开发中');
                     statsSidebar.querySelector('[data-smenu="revenue"]').classList.add('active');
@@ -1736,7 +2451,7 @@
     function renderStatsCards() {
         if(!statsData) return;
         const cards = statsData.cards || [];
-        const ids = ['rc_total','rc_op','rc_retail','rc_reg','rc_opvisits','rc_retailcust','rc_opavg','rc_retailavg'];
+        const ids = ['rc_total','rc_op','rc_retail','rc_opvisits','rc_retailcust','rc_opavg','rc_retailavg'];
         cards.forEach((c, i) => {
             const el = document.getElementById(ids[i]);
             if(el) {
@@ -2171,21 +2886,20 @@
         const dayMap = {};
         statsData.detailList.forEach(r => {
             const day = (r.date || '').split(' ')[0] || '未知';
-            if(!dayMap[day]) dayMap[day] = { total:0, op:0, retail:0, reg:0, count:0 };
+            if(!dayMap[day]) dayMap[day] = { total:0, op:0, retail:0, count:0 };
             dayMap[day].total += r.amount || 0;
             if((r.desc||'').includes('门诊')) dayMap[day].op += r.amount || 0;
             if((r.desc||'').includes('零售')) dayMap[day].retail += r.amount || 0;
-            if((r.desc||'').includes('挂号') || (r.desc||'').includes('预约')) dayMap[day].reg += r.amount || 0;
             dayMap[day].count++;
         });
         const days = Object.keys(dayMap).sort().reverse();
         if(!days.length) {
-            tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#999;padding:15px;">暂无数据</td></tr>';
+            tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;padding:15px;">暂无数据</td></tr>';
             return;
         }
         tb.innerHTML = days.map(d => `
             <tr><td>${esc(d)}</td><td>¥${dayMap[d].total.toFixed(2)}</td><td>¥${dayMap[d].op.toFixed(2)}</td>
-            <td>¥${dayMap[d].retail.toFixed(2)}</td><td>¥${dayMap[d].reg.toFixed(2)}</td><td>${dayMap[d].count}</td></tr>`).join('');
+            <td>¥${dayMap[d].retail.toFixed(2)}</td><td>${dayMap[d].count}</td></tr>`).join('');
     }
 
     function renderProjectStats() {
@@ -2237,48 +2951,98 @@
             const tab = e.target.dataset.wtab;
             document.getElementById('warningExpiryPanel').style.display = tab==='expiry'?'block':'none';
             document.getElementById('warningStockPanel').style.display = tab==='stock'?'block':'none';
+            document.getElementById('warningMarginPanel').style.display = tab==='margin'?'block':'none';
         }
     });
 
-    // 【本次需求新增】 重写药房列表渲染逻辑，9列对齐与库存<=10黄字高亮
+    // 【v3.3】 药房列表：物品列表 / 库存列表 两个页签
     function renderPharmacyList() {
-        const active = document.querySelector('#pharmaListTabs span.active').dataset.tab;
-        let list = dbPharmacy;
-        if(active === 'pending') list = dbPharmacy.filter(p => p.status === '待发药');
-        else if(active === 'done') list = dbPharmacy.filter(p => p.status === '已发药');
+        const active = document.querySelector('#pharmaListTabs span.active')?.dataset.tab || 'items';
+        const itemsEl = document.getElementById('pharmaTabItems');
+        const stockEl = document.getElementById('pharmaTabStock');
+        if (itemsEl) itemsEl.style.display = active === 'items' ? 'block' : 'none';
+        if (stockEl) stockEl.style.display = active === 'stock' ? 'block' : 'none';
+        renderPharmacyItemTable();
+        renderPharmacyStockTable();
+        renderPendingDispense();
+    }
 
-        const tb = document.getElementById('pharmacyBody');
-        if (active === 'all') {
-            if(!dbDrugInventory.length) { 
-                tb.innerHTML='<tr><td colspan="9" style="text-align:center;color:#999;padding:15px;">暂无库存数据</td></tr>'; 
-            } else {
-                tb.innerHTML = dbDrugInventory.map((d, idx) => `
-                    <tr>
-                        <td>${idx + 1}</td>
-                        <td>${esc(d.code || '-')}</td>
-                        <td><b>${esc(d.name)}</b></td>
-                        <td>${esc(d.spec || '-')}</td>
-                        <td>${esc(d.manufacturer || d.supplier || '-')}</td>
-                        <td>${esc(d.category || '-')}</td>
-                        <td>¥${(d.price||0).toFixed(2)}</td>
-                        <td>¥${(d.costPrice||0).toFixed(2)}</td>
-                        <td style="color: ${Number(d.stock||0) <= 10 ? '#F5A623' : '#27AE60'}; font-weight:bold;">
-                            ${Number(d.stock||0) <= 10 ? '预警(库存不足)' : '正常'}
-                        </td>
-                    </tr>
-                `).join('');
-            }
-        } else {
-            if(!list.length) { tb.innerHTML='<tr><td colspan="9" style="text-align:center;color:#999;padding:15px;">无记录</td></tr>'; }
-            else {
-                tb.innerHTML = list.map(p=>`
-                    <tr><td>-</td><td>-</td><td>${esc(p.drug)}</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
-                    <td><span style="color:${p.status==='待发药'?'var(--orange)':'var(--green)'};">${esc(p.status)}</span>
-                    ${p.status==='待发药'?`<button class="op-btn" onclick="dispenseDrug(${p.id})">发药</button>`:''}</td></tr>
-                `).join('');
-            }
+    function renderPharmacyItemTable() {
+        const tb = document.getElementById('pharmacyItemBody');
+        if (!tb) return;
+        if (!dbDrugInventory.length) {
+            tb.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#999;padding:15px;">暂无库存数据</td></tr>';
+            return;
         }
-        document.getElementById('pharma_wait').innerText = dbPharmacy.filter(p=>p.status==='待发药').length;
+        tb.innerHTML = dbDrugInventory.map((d, idx) => {
+            const price = Number(d.price) || 0, cost = Number(d.costPrice) || 0, stock = Number(d.stock) || 0;
+            const stockCost = stock * cost;
+            const rate = price > 0 ? ((price - cost) / price * 100) : 0;
+            return `<tr>
+                <td>${idx + 1}</td>
+                <td>${esc(d.code || '-')}</td>
+                <td><b class="drug-name" data-drug-name="${esc(d.name)}">${esc(d.name)}</b></td>
+                <td>${esc(d.spec || '-')}</td>
+                <td>${esc(d.manufacturer || d.supplier || '-')}</td>
+                <td>${esc(d.category || '-')}</td>
+                <td>¥${price.toFixed(2)}</td>
+                <td>¥${cost.toFixed(2)}</td>
+                <td style="color: ${stock <= 10 ? '#F5A623' : '#27AE60'}; font-weight:bold;">${stock} ${esc(d.unit || '盒')}</td>
+                <td>¥${stockCost.toFixed(2)}</td>
+                <td class="${rate <= 0 ? 'margin-low' : ''}">${rate.toFixed(1)}%</td>
+            </tr>`;
+        }).join('');
+    }
+
+    function renderPharmacyStockTable() {
+        const tb = document.getElementById('pharmacyStockBody');
+        if (!tb) return;
+        if (!dbDrugInventory.length) {
+            tb.innerHTML = '<tr><td colspan="16" style="text-align:center;color:#999;padding:15px;">暂无库存数据</td></tr>';
+            return;
+        }
+        tb.innerHTML = dbDrugInventory.map((d, idx) => {
+            const specUnit = [d.spec, d.unit].filter(Boolean).join('×') || '-';
+            return `<tr>
+                <td>${idx + 1}</td>
+                <td>${esc(d.code || '-')}</td>
+                <td><b class="drug-name" data-drug-name="${esc(d.name)}">${esc(d.name)}</b></td>
+                <td>${esc(d.category || '-')}</td>
+                <td>${esc(specUnit)}</td>
+                <td>${esc(d.manufacturer || '-')}</td>
+                <td>${esc(d.approvalNo || '-')}</td>
+                <td>${esc(d.batchNo || '-')}</td>
+                <td>${esc(d.productionDate || '-')}</td>
+                <td>${esc(d.expiry || '-')}</td>
+                <td>${esc(d.batchNo || '-')}</td>
+                <td style="font-weight:bold;">${Number(d.stock) || 0} ${esc(d.unit || '盒')}</td>
+                <td>${esc(d.supplier || '-')}</td>
+                <td>¥${(Number(d.costPrice) || 0).toFixed(2)}</td>
+                <td>${esc(d.purchaseDate || '-')}</td>
+                <td>¥${(Number(d.price) || 0).toFixed(2)}</td>
+            </tr>`;
+        }).join('');
+    }
+
+    // 【v3.3】 待发药列表（发药功能并入“出库记录”页）
+    function renderPendingDispense() {
+        const tb = document.getElementById('pendingDispenseBody');
+        const waitEl = document.getElementById('pharma_wait');
+        const pending = dbPharmacy.filter(p => p.status === '待发药');
+        if (waitEl) waitEl.innerText = pending.length;
+        if (!tb) return;
+        if (!pending.length) {
+            tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#999;">暂无待发药</td></tr>';
+            return;
+        }
+        tb.innerHTML = pending.map(p => `<tr>
+            <td>${esc(p.patient || '-')}</td>
+            <td><span class="drug-name" data-drug-name="${esc(p.drug)}">${esc(p.drug)}</span></td>
+            <td>${esc(p.qty)}</td>
+            <td>${esc(p.date || '-')}</td>
+            <td><span style="color:var(--orange);">${esc(p.status)}</span></td>
+            <td><button class="op-btn" onclick="dispenseDrug(${p.id})">发药</button></td>
+        </tr>`).join('');
     }
 
     async function dispenseDrug(id) {
@@ -2310,19 +3074,21 @@
                 if(!rows.length){ alert('Excel文件中未检测到数据行'); return; }
                 // 列名自动映射关键字逻辑保持不变，见本次后端优化
                 const colMap = {
-                    name:      ['药名','名称','药品名称','品名','药品名','drug_name','name'],
-                    code:      ['药品编码','编码','code'],
-                    spec:      ['规格','spec'],
-                    unit:      ['包装单位','最小包装单位','单位','unit'],
-                    category:  ['类型','药品类型','分类','category'],
-                    manufacturer:['厂家','生产厂家','生产企业','manufacturer'],
-                    approvalNo:['批准文号','国药准字','approval'],
-                    price:     ['门店售价','零售价','售价','price','门店售价(拆零)'],
-                    costPrice: ['最近进价','进价','成本','cost'],
-                    stock:     ['当前库存','库存','stock','当前库存数(按大包装)'],
-                    expiry:    ['最近效期','效期','过期日期','expiry','有效期'],
-                    supplier:  ['最近供应商','供应商','supplier'],
-                    batchNo:   ['最近批次','批号','batchNo','批次']
+                    name:      ['药名','名称','药品名称','品名','药品名','药物名称','品名规格','drug_name','name'],
+                    code:      ['药品编码','编码','商品编码','货号','code'],
+                    spec:      ['规格','规格型号','spec'],
+                    unit:      ['包装单位','最小包装单位','单位','规格单位','unit'],
+                    category:  ['类型','药品类型','分类','类别','category'],
+                    manufacturer:['厂家','生产厂家','生产企业','制造商','manufacturer'],
+                    approvalNo:['批准文号','国药准字','注册证号','approval','approval_no'],
+                    price:     ['门店售价','零售价','售价','销售价格','销售价','price'],
+                    costPrice: ['最近进价','进价','成本','进货价格','采购价','cost','costPrice'],
+                    stock:     ['当前库存','库存','库存数量','数量','stock','当前库存数(按大包装)'],
+                    expiry:    ['最近效期','效期','过期日期','有效期至','有效期','expiry'],
+                    supplier:  ['最近供应商','供应商','供货单位','供货商','supplier'],
+                    batchNo:   ['最近批次','批号','生产批号','批次','batchNo','batch_no','lot'],
+                    productionDate: ['生产日期','生产批号日期','productionDate','production_date'],
+                    purchaseDate: ['购进日期','入库日期','采购日期','到货日期','purchaseDate','purchase_date']
                 };
                 const headers = Object.keys(rows[0]);
                 function findCol(names) {
@@ -2338,9 +3104,10 @@
                 }
                 if(!colIdx.name){ alert('未找到药品名称列！请确认Excel包含"药名"或"名称"列。\n检测到的列：' + headers.join(', ')); return; }
                 const items = [];
+                let skippedRows = 0;
                 for(const r of rows){
                     const name = String(r[colIdx.name] || '').trim();
-                    if(!name || name === '药名' || name === '名称') continue;
+                    if(!name || name === '药名' || name === '名称') { skippedRows++; continue; }
                     let stockVal = 0;
                     if(colIdx.stock){
                         const raw = String(r[colIdx.stock] || '0');
@@ -2371,10 +3138,12 @@
                         stock: stockVal,
                         expiry: colIdx.expiry ? String(r[colIdx.expiry] || '') : '',
                         supplier: colIdx.supplier ? String(r[colIdx.supplier] || '') : '',
-                        batchNo: colIdx.batchNo ? String(r[colIdx.batchNo] || '') : ''
+                        batchNo: colIdx.batchNo ? String(r[colIdx.batchNo] || '') : '',
+                        productionDate: colIdx.productionDate ? String(r[colIdx.productionDate] || '') : '',
+                        purchaseDate: colIdx.purchaseDate ? String(r[colIdx.purchaseDate] || '') : ''
                     });
                 }
-                if(!items.length){ alert('未解析到有效药品数据'); return; }
+                if(!items.length){ alert('未解析到有效药品数据（请确认存在"名称/药名"列）。检测到的列：' + headers.join(', ')); return; }
                 const resp = await apiFetch(`${API_BASE}/drug-inventory/batch-import`, {
                     method:'POST', headers:{'Content-Type':'application/json'},
                     body:JSON.stringify({ items })
@@ -2382,7 +3151,7 @@
                 const result = await resp.json();
                 if(result.success){
                     await loadAllData();
-                    showToast(`导入成功！新增 ${result.added} 条，更新 ${result.updated} 条`);
+                    showToast(`导入成功！新增 ${result.added} 条，更新 ${result.updated} 条${skippedRows ? '，跳过无名称 ' + skippedRows + ' 行' : ''}`);
                 } else { alert('导入失败：' + (result.error || '未知错误')); }
             }catch(err){
                 console.error('导入异常:', err);
@@ -2393,35 +3162,45 @@
     });
 
     function exportPharmacyData(){
-        if(dbDrugInventory && dbDrugInventory.length) {
-            const wsData = dbDrugInventory.map(d => ({
-                '药品名称': d.name || '', '编码': d.code || '', '规格': d.spec || '',
-                '单位': d.unit || '', '类型': d.category || '', '厂家': d.manufacturer || '',
-                '批准文号': d.approvalNo || '', '零售价': d.price || 0,
-                '最近进价': d.costPrice || 0, '当前库存': d.stock || 0,
-                '效期': d.expiry || '', '供应商': d.supplier || '', '批号': d.batchNo || ''
+        const active = document.querySelector('#pharmaListTabs span.active')?.dataset.tab || 'items';
+        if(!dbDrugInventory || !dbDrugInventory.length) { alert('暂无库存数据可导出'); return; }
+        const dateStr = new Date().toISOString().split('T')[0];
+        if(active === 'stock') {
+            const wsData = dbDrugInventory.map((d, idx) => ({
+                '序号': idx + 1, '编码': d.code || '', '名称': d.name || '', '类型': d.category || '',
+                '规格单位': [d.spec, d.unit].filter(Boolean).join('×'), '厂家': d.manufacturer || '',
+                '国药准字': d.approvalNo || '', '生产批号': d.batchNo || '', '生产日期': d.productionDate || '',
+                '有效期': d.expiry || '', '批次': d.batchNo || '', '库存': d.stock || 0,
+                '供货单位': d.supplier || '', '进货价格': d.costPrice || 0, '购进日期': d.purchaseDate || '',
+                '销售价格': d.price || 0
             }));
             const ws = XLSX.utils.json_to_sheet(wsData);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, '药品库存');
-            XLSX.writeFile(wb, `药品库存列表_${new Date().toISOString().split('T')[0]}.xlsx`);
-        } else if(dbPharmacy.length) {
-            const wsData = dbPharmacy.map(p => ({
-                '时间': p.date || '', '患者': p.patient || '', '药品': p.drug || '',
-                '数量': p.qty || 0, '状态': p.status || '', '来源': p.source || ''
-            }));
+            XLSX.utils.book_append_sheet(wb, ws, '库存列表');
+            XLSX.writeFile(wb, `库存列表_${dateStr}.xlsx`);
+        } else {
+            const wsData = dbDrugInventory.map((d, idx) => {
+                const price = Number(d.price) || 0, cost = Number(d.costPrice) || 0, stock = Number(d.stock) || 0;
+                const rate = price > 0 ? +((price - cost) / price * 100).toFixed(1) : 0;
+                return {
+                    '序号': idx + 1, '编码': d.code || '', '名称': d.name || '', '规格': d.spec || '',
+                    '厂家': d.manufacturer || d.supplier || '', '类型': d.category || '',
+                    '零售价': price, '进价': cost, '库存': stock,
+                    '库存成本': +(stock * cost).toFixed(2), '毛利率(%)': rate
+                };
+            });
             const ws = XLSX.utils.json_to_sheet(wsData);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, '处方记录');
-            XLSX.writeFile(wb, `处方记录_${new Date().toISOString().split('T')[0]}.xlsx`);
-        } else { alert('暂无数据可导出'); }
+            XLSX.utils.book_append_sheet(wb, ws, '物品列表');
+            XLSX.writeFile(wb, `物品列表_${dateStr}.xlsx`);
+        }
     }
 
     function renderInventoryTables() {
         const inTb = document.getElementById('inRecordBody');
         if(dbDrugInRecords.length) {
             inTb.innerHTML = dbDrugInRecords.map(r => `<tr>
-                <td>${esc(r.drugName)}</td><td>${esc(r.qty)}</td><td>${esc(r.batchNo||'-')}</td>
+                <td><span class="drug-name" data-drug-name="${esc(r.drugName)}">${esc(r.drugName)}</span></td><td>${esc(r.qty)}</td><td>${esc(r.batchNo||'-')}</td>
                 <td>${esc(r.expiry||'-')}</td><td>${esc(r.supplier||'-')}</td><td>¥${(r.cost||0).toFixed(2)}</td><td>${esc(r.date)}</td>
             </tr>`).join('');
         } else if(inTb) {
@@ -2430,7 +3209,7 @@
         const outTb = document.getElementById('outRecordBody');
         if(dbDrugOutRecords.length) {
             outTb.innerHTML = dbDrugOutRecords.map(r => `<tr>
-                <td>${esc(r.drugName)}</td><td>${esc(r.qty)}</td><td>${esc(r.patient||'-')}</td><td>${esc(r.type)}</td><td>${esc(r.date)}</td>
+                <td><span class="drug-name" data-drug-name="${esc(r.drugName)}">${esc(r.drugName)}</span></td><td>${esc(r.qty)}</td><td>${esc(r.patient||'-')}</td><td>${esc(r.type)}</td><td>${esc(r.date)}</td>
             </tr>`).join('');
         } else if(outTb) {
             outTb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">暂无记录</td></tr>';
@@ -2439,7 +3218,7 @@
         const expiryList = (dashboardStats && dashboardStats.warnings && dashboardStats.warnings.expiryDrugs) || [];
         if(expiryList.length) {
             expTb.innerHTML = expiryList.map(d => `<tr>
-                <td>${esc(d.name)}</td><td>${esc(d.stock||d.quantity||0)}</td><td>${esc(d.batchNo||'-')}</td><td>${esc(d.expiry||'-')}</td>
+                <td><span class="drug-name" data-drug-name="${esc(d.name)}">${esc(d.name)}</span></td><td>${esc(d.stock||d.quantity||0)}</td><td>${esc(d.batchNo||'-')}</td><td>${esc(d.expiry||'-')}</td>
                 <td><span class="badge expire">即将过期</span></td>
             </tr>`).join('');
         } else if(expTb) {
@@ -2449,7 +3228,7 @@
         const lowList = (dashboardStats && dashboardStats.warnings && dashboardStats.warnings.lowStockDrugs) || [];
         if(lowList.length) {
             stockTb.innerHTML = lowList.map(d => `<tr>
-                <td>${esc(d.name)}</td><td>${esc(d.stock||0)}</td><td>${esc(d.minStock||10)}</td><td>${esc(d.unit||'盒')}</td>
+                <td><span class="drug-name" data-drug-name="${esc(d.name)}">${esc(d.name)}</span></td><td>${esc(d.stock||0)}</td><td>${esc(d.minStock||10)}</td><td>${esc(d.unit||'盒')}</td>
                 <td><span class="badge warn">库存不足</span></td>
             </tr>`).join('');
         } else if(stockTb) {
@@ -2466,8 +3245,33 @@
         }
     }
 
+    function renderMarginWarnings() {
+        const tb = document.getElementById('marginBody');
+        if(!tb) return;
+        const list = dbDrugInventory.filter(d => {
+            const price = Number(d.price) || 0;
+            const cost = Number(d.costPrice) || 0;
+            return cost > 0 && price > 0 && (price <= cost || (price - cost) / price < 0.15);
+        });
+        if(!list.length) {
+            tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">暂无毛利预警</td></tr>';
+            return;
+        }
+        tb.innerHTML = list.map(d => {
+            const price = Number(d.price) || 0, cost = Number(d.costPrice) || 0;
+            const rate = price > 0 ? ((price - cost) / price * 100) : 0;
+            const cls = rate <= 0 ? 'margin-low' : '';
+            return `<tr>
+                <td><span class="drug-name" data-drug-name="${esc(d.name)}">${esc(d.name)}</span></td>
+                <td>¥${price.toFixed(2)}</td><td>¥${cost.toFixed(2)}</td>
+                <td class="${cls}">${rate.toFixed(1)}%</td>
+                <td><span class="badge ${rate<=0?'danger':'warn'}">${rate<=0?'无毛利':'毛利偏低'}</span></td>
+            </tr>`;
+        }).join('');
+    }
+
     function openStockInModal() {
-        ['si_drugName','si_qty','si_batchNo','si_expiry','si_supplier','si_cost','si_price'].forEach(id=>document.getElementById(id).value='');
+        ['si_drugName','si_qty','si_batchNo','si_productionDate','si_expiry','si_supplier','si_cost','si_price'].forEach(id=>document.getElementById(id).value='');
         document.getElementById('modalStockIn').style.display = 'flex';
     }
 
@@ -2481,6 +3285,7 @@
                 body: JSON.stringify({
                     drugName, qty, unit: document.getElementById('si_unit').value,
                     batchNo: document.getElementById('si_batchNo').value,
+                    productionDate: document.getElementById('si_productionDate').value,
                     expiry: document.getElementById('si_expiry').value,
                     supplier: document.getElementById('si_supplier').value,
                     cost: parseFloat(document.getElementById('si_cost').value)||0,
@@ -2552,50 +3357,6 @@
         }
     }
 
-    // 【本次需求新增】 彻底修复日历双重高亮BUG，逻辑互斥
-    function toDateKey(d) {
-        if (!d) return null;
-        const m = String(d).match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
-        if (m) return `${m[1]}/${String(+m[2]).padStart(2,'0')}/${String(+m[3]).padStart(2,'0')}`;
-        return null;
-    }
-    function renderCalendar(){
-        const grid=document.getElementById('calendarDays'); if(!grid) return;
-        grid.innerHTML='';
-        const first=new Date(calYear,calMonth-1,1).getDay();
-        const days=new Date(calYear,calMonth,0).getDate();
-        const todayStr=getTodayStr();
-        const todayDate = new Date();
-        const isCurrentMonth = (calYear===todayDate.getFullYear() && calMonth===todayDate.getMonth()+1);
-        const dates=new Set(dbRegistration.map(p=>toDateKey(p.date)));
-        const doctors = new Set([...dbRegistration, ...dbOutpatient].map(x => (x.doctor||'').trim()).filter(Boolean));
-        const dc = document.getElementById('doctorCount');
-        if(dc) dc.innerText = `约 ${doctors.size} 位`;
-        document.getElementById('calTitle').innerText=`${calYear}年 ${calMonth}月`;
-        for(let i=0;i<first;i++)grid.innerHTML+='<div class="day-cell"></div>';
-        for(let d=1;d<=days;d++){
-            const ds=formatDateStr(calYear,calMonth,d);
-            const hasData=dates.has(ds);
-            const isToday = isCurrentMonth && d === todayDate.getDate();
-            const isSelected=regCalFilter===ds;
-            let cls='day-cell';
-            if(isToday && !isSelected) cls+=' today'; // 仅当未被选中时，今日才高亮
-            if(isSelected) cls+=' selected'; // 选中时覆盖样式，移除今日高亮
-            else if(hasData && !isToday) cls+=' has-data';
-            grid.innerHTML+=`<div class="${cls}" onclick="selectCalDate('${ds}')">${d}</div>`;
-        }
-    }
-
-    function changeCalMonth(delta) {
-        let m = calMonth + delta;
-        let y = calYear;
-        if (m < 1) { m = 12; y--; }
-        else if (m > 12) { m = 1; y++; }
-        calYear = y;
-        calMonth = m;
-        renderCalendar();
-    }
-
     function formatDateStr(year, month, day) {
         return `${year}/${String(month).padStart(2,'0')}/${String(day).padStart(2,'0')}`;
     }
@@ -2604,11 +3365,163 @@
         return formatDateStr(d.getFullYear(), d.getMonth()+1, d.getDate());
     }
 
-    function selectCalDate(dateStr) {
-        if (regCalFilter === dateStr) { regCalFilter = null; } else { regCalFilter = dateStr; }
-        renderRegTable();
-        renderCalendar();
+    // ==================== v3.3 门诊病历智能联想 ====================
+    const DEFAULT_RECORD_TERMS = {
+        chief: {
+            label: '主诉',
+            terms: ['偶尔','1天','2天','3天','4天','5天','6天','1周','2周','1月','2月','3月','半年','1年','咳嗽','干咳','咽痛','鼻塞','流涕','头痛','头晕','发热','乏力','腹胀','腹痛','恶心','呕吐','心悸','气短','胸闷','腰酸','关节痛','失眠','食欲不振','便秘','腹泻','尿频','皮疹']
+        },
+        history: {
+            label: '现病史',
+            terms: ['偶尔','1天','2天','3天','4天','5天','6天','1周','2周','1月','2月','3月','半年','1年','咳嗽','干咳','咽痛','鼻塞','流涕','头痛','头晕','发热','乏力','腹胀','腹痛','恶心','呕吐','心悸','气短','胸闷','腰酸','关节痛','失眠','食欲不振','便秘','腹泻','尿频','皮疹']
+        },
+        past: {
+            label: '既往史',
+            terms: ['既往体健','否认慢性疾病','否认手术外伤史','否认药物过敏史','高血压','糖尿病','冠心病','脑梗死','慢性胃炎','乙肝携带','慢性肾病','哮喘','甲状腺功能亢进','高脂血症','风湿类疾病','肿瘤史']
+        },
+        allergy: {
+            label: '过敏史',
+            terms: ['青霉素过敏','头孢类过敏','磺胺类过敏','阿司匹林过敏','鱼虾过敏','海鲜过敏','花生过敏','牛奶过敏','鸡蛋过敏','花粉过敏','尘螨过敏','橡胶过敏','金属过敏','酒精过敏','碘过敏']
+        },
+        tcm: {
+            label: '望闻问切',
+            tabs: {
+                '望闻切': ['形体适中','形体消瘦','形体肥胖','神志清楚','精神萎靡','烦躁不安','面色红润','面色萎黄','面色苍白','面色晦暗','舌淡红','舌红','舌暗','苔白','苔薄白','苔黄腻','苔少','脉浮','脉沉','脉弦','脉滑','脉细','脉数'],
+                '体温': ['体温正常','低热 37.3~38℃','中度发热 38.1~39℃','高热 39.1℃以上'],
+                '脉搏': ['脉率正常 60~100次/分','脉率过速 >100次/分','脉率过缓 <60次/分'],
+                '呼吸': ['呼吸平稳','气促','喘息','呼吸困难'],
+                '血压': ['血压正常 <120/80mmHg','血压偏高 ≥140/90mmHg','血压偏低 <90/60mmHg']
+            }
+        }
+    };
+    let recordTermPopup = null;
+    let recordTermActive = { field: '', tab: '' };
+
+    function getRecordTermFieldKey(id) {
+        if (id === 'cf_chief' || id === 'direct_chief') return 'chief';
+        if (id === 'cf_history') return 'history';
+        if (id === 'cf_past') return 'past';
+        if (id === 'cf_allergy') return 'allergy';
+        if (id === 'cf_tcm') return 'tcm';
+        return null;
     }
+
+    function getRecordTermLibrary(field) {
+        const def = DEFAULT_RECORD_TERMS[field] || { label: field, terms: [] };
+        const custom = (dbRecordTerms && dbRecordTerms[field]) || [];
+        if (field === 'tcm') {
+            const tabs = def.tabs || {};
+            const merged = {};
+            Object.keys(tabs).forEach(t => merged[t] = [...(tabs[t] || [])]);
+            merged['望闻切'] = [...(merged['望闻切'] || []), ...custom];
+            return { label: def.label, tabs: merged };
+        }
+        return { label: def.label, terms: [...(def.terms || []), ...custom] };
+    }
+
+    async function saveRecordTerm(field, term) {
+        const list = [...((dbRecordTerms && dbRecordTerms[field]) || [])];
+        if (!list.includes(term)) list.push(term);
+        const next = { ...(dbRecordTerms || {}), [field]: list };
+        await apiFetch(`${API_BASE}/recordTerms`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(next)
+        });
+        dbRecordTerms = next;
+    }
+
+    function openRecordTermPopup(input) {
+        const field = getRecordTermFieldKey(input.id);
+        if (!field) return;
+        closeRecordTermPopup();
+        recordTermActive = { field, tab: field === 'tcm' ? '望闻切' : '' };
+        const popup = document.createElement('div');
+        popup.id = 'recordTermPopup';
+        popup.className = 'record-term-popup';
+        document.body.appendChild(popup);
+        recordTermPopup = popup;
+        renderRecordTermPopup(input);
+    }
+
+    function renderRecordTermPopup(input) {
+        if (!recordTermPopup) return;
+        const field = recordTermActive.field;
+        const lib = getRecordTermLibrary(field);
+        const rect = input.getBoundingClientRect();
+        recordTermPopup.style.left = Math.max(4, Math.min(rect.left, window.innerWidth - 336)) + 'px';
+        recordTermPopup.style.top = (rect.bottom + 4) + 'px';
+        recordTermPopup.style.width = '320px';
+        recordTermPopup.style.maxHeight = '300px';
+        recordTermPopup.style.display = 'flex';
+
+        let tabsHtml = '';
+        let bodyHtml = '';
+        if (field === 'tcm') {
+            tabsHtml = '<div class="record-term-tabs">' + Object.keys(lib.tabs).map(t =>
+                `<span class="record-term-tab ${t === recordTermActive.tab ? 'active' : ''}" data-rt-tab="${esc(t)}">${esc(t)}</span>`
+            ).join('') + '</div>';
+            bodyHtml = '<div class="record-term-body">' + (lib.tabs[recordTermActive.tab] || []).map(t =>
+                `<span class="record-term-item" data-rt-term="${esc(t)}">${esc(t)}</span>`
+            ).join('') + '</div>';
+        } else {
+            bodyHtml = '<div class="record-term-body">' + (lib.terms || []).map(t =>
+                `<span class="record-term-item" data-rt-term="${esc(t)}">${esc(t)}</span>`
+            ).join('') + '</div>';
+        }
+        const header = `<div style="padding:6px 10px; font-size:12px; color:#666; border-bottom:1px solid #eee;">${esc(lib.label)}词库${field === 'tcm' ? '（点击标签切换）' : ''}：点击词条可连续拼接</div>`;
+        const footer = '<div class="record-term-footer"><button class="op-btn" data-rt-add="1"><i class="fas fa-plus"></i> 添加</button></div>';
+        recordTermPopup.innerHTML = header + tabsHtml + bodyHtml + footer;
+        recordTermPopup._input = input;
+    }
+
+    function closeRecordTermPopup() {
+        if (recordTermPopup) { recordTermPopup.remove(); recordTermPopup = null; }
+    }
+
+    // 全局委托：聚焦打开、点击词条回填、添加自定义、点击外部关闭
+    document.addEventListener('focusin', e => {
+        const input = e.target.closest('#cf_chief, #cf_history, #cf_past, #cf_allergy, #cf_tcm, #direct_chief');
+        if (input) openRecordTermPopup(input);
+    });
+    document.addEventListener('focusout', e => {
+        const input = e.target.closest('#cf_chief, #cf_history, #cf_past, #cf_allergy, #cf_tcm, #direct_chief');
+        if (input && recordTermPopup) {
+            setTimeout(() => { if (recordTermPopup && !recordTermPopup.matches(':hover')) closeRecordTermPopup(); }, 150);
+        }
+    });
+    document.addEventListener('click', e => {
+        const term = e.target.closest('[data-rt-term]');
+        if (term && recordTermPopup) {
+            const input = recordTermPopup._input;
+            if (input) {
+                const val = (input.value || '').trim();
+                input.value = val ? val.replace(/[；;]\s*$/, '') + '；' + term.dataset.rtTerm : term.dataset.rtTerm;
+                input.focus();
+            }
+            return;
+        }
+        const tab = e.target.closest('[data-rt-tab]');
+        if (tab && recordTermPopup) {
+            recordTermActive.tab = tab.dataset.rtTab;
+            renderRecordTermPopup(recordTermPopup._input);
+            return;
+        }
+        const add = e.target.closest('[data-rt-add]');
+        if (add && recordTermPopup) {
+            const field = recordTermActive.field;
+            const term = prompt('输入自定义词条：');
+            if (term && term.trim()) {
+                saveRecordTerm(field, term.trim()).then(() => {
+                    showToast('词条已保存到当前输入框词库');
+                    renderRecordTermPopup(recordTermPopup._input);
+                }).catch(err => { if (err.message !== '未登录') showToast('保存失败', 'error'); });
+            }
+            return;
+        }
+        if (recordTermPopup && !e.target.closest('#recordTermPopup') && !e.target.closest('#cf_chief, #cf_history, #cf_past, #cf_allergy, #cf_tcm, #direct_chief')) {
+            closeRecordTermPopup();
+        }
+    });
 
     document.getElementById('mainNav').addEventListener('click', e=>{
         if(e.target.tagName==='SPAN' && e.target.dataset.target) gotoPage(e.target.dataset.target);

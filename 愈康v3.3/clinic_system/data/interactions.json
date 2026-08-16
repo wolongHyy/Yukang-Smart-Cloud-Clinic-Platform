@@ -1,0 +1,910 @@
+[
+ {
+  "herbs": [
+   "丹参"
+  ],
+  "drugClassZh": "抗凝血药",
+  "drugExamples": [
+   "warfarin",
+   "rivaroxaban",
+   "apixaban",
+   "dabigatran"
+  ],
+  "severity": "严重",
+  "mechanismZh": "丹参所含丹参酮、丹酚酸等成分可抑制血小板聚集，并经报道增加华法林的抗凝作用，可致 INR 升高及出血。",
+  "recommendationZh": "服用华法林或新型口服抗凝药者忌用丹参。如必须合用，须在医师监测 INR 及出凝血指标下进行。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "当归"
+  ],
+  "drugClassZh": "抗凝血药",
+  "drugExamples": [
+   "warfarin",
+   "heparin",
+   "rivaroxaban"
+  ],
+  "severity": "严重",
+  "mechanismZh": "当归含香豆素类成分，理论上可加强华法林之抗凝作用。已有当归与华法林合用致 INR 升高、出血之报道。",
+  "recommendationZh": "服用抗凝药者忌用当归及含当归之复方（四物汤、八珍汤、十全大补汤等）。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "红花"
+  ],
+  "drugClassZh": "抗凝血药",
+  "drugExamples": [
+   "warfarin",
+   "rivaroxaban",
+   "aspirin",
+   "clopidogrel"
+  ],
+  "severity": "严重",
+  "mechanismZh": "红花有抗血小板与抗凝血作用，与华法林、阿司匹林、氯吡格雷合用增加出血风险。",
+  "recommendationZh": "服用抗凝药或抗血小板药者忌用红花及含红花之活血化瘀方剂（桃红四物汤等）。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "桃仁"
+  ],
+  "drugClassZh": "抗凝血药",
+  "drugExamples": [
+   "warfarin",
+   "aspirin",
+   "clopidogrel"
+  ],
+  "severity": "中等",
+  "mechanismZh": "桃仁含苦杏仁苷类成分，并具活血化瘀作用，理论上与抗凝药、抗血小板药合用增加出血风险。",
+  "recommendationZh": "服用抗凝药或抗血小板药者慎用桃仁。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "麻黄"
+  ],
+  "drugClassZh": "单胺氧化酶抑制剂",
+  "drugExamples": [
+   "phenelzine",
+   "tranylcypromine",
+   "selegiline",
+   "moclobemide"
+  ],
+  "severity": "严重",
+  "mechanismZh": "麻黄含麻黄碱（ephedrine），为间接拟交感胺。与单胺氧化酶抑制剂合用可致严重高血压危象。",
+  "recommendationZh": "服用 MAOI 者绝对禁用麻黄。即便停药后亦须等待至少 2 周方可使用。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "麻黄"
+  ],
+  "drugClassZh": "拟交感药及兴奋剂",
+  "drugExamples": [
+   "pseudoephedrine",
+   "phenylephrine",
+   "amphetamines",
+   "caffeine (high dose)"
+  ],
+  "severity": "严重",
+  "mechanismZh": "麻黄之拟交感作用与其他拟交感药合用，致心动过速、高血压、心律失常之风险显著增加。",
+  "recommendationZh": "服用拟交感药者禁用麻黄。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "麻黄"
+  ],
+  "drugClassZh": "强心苷",
+  "drugExamples": [
+   "digoxin"
+  ],
+  "severity": "严重",
+  "mechanismZh": "麻黄碱可增加心肌兴奋性，与地高辛合用可诱发室性心律失常。",
+  "recommendationZh": "服用地高辛者禁用麻黄。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "甘草"
+  ],
+  "drugClassZh": "排钾利尿剂",
+  "drugExamples": [
+   "hydrochlorothiazide",
+   "furosemide",
+   "bumetanide"
+  ],
+  "severity": "严重",
+  "mechanismZh": "甘草所含甘草甜素可抑制 11-β-羟类固醇脱氢酶 2，致皮质醇蓄积，引起假性醛固酮增多症（钠水潴留、低钾、高血压）。与排钾利尿剂合用使低血钾风险显著加剧。",
+  "recommendationZh": "服用排钾利尿剂者长期或大量用甘草需慎，并监测血钾。短期、低剂量（如调和诸药 3g 以下）一般尚可。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "甘草"
+  ],
+  "drugClassZh": "强心苷",
+  "drugExamples": [
+   "digoxin"
+  ],
+  "severity": "严重",
+  "mechanismZh": "甘草所致低血钾增强地高辛之毒性，可致地高辛中毒（恶心、心律失常、视觉异常）。",
+  "recommendationZh": "服用地高辛者长期用甘草需慎，并监测血钾与地高辛血药浓度。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "甘草"
+  ],
+  "drugClassZh": "皮质类固醇",
+  "drugExamples": [
+   "prednisone",
+   "dexamethasone",
+   "hydrocortisone"
+  ],
+  "severity": "中等",
+  "mechanismZh": "甘草甜素可延缓皮质醇代谢，与外源性皮质类固醇合用使皮质醇负担及副作用增加。",
+  "recommendationZh": "长期使用皮质类固醇者，长期合用甘草需谨慎。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "黄芪"
+  ],
+  "drugClassZh": "免疫抑制剂",
+  "drugExamples": [
+   "cyclosporine",
+   "tacrolimus",
+   "azathioprine"
+  ],
+  "severity": "中等",
+  "mechanismZh": "黄芪有显著之免疫增强作用，理论上与免疫抑制剂之作用相对抗，可削弱后者之疗效（尤其器官移植与自身免疫病）。",
+  "recommendationZh": "器官移植术后及自身免疫病服用免疫抑制剂者，慎用黄芪。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "人参"
+  ],
+  "drugClassZh": "抗凝血药",
+  "drugExamples": [
+   "warfarin"
+  ],
+  "severity": "中等",
+  "mechanismZh": "人参与华法林之相互作用文献存争议：有报道显示人参可降低华法林之 INR（即拮抗其作用）。机制可能涉及肝酶诱导。",
+  "recommendationZh": "服用华法林者使用人参须监测 INR。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "人参"
+  ],
+  "drugClassZh": "降糖药",
+  "drugExamples": [
+   "insulin",
+   "metformin",
+   "glipizide",
+   "glyburide"
+  ],
+  "severity": "中等",
+  "mechanismZh": "人参有降低血糖之作用，与降糖药合用可致低血糖。",
+  "recommendationZh": "糖尿病患者服降糖药同时使用人参须监测血糖。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "黄芩"
+  ],
+  "drugClassZh": "CYP3A4 代谢底物",
+  "drugExamples": [
+   "statins",
+   "calcium channel blockers",
+   "many oral anticancer agents"
+  ],
+  "severity": "理论风险",
+  "mechanismZh": "黄芩中黄酮类成分（黄芩苷等）于体外可调节 CYP450 同工酶活性，理论上影响经此通路代谢之药物之血药浓度。",
+  "recommendationZh": "长期合用窄治疗指数药物（如他汀类、抗癌药）时需考量。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "柴胡"
+  ],
+  "drugClassZh": "CYP3A4 代谢底物",
+  "drugExamples": [
+   "statins",
+   "midazolam",
+   "cyclosporine"
+  ],
+  "severity": "理论风险",
+  "mechanismZh": "柴胡所含柴胡皂苷于动物模型中可调节 CYP3A 酶活性，理论上影响共服药物之血药浓度。",
+  "recommendationZh": "长期合用经 CYP3A4 代谢之窄治疗指数药物时需考量。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "附子"
+  ],
+  "drugClassZh": "心脏药及抗心律失常药",
+  "drugExamples": [
+   "digoxin",
+   "beta-blockers",
+   "antiarrhythmics"
+  ],
+  "severity": "严重",
+  "mechanismZh": "附子（生品）含乌头碱类生物碱，具显著心毒性，可致心律失常、心力衰竭。即便经炮制后毒性大减，仍须避免与心脏药同用。",
+  "recommendationZh": "心脏病患者及服用心脏药物者禁用附子。仅可由有经验之中医师严格炮制并控制剂量后使用。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "五味子"
+  ],
+  "drugClassZh": "CYP3A4 代谢底物",
+  "drugExamples": [
+   "tacrolimus",
+   "midazolam",
+   "warfarin"
+  ],
+  "severity": "中等",
+  "mechanismZh": "五味子之木脂素类成分可显著抑制 CYP3A4，使经此酶代谢之药物血药浓度升高。已有五味子提高他克莫司血药浓度之报告。",
+  "recommendationZh": "服用他克莫司、咪达唑仑、华法林之窄治疗指数药者使用五味子须监测血药浓度。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "大黄"
+  ],
+  "drugClassZh": "影响钾离子之药物",
+  "drugExamples": [
+   "digoxin",
+   "thiazide diuretics",
+   "loop diuretics",
+   "corticosteroids"
+  ],
+  "severity": "中等",
+  "mechanismZh": "大黄所含蒽醌类泻下成分长期使用可致低钾血症，与排钾药物及强心苷合用风险叠加。",
+  "recommendationZh": "长期服用大黄者监测血钾。短期攻下用药一般无虞。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "半夏"
+  ],
+  "drugClassZh": "镇静催眠药",
+  "drugExamples": [
+   "benzodiazepines",
+   "zolpidem",
+   "eszopiclone",
+   "barbiturates"
+  ],
+  "severity": "中等",
+  "mechanismZh": "半夏具中枢抑制作用，与苯二氮卓类、巴比妥类等镇静催眠药合用可致过度镇静、嗜睡。",
+  "recommendationZh": "服用镇静催眠药者使用半夏须谨慎，注意嗜睡及呼吸抑制。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "生地黄"
+  ],
+  "drugClassZh": "抗凝血药",
+  "drugExamples": [
+   "warfarin",
+   "rivaroxaban",
+   "apixaban"
+  ],
+  "severity": "中等",
+  "mechanismZh": "生地黄有凉血活血之效，可影响血小板功能，理论上与抗凝药合用增加出血风险。",
+  "recommendationZh": "服用抗凝药者使用生地黄须监测凝血功能。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "黄连"
+  ],
+  "drugClassZh": "降糖药",
+  "drugExamples": [
+   "metformin",
+   "glipizide",
+   "glyburide",
+   "insulin"
+  ],
+  "severity": "中等",
+  "mechanismZh": "黄连所含小檗碱（berberine）具显著降血糖作用，与降糖药合用可致低血糖。",
+  "recommendationZh": "糖尿病患者服用降糖药期间使用黄连须密切监测血糖，必要时调整降糖药剂量。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "山楂"
+  ],
+  "drugClassZh": "降压药",
+  "drugExamples": [
+   "ACE inhibitors",
+   "ARBs",
+   "amlodipine",
+   "metoprolol"
+  ],
+  "severity": "中等",
+  "mechanismZh": "山楂含黄酮类及原花青素，有扩张血管、降低血压之作用，与降压药合用可致血压过低。",
+  "recommendationZh": "服用降压药者使用山楂须注意血压变化，防止低血压。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "枸杞子"
+  ],
+  "drugClassZh": "抗凝血药",
+  "drugExamples": [
+   "warfarin",
+   "rivaroxaban"
+  ],
+  "severity": "中等",
+  "mechanismZh": "枸杞子有报道可增强华法林之抗凝作用，致 INR 升高及出血。机制可能涉及 CYP2C9 抑制。",
+  "recommendationZh": "服用华法林者使用枸杞子须监测 INR。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "何首乌"
+  ],
+  "drugClassZh": "肝毒性药物",
+  "drugExamples": [
+   "acetaminophen (high dose)",
+   "methotrexate",
+   "statins",
+   "isoniazid"
+  ],
+  "severity": "严重",
+  "mechanismZh": "何首乌含蒽醌类成分，已有大量肝毒性报告（包括致死病例）。与其他肝毒性药物合用使肝损伤风险叠加。",
+  "recommendationZh": "服用肝毒性药物者禁用何首乌。即便单独使用亦须监测肝功能。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "葛根"
+  ],
+  "drugClassZh": "降糖药",
+  "drugExamples": [
+   "metformin",
+   "glipizide",
+   "insulin"
+  ],
+  "severity": "中等",
+  "mechanismZh": "葛根所含葛根素（puerarin）等异黄酮类成分有降血糖作用，与降糖药合用可增加低血糖风险。",
+  "recommendationZh": "糖尿病患者服用降糖药期间使用葛根须监测血糖。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "三七"
+  ],
+  "drugClassZh": "抗凝血药及抗血小板药",
+  "drugExamples": [
+   "warfarin",
+   "aspirin",
+   "clopidogrel",
+   "rivaroxaban"
+  ],
+  "severity": "严重",
+  "mechanismZh": "三七含三七皂苷，具显著抗血小板及抗凝血活性。与华法林、阿司匹林等合用显著增加出血风险。",
+  "recommendationZh": "服用抗凝药或抗血小板药者禁用三七。术前至少 2 周停用。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "肉桂"
+  ],
+  "drugClassZh": "抗凝血药",
+  "drugExamples": [
+   "warfarin",
+   "rivaroxaban",
+   "aspirin"
+  ],
+  "severity": "中等",
+  "mechanismZh": "肉桂含香豆素类成分，有报道可增强华法林之抗凝效果。大剂量肉桂可抑制血小板聚集。",
+  "recommendationZh": "服用华法林者大剂量使用肉桂须监测 INR。常规调味量一般无虞。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "杜仲"
+  ],
+  "drugClassZh": "降压药",
+  "drugExamples": [
+   "ACE inhibitors",
+   "ARBs",
+   "calcium channel blockers",
+   "beta-blockers"
+  ],
+  "severity": "中等",
+  "mechanismZh": "杜仲含杜仲胶及环烯醚萜苷类成分，有降压作用。与降压药合用可致血压过低。",
+  "recommendationZh": "服用降压药者使用杜仲须注意血压变化。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "益母草"
+  ],
+  "drugClassZh": "抗凝血药及抗血小板药",
+  "drugExamples": [
+   "warfarin",
+   "aspirin",
+   "clopidogrel"
+  ],
+  "severity": "中等",
+  "mechanismZh": "益母草有活血化瘀作用，含益母草碱等生物碱，可抑制血小板聚集。与抗凝药合用增加出血风险。",
+  "recommendationZh": "服用抗凝药或抗血小板药者慎用益母草。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "川芎"
+  ],
+  "drugClassZh": "抗凝血药及抗血小板药",
+  "drugExamples": [
+   "warfarin",
+   "aspirin",
+   "clopidogrel",
+   "heparin"
+  ],
+  "severity": "中等",
+  "mechanismZh": "川芎含川芎嗪（tetramethylpyrazine）等活血成分，可抑制血小板聚集、扩张血管。与抗凝药合用增加出血风险。",
+  "recommendationZh": "服用抗凝药或抗血小板药者慎用川芎及含川芎之复方。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "天麻"
+  ],
+  "drugClassZh": "降压药",
+  "drugExamples": [
+   "ACE inhibitors",
+   "ARBs",
+   "amlodipine",
+   "nifedipine"
+  ],
+  "severity": "中等",
+  "mechanismZh": "天麻含天麻素（gastrodin），有降血压及扩张血管作用。与降压药合用可致血压过低。",
+  "recommendationZh": "服用降压药者使用天麻须密切监测血压。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "酸枣仁"
+  ],
+  "drugClassZh": "镇静催眠药",
+  "drugExamples": [
+   "benzodiazepines",
+   "zolpidem",
+   "eszopiclone",
+   "barbiturates"
+  ],
+  "severity": "中等",
+  "mechanismZh": "酸枣仁含酸枣仁皂苷及黄酮类，具显著镇静催眠作用。与苯二氮卓类等镇静催眠药合用可致过度镇静。",
+  "recommendationZh": "服用镇静催眠药者使用酸枣仁须注意过度嗜睡。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "薄荷"
+  ],
+  "drugClassZh": "CYP1A2 及 CYP2A6 代谢底物",
+  "drugExamples": [
+   "theophylline",
+   "clozapine",
+   "duloxetine",
+   "cyclosporine"
+  ],
+  "severity": "理论风险",
+  "mechanismZh": "薄荷含薄荷醇（menthol），体外研究显示可抑制 CYP1A2 及 CYP2A6 酶活性，理论上影响经此通路代谢之药物之血药浓度。",
+  "recommendationZh": "长期大量使用薄荷并同服窄治疗指数之 CYP1A2 底物（茶碱、氯氮平等）时需考量。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "甘草"
+  ],
+  "drugClassZh": "降压药",
+  "drugExamples": [
+   "ACE inhibitors",
+   "ARBs",
+   "amlodipine",
+   "hydrochlorothiazide"
+  ],
+  "severity": "严重",
+  "mechanismZh": "甘草所致假性醛固酮增多症可致钠水潴留、高血压，直接对抗降压药之效果。长期用量超过 3g/日时此风险显著。",
+  "recommendationZh": "高血压患者服用降压药者避免长期、大量使用甘草。须监测血压和血钾。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "人参"
+  ],
+  "drugClassZh": "免疫抑制剂",
+  "drugExamples": [
+   "cyclosporine",
+   "tacrolimus",
+   "azathioprine",
+   "mycophenolate"
+  ],
+  "severity": "中等",
+  "mechanismZh": "人参具免疫调节作用，含多种人参皂苷可增强免疫功能，理论上可对抗免疫抑制剂之效果。",
+  "recommendationZh": "器官移植及自身免疫病服用免疫抑制剂者慎用人参。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "麻黄"
+  ],
+  "drugClassZh": "降压药",
+  "drugExamples": [
+   "ACE inhibitors",
+   "ARBs",
+   "beta-blockers",
+   "calcium channel blockers"
+  ],
+  "severity": "严重",
+  "mechanismZh": "麻黄含麻黄碱，具升压及增加心率之作用，直接对抗降压药之效果。可致血压控制不良及高血压危象。",
+  "recommendationZh": "高血压患者及服用降压药者禁用麻黄。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "附子"
+  ],
+  "drugClassZh": "麻醉药",
+  "drugExamples": [
+   "sevoflurane",
+   "isoflurane",
+   "propofol",
+   "ketamine"
+  ],
+  "severity": "严重",
+  "mechanismZh": "附子含乌头碱类生物碱，具心毒性及心律失常风险。全身麻醉亦可诱发心律失常，两者合用风险叠加。术前至少 2 周须停用。",
+  "recommendationZh": "拟行全身麻醉者术前至少 2 周停用附子。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "大黄"
+  ],
+  "drugClassZh": "抗凝血药",
+  "drugExamples": [
+   "warfarin",
+   "rivaroxaban",
+   "apixaban"
+  ],
+  "severity": "中等",
+  "mechanismZh": "大黄含蒽醌类成分，长期使用致低钾血症可间接影响凝血功能。此外大黄有轻度活血化瘀作用，与抗凝药合用理论上增加出血风险。",
+  "recommendationZh": "服用抗凝药者长期使用大黄须慎。短期攻下用药一般影响不大。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "黄芪"
+  ],
+  "drugClassZh": "降糖药",
+  "drugExamples": [
+   "metformin",
+   "insulin",
+   "glipizide",
+   "glyburide"
+  ],
+  "severity": "中等",
+  "mechanismZh": "黄芪含黄芪多糖等成分，有降低血糖作用。与降糖药合用可增加低血糖风险。",
+  "recommendationZh": "糖尿病患者服用降糖药期间使用黄芪须监测血糖。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "半夏"
+  ],
+  "drugClassZh": "抗心律失常药",
+  "drugExamples": [
+   "amiodarone",
+   "sotalol",
+   "flecainide"
+  ],
+  "severity": "理论风险",
+  "mechanismZh": "半夏含生物碱类成分，体外研究显示可影响心肌细胞离子通道。理论上与抗心律失常药合用须考量。",
+  "recommendationZh": "服用抗心律失常药者使用半夏须谨慎。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "黄连"
+  ],
+  "drugClassZh": "CYP3A4 及 CYP2D6 代谢底物",
+  "drugExamples": [
+   "cyclosporine",
+   "statins",
+   "codeine",
+   "dextromethorphan"
+  ],
+  "severity": "中等",
+  "mechanismZh": "黄连所含小檗碱可抑制 CYP3A4 及 CYP2D6 酶活性，使经此通路代谢之药物血药浓度升高。",
+  "recommendationZh": "合用经 CYP3A4 或 CYP2D6 代谢之窄治疗指数药物时须考量，必要时监测血药浓度。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "枸杞子"
+  ],
+  "drugClassZh": "降糖药",
+  "drugExamples": [
+   "metformin",
+   "insulin",
+   "glipizide"
+  ],
+  "severity": "理论风险",
+  "mechanismZh": "枸杞子含枸杞多糖，有轻度降血糖作用。与降糖药合用理论上增加低血糖风险。",
+  "recommendationZh": "糖尿病患者服用降糖药期间大量使用枸杞子须注意血糖。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "何首乌"
+  ],
+  "drugClassZh": "抗凝血药",
+  "drugExamples": [
+   "warfarin",
+   "rivaroxaban"
+  ],
+  "severity": "中等",
+  "mechanismZh": "何首乌之肝毒性可影响肝脏合成凝血因子之功能，理论上改变抗凝药之效果。此外肝损伤本身即增加出血风险。",
+  "recommendationZh": "服用抗凝药者避免使用何首乌。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "葛根"
+  ],
+  "drugClassZh": "降压药",
+  "drugExamples": [
+   "ACE inhibitors",
+   "ARBs",
+   "calcium channel blockers"
+  ],
+  "severity": "理论风险",
+  "mechanismZh": "葛根所含葛根素有扩张冠状动脉及外周血管之作用，理论上与降压药合用可致血压过低。",
+  "recommendationZh": "服用降压药者使用葛根须注意血压变化。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "三七"
+  ],
+  "drugClassZh": "降糖药",
+  "drugExamples": [
+   "metformin",
+   "insulin",
+   "glipizide"
+  ],
+  "severity": "理论风险",
+  "mechanismZh": "三七皂苷有轻度降血糖作用，理论上与降糖药合用增加低血糖风险。",
+  "recommendationZh": "糖尿病患者服用降糖药期间使用三七须注意血糖变化。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "肉桂"
+  ],
+  "drugClassZh": "降糖药",
+  "drugExamples": [
+   "metformin",
+   "insulin",
+   "glipizide"
+  ],
+  "severity": "理论风险",
+  "mechanismZh": "肉桂有改善胰岛素敏感性及降血糖之作用。与降糖药合用理论上增加低血糖风险。",
+  "recommendationZh": "糖尿病患者服用降糖药期间大量使用肉桂须注意血糖。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "杜仲"
+  ],
+  "drugClassZh": "降糖药",
+  "drugExamples": [
+   "metformin",
+   "insulin",
+   "glipizide"
+  ],
+  "severity": "理论风险",
+  "mechanismZh": "杜仲有轻度降血糖作用，理论上与降糖药合用增加低血糖风险。",
+  "recommendationZh": "糖尿病患者服用降糖药期间使用杜仲须注意血糖。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "川芎"
+  ],
+  "drugClassZh": "降压药",
+  "drugExamples": [
+   "ACE inhibitors",
+   "ARBs",
+   "calcium channel blockers"
+  ],
+  "severity": "中等",
+  "mechanismZh": "川芎含川芎嗪，有扩张血管、降低血压之作用。与降压药合用可致血压过低。",
+  "recommendationZh": "服用降压药者使用川芎须注意血压变化。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "天麻"
+  ],
+  "drugClassZh": "镇静催眠药",
+  "drugExamples": [
+   "benzodiazepines",
+   "zolpidem",
+   "barbiturates"
+  ],
+  "severity": "中等",
+  "mechanismZh": "天麻含天麻素，有镇静、抗惊厥作用。与镇静催眠药合用可致过度镇静。",
+  "recommendationZh": "服用镇静催眠药者使用天麻须注意过度嗜睡。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "酸枣仁"
+  ],
+  "drugClassZh": "抗癫痫药",
+  "drugExamples": [
+   "phenobarbital",
+   "carbamazepine",
+   "valproic acid",
+   "gabapentin"
+  ],
+  "severity": "理论风险",
+  "mechanismZh": "酸枣仁有镇静及抗惊厥作用，理论上与抗癫痫药合用可产生协同镇静效应。",
+  "recommendationZh": "服用抗癫痫药者使用酸枣仁须注意过度镇静。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "薄荷"
+  ],
+  "drugClassZh": "免疫抑制剂（环孢素）",
+  "drugExamples": [
+   "cyclosporine"
+  ],
+  "severity": "中等",
+  "mechanismZh": "薄荷含薄荷醇，可抑制 CYP3A4，影响环孢素之代谢，致血药浓度升高。",
+  "recommendationZh": "使用环孢素之移植患者避免大量使用薄荷。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "益母草"
+  ],
+  "drugClassZh": "降压药",
+  "drugExamples": [
+   "ACE inhibitors",
+   "ARBs",
+   "calcium channel blockers"
+  ],
+  "severity": "理论风险",
+  "mechanismZh": "益母草含益母草碱，有扩张血管、利尿、降压作用。与降压药合用理论上可致血压过低。",
+  "recommendationZh": "服用降压药者使用益母草须注意血压变化。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "生地黄"
+  ],
+  "drugClassZh": "降糖药",
+  "drugExamples": [
+   "metformin",
+   "insulin",
+   "glipizide"
+  ],
+  "severity": "理论风险",
+  "mechanismZh": "生地黄含梓醇等环烯醚萜苷，有轻度降血糖作用。理论上与降糖药合用增加低血糖风险。",
+  "recommendationZh": "糖尿病患者服用降糖药期间使用生地黄须注意血糖变化。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "山楂"
+  ],
+  "drugClassZh": "强心苷",
+  "drugExamples": [
+   "digoxin"
+  ],
+  "severity": "中等",
+  "mechanismZh": "山楂含黄酮类成分，有正性肌力作用，与地高辛合用可增强强心效果，致地高辛毒性风险增加。",
+  "recommendationZh": "服用地高辛者使用山楂须监测地高辛血药浓度。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "甘草"
+  ],
+  "drugClassZh": "口服避孕药及激素治疗",
+  "drugExamples": [
+   "ethinyl estradiol",
+   "norethindrone",
+   "conjugated estrogens"
+  ],
+  "severity": "中等",
+  "mechanismZh": "甘草甜素可抑制类固醇代谢，与外源性雌激素合用可加剧雌激素之副作用（水肿、高血压、血栓风险）。",
+  "recommendationZh": "服用口服避孕药或激素替代治疗者避免长期大量使用甘草。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ },
+ {
+  "herbs": [
+   "人参"
+  ],
+  "drugClassZh": "非甾体抗炎药",
+  "drugExamples": [
+   "ibuprofen",
+   "naproxen",
+   "diclofenac",
+   "aspirin"
+  ],
+  "severity": "中等",
+  "mechanismZh": "人参具抗血小板活性，与非甾体抗炎药（尤其阿司匹林）合用可增加出血风险。已有合用致出血之个案报道。",
+  "recommendationZh": "长期服用 NSAIDs 者使用人参须注意出血征象。",
+  "source": "本草典 v1（CC BY-SA 4.0，本草典编辑部）",
+  "updatedAt": "2026-04-17"
+ }
+]

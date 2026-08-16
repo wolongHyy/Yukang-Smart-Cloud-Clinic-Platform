@@ -1,10 +1,12 @@
 // ============================================================
-//  愈康云诊所 - 服务器端（v3.1 修复版）
+//  愈康云诊所 - 服务器端（v3.2）
 //  - 修复静态目录泄露：不再暴露 clinic_database / server.js 等文件
 //  - 会话令牌认证（x-auth-token），密码哈希存储（兼容旧明文账号自动迁移）
 //  - 统一日期解析（兼容 2026/8/3、2026/08/03、带时间戳等格式）
 //  - 新增事务化接诊接口 /api/visits/complete，避免多模块写入中途失败丢数据
 //  - 发药扣库存增加库存校验，统计口径修正
+//  - v3.2 新增：药典/方剂知识库（本草典 v1 + 公开说明书）、AI 辅助开方与审方、
+//    患者档案自动归拢、库存盘点、增强统计（处方量/毛利/复诊率）
 // ============================================================
 const express = require('express');
 const cors = require('cors');
@@ -13,6 +15,8 @@ const fs = require('fs').promises;
 const path = require('path');
 const os = require('os');
 const { exec } = require('child_process');
+const knowledge = require('./knowledge');
+const ai = require('./ai');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3002;
@@ -64,7 +68,12 @@ const COLLECTIONS = {
     drugOutRecords:  { type: 'array',  default: [] },
     suppliers:       { type: 'array',  default: [] },
     medicalTemplates:{ type: 'array',  default: [] },
-    patients:        { type: 'array',  default: [] }
+    patients:        { type: 'array',  default: [] },
+    drugKnowledge:   { type: 'array',  default: [] },
+    userFormulas:    { type: 'array',  default: [] },
+    aiLogs:          { type: 'array',  default: [] },
+    inventoryChecks: { type: 'array',  default: [] },
+    recordTerms:     { type: 'object', default: {} }
 };
 
 const USERS_FILE = path.join(DATA_DIR, 'users.json');
@@ -332,6 +341,242 @@ app.delete('/api/:collection/:id', authMiddleware, async (req, res) => {
     }
 });
 
+// ==================== 病历词条库（v3.3 门诊智能联想，按账号保存） ====================
+app.put('/api/recordTerms', authMiddleware, async (req, res) => {
+    try {
+        if (!isPlainObject(req.body)) return res.status(400).json({ error: '请求数据格式错误' });
+        const data = await readCollection(req.currentUser, 'recordTerms');
+        const updated = { ...data, ...req.body };
+        await writeCollection(req.currentUser, 'recordTerms', updated);
+        res.json({ success: true, data: updated });
+    } catch (err) {
+        console.error('保存病历词条失败:', err);
+        res.status(500).json({ error: '保存失败' });
+    }
+});
+
+// ==================== 药典知识库接口 ====================
+app.get('/api/pharmacopoeia/lookup', authMiddleware, async (req, res) => {
+    try {
+        const name = String(req.query.name || '').trim();
+        if (!name) return res.status(400).json({ error: '缺少药品名称' });
+        const userEntries = await readCollection(req.currentUser, 'drugKnowledge');
+        const entry = knowledge.lookupDrug(name, userEntries);
+        if (!entry) return res.json({ found: false });
+        res.json({ found: true, entry });
+    } catch (err) {
+        res.status(500).json({ error: '知识库查询失败' });
+    }
+});
+
+app.get('/api/pharmacopoeia/search', authMiddleware, async (req, res) => {
+    try {
+        const q = String(req.query.q || '').trim();
+        const limit = Math.min(Number(req.query.limit) || 30, 100);
+        const userEntries = await readCollection(req.currentUser, 'drugKnowledge');
+        const userNames = new Set((userEntries || []).map(e => e.name));
+        const items = q ? knowledge.searchEntries(q, userEntries, limit) : knowledge.listEntries(userEntries, limit);
+        res.json({ total: items.length, items: items.map(e => ({ ...e, isUser: userNames.has(e.name) })) });
+    } catch (err) {
+        res.status(500).json({ error: '知识库搜索失败' });
+    }
+});
+
+app.get('/api/pharmacopoeia/stats', authMiddleware, (req, res) => {
+    res.json(knowledge.stats());
+});
+
+app.get('/api/formulas/library', authMiddleware, async (req, res) => {
+    try {
+        const userFormulas = await readCollection(req.currentUser, 'userFormulas');
+        res.json(knowledge.listFormulas(userFormulas));
+    } catch (err) {
+        res.status(500).json({ error: '方剂库加载失败' });
+    }
+});
+
+// ==================== AI 辅助诊断接口 ====================
+app.post('/api/ai/test', authMiddleware, async (req, res) => {
+    try {
+        const settings = await readCollection(req.currentUser, 'settings');
+        const r = await ai.testConnection(settings);
+        res.json(r);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+app.post('/api/ai/generate-prescription', authMiddleware, async (req, res) => {
+    try {
+        const settings = await readCollection(req.currentUser, 'settings');
+        const inventory = await readCollection(req.currentUser, 'drugInventory');
+        const userEntries = await readCollection(req.currentUser, 'drugKnowledge');
+        const patient = (req.body && req.body.patient) || {};
+        const prescriptions = Array.isArray(req.body && req.body.prescriptions) ? req.body.prescriptions : [];
+        const result = await ai.generatePrescription(settings, { patient, prescriptions, inventory, userEntries });
+        // 本地 AI 日志（不含姓名，仅记录建议药名与思路，便于追溯）
+        try {
+            const logs = await readCollection(req.currentUser, 'aiLogs');
+            logs.push({
+                id: newId(), type: 'generate', createdAt: new Date().toISOString(),
+                patientId: patient.id || null, model: result.model,
+                items: result.suggestions.map(s => s.name), rationale: result.rationale
+            });
+            if (logs.length > 500) logs.splice(0, logs.length - 500);
+            await writeCollection(req.currentUser, 'aiLogs', logs);
+        } catch (e) { console.error('AI 日志写入失败:', e.message); }
+        res.json(result);
+    } catch (err) {
+        console.error('AI 开方失败:', err.message);
+        res.status(400).json({ error: err.message });
+    }
+});
+
+app.post('/api/ai/review-prescription', authMiddleware, async (req, res) => {
+    try {
+        const settings = await readCollection(req.currentUser, 'settings');
+        const userEntries = await readCollection(req.currentUser, 'drugKnowledge');
+        const patient = (req.body && req.body.patient) || {};
+        const prescriptions = Array.isArray(req.body && req.body.prescriptions) ? req.body.prescriptions : [];
+        const result = await ai.reviewPrescription(settings, { patient, prescriptions, userEntries });
+        try {
+            const logs = await readCollection(req.currentUser, 'aiLogs');
+            logs.push({
+                id: newId(), type: 'review', createdAt: new Date().toISOString(),
+                patientId: patient.id || null, items: prescriptions.map(d => d.name),
+                risks: result.risks.map(r => r.issue).slice(0, 10)
+            });
+            if (logs.length > 500) logs.splice(0, logs.length - 500);
+            await writeCollection(req.currentUser, 'aiLogs', logs);
+        } catch (e) { console.error('AI 日志写入失败:', e.message); }
+        res.json(result);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+});
+
+// ==================== 患者档案迁移 ====================
+app.post('/api/patients/migrate', authMiddleware, async (req, res) => {
+    try {
+        const outpatients = await readCollection(req.currentUser, 'outpatients');
+        const patients = await readCollection(req.currentUser, 'patients');
+        const map = new Map((patients || []).map(p => [p.key, p]));
+        const groups = {};
+        for (const o of outpatients) {
+            const name = String(o.name || '').trim();
+            if (!name) continue;
+            const phone = String(o.phone || '').trim();
+            const key = (name + '|' + phone).toLowerCase();
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(o);
+        }
+        let created = 0, updated = 0;
+        for (const key of Object.keys(groups)) {
+            const list = groups[key].sort((a, b) => String(a.opDate || a.date).localeCompare(String(b.opDate || b.date)));
+            const last = list[list.length - 1];
+            const profile = {
+                key, name: last.name, phone: last.phone || '',
+                gender: last.gender || '', age: last.age || '',
+                allergy: last.allergy || '', past: last.past || '',
+                visitCount: list.length, lastVisit: last.opDate || last.date || '',
+                visits: list.map(o => ({
+                    id: o.id, date: o.opDate || o.date, diagnosis: o.diagnosis || '',
+                    prescriptions: (o.prescriptions || []).map(d => ({ name: d.name, qty: d.qty }))
+                })),
+                updatedAt: new Date().toISOString()
+            };
+            if (map.has(key)) { map.set(key, { ...map.get(key), ...profile }); updated++; }
+            else { map.set(key, { id: newId(), ...profile }); created++; }
+        }
+        const out = [...map.values()];
+        await writeCollection(req.currentUser, 'patients', out);
+        res.json({ success: true, total: out.length, created, updated });
+    } catch (err) {
+        console.error('患者迁移失败:', err);
+        res.status(500).json({ error: '患者档案迁移失败: ' + err.message });
+    }
+});
+
+// ==================== 库存盘点 ====================
+app.post('/api/inventory/check', authMiddleware, async (req, res) => {
+    try {
+        const items = Array.isArray(req.body && req.body.items) ? req.body.items : [];
+        if (!items.length) return res.status(400).json({ error: '盘点数据不能为空' });
+        const inventory = await readCollection(req.currentUser, 'drugInventory');
+        const checks = await readCollection(req.currentUser, 'inventoryChecks');
+        const details = [];
+        let changed = 0;
+        for (const it of items) {
+            const actual = Number(it.actual);
+            if (!Number.isFinite(actual) || actual < 0) continue;
+            const drug = it.id
+                ? inventory.find(d => String(d.id) === String(it.id))
+                : inventory.find(d => d.name === it.name);
+            if (!drug) continue;
+            const oldStock = toNum(drug.stock || drug.quantity);
+            if (oldStock !== actual) { drug.stock = actual; drug.updatedAt = new Date().toISOString(); changed++; }
+            details.push({ name: drug.name, oldStock, newStock: actual, diff: +(actual - oldStock).toFixed(2) });
+        }
+        await writeCollection(req.currentUser, 'drugInventory', inventory);
+        checks.push({ id: newId(), date: new Date().toLocaleString(), operator: req.currentUser, items: details });
+        await writeCollection(req.currentUser, 'inventoryChecks', checks);
+        res.json({ success: true, changed, details });
+    } catch (err) {
+        console.error('盘点失败:', err);
+        res.status(500).json({ error: '盘点失败: ' + err.message });
+    }
+});
+
+// ==================== 增强统计（处方量/毛利/复诊率） ====================
+app.get('/api/statistics/enhanced', authMiddleware, async (req, res) => {
+    try {
+        const range = req.query.range || '1m';
+        const now = new Date();
+        let startDate, label;
+        if (range === '1m') { startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()); label = '近一月'; }
+        else if (range === '3m') { startDate = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate()); label = '近三月'; }
+        else { startDate = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate()); label = '近半年'; }
+        const outpatients = await readCollection(req.currentUser, 'outpatients');
+        const drugInventory = await readCollection(req.currentUser, 'drugInventory');
+        const opIn = outpatients.filter(o => {
+            const dt = parseDate(o.opDate || o.date);
+            return dt && dt >= startDate && dt <= now;
+        });
+        const rxByDay = {};
+        for (let d = new Date(startDate); d <= now; d.setDate(d.getDate() + 1)) rxByDay[toDateKey(d)] = 0;
+        const invMap = new Map(drugInventory.map(d => [d.name, d]));
+        let grossProfit = 0, rxTotal = 0;
+        for (const o of opIn) {
+            const rx = o.prescriptions || [];
+            rxTotal += rx.length;
+            const k = toDateKey(o.opDate || o.date);
+            if (k && rxByDay[k] !== undefined) rxByDay[k] += rx.length;
+            for (const d of rx) {
+                const inv = invMap.get(d.name);
+                const cost = inv ? toNum(inv.costPrice) : 0;
+                grossProfit += (toNum(d.price) - cost) * toNum(d.qty);
+            }
+        }
+        const grp = {};
+        opIn.forEach(o => {
+            const key = (String(o.name || '') + '|' + String(o.phone || '')).toLowerCase();
+            grp[key] = (grp[key] || 0) + 1;
+        });
+        const totalPatients = Object.keys(grp).length;
+        const revisitPatients = Object.values(grp).filter(n => n >= 2).length;
+        res.json({
+            range, label,
+            rxTrend: Object.keys(rxByDay).sort().map(date => ({ date, value: rxByDay[date] })),
+            rxTotal, grossProfit: +grossProfit.toFixed(2),
+            totalPatients, revisitPatients,
+            revisitRate: totalPatients ? +(revisitPatients / totalPatients * 100).toFixed(1) : 0
+        });
+    } catch (err) {
+        console.error('增强统计失败:', err);
+        res.status(500).json({ error: '增强统计失败' });
+    }
+});
+
 // ==================== 首页大盘统计 ====================
 app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
     try {
@@ -356,7 +601,6 @@ app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
             endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
         }
 
-        const registrations = await readCollection(req.currentUser, 'registrations');
         const outpatients = await readCollection(req.currentUser, 'outpatients');
         const pharmacy = await readCollection(req.currentUser, 'pharmacy');
         const revenue = await readCollection(req.currentUser, 'revenue');
@@ -367,21 +611,17 @@ app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
             return dt && dt >= startDate && dt < endDate;
         }
 
-        const regInPeriod = registrations.filter(r => inRange(r.date));
         const opInPeriod = outpatients.filter(o => inRange(o.opDate || o.date));
         const pharmaInPeriod = pharmacy.filter(p => inRange(p.date));
         const revInPeriod = revenue.filter(r => inRange(r.date));
 
         const tKey = todayKey();
-        const todayReg = registrations.filter(r => toDateKey(r.date) === tKey);
         const todayOp = outpatients.filter(o => toDateKey(o.opDate || o.date) === tKey);
         const todayPharma = pharmacy.filter(p => toDateKey(p.date) === tKey);
 
         const totalRev = revInPeriod.reduce((s, r) => s + toNum(r.amount), 0);
         const outpatientRev = revInPeriod.filter(r => (r.desc || '').includes('门诊')).reduce((s, r) => s + toNum(r.amount), 0);
         const retailRev = revInPeriod.filter(r => (r.desc || '').includes('零售')).reduce((s, r) => s + toNum(r.amount), 0);
-        const regRev = revInPeriod.filter(r => (r.desc || '').includes('挂号') || (r.desc || '').includes('预约')).reduce((s, r) => s + toNum(r.amount), 0);
-
         const opCount = opInPeriod.length;
         const retailCount = pharmaInPeriod.filter(p => p.source === 'retail' || !p.patient).length;
         const opAvg = opCount > 0 ? outpatientRev / opCount : 0; // 门诊客单价 = 门诊收费 / 门诊诊量
@@ -409,15 +649,14 @@ app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
         res.json({
             period,
             today: {
-                regCount: todayReg.length, pendingVisit: Math.max(0, todayReg.length - todayOp.length),
                 visitCount: todayOp.length, pendingBill: todayOp.filter(o => !o.billed).length,
                 pendingDrug: todayPharma.filter(p => p.status === '待发药').length,
-                expiryWarning: warningDrugs.length, appointmentCount: todayReg.filter(r => r.type === '预约').length,
+                expiryWarning: warningDrugs.length,
                 visited: todayOp.length, prescriptionCount: todayOp.filter(o => o.prescriptions && o.prescriptions.length > 0).length,
                 billed: todayOp.filter(o => o.billed).length, dispensed: todayPharma.filter(p => p.status === '已发药').length,
                 stockWarning: lowStockDrugs.length
             },
-            revenue: { total: totalRev, outpatient: outpatientRev, retail: retailRev, registration: regRev, opVisits: opCount, retailCustomers: retailCount, opAvgPrice: opAvg, retailAvgPrice: retailAvg },
+            revenue: { total: totalRev, outpatient: outpatientRev, retail: retailRev, opVisits: opCount, retailCustomers: retailCount, opAvgPrice: opAvg, retailAvgPrice: retailAvg },
             charts: {
                 payMethod: Object.entries(payMap).map(([name, value]) => ({ name, value })),
                 feeCategory: Object.entries(feeMap).map(([name, value]) => ({ name, value })),
@@ -476,7 +715,7 @@ app.post('/api/pharmacy/dispense/:id', authMiddleware, async (req, res) => {
 // ==================== 药品入库 ====================
 app.post('/api/drug-inventory/stock-in', authMiddleware, async (req, res) => {
     try {
-        const { drugId, drugName, qty, batchNo, expiry, supplier, cost, supplierId, unit, minStock, price } = req.body || {};
+        const { drugId, drugName, qty, batchNo, expiry, productionDate, supplier, cost, supplierId, unit, minStock, price } = req.body || {};
         const qtyNum = toNum(qty);
         if (!drugName || qtyNum <= 0) return res.status(400).json({ error: '药品名称和数量不能为空，且数量必须大于0' });
 
@@ -502,19 +741,22 @@ app.post('/api/drug-inventory/stock-in', authMiddleware, async (req, res) => {
             drug.stock = toNum(drug.stock) + qtyNum;
             if (batchNo) drug.batchNo = batchNo;
             if (expiry) drug.expiry = expiry;
+            if (productionDate) drug.productionDate = productionDate;
             if (supplier) drug.supplier = supplier;
             if (finalSupplierId) drug.supplierId = finalSupplierId;
             if (cost !== undefined && cost !== '') drug.costPrice = toNum(cost);
             if (price !== undefined && price !== '') drug.price = toNum(price);
             if (unit) drug.unit = unit;
             if (minStock !== undefined && minStock !== '') drug.minStock = toNum(minStock, 10);
+            drug.purchaseDate = todayKey();
             drug.updatedAt = new Date().toISOString();
         } else {
             inventory.push({
                 id: newId(),
                 name: drugName, stock: qtyNum, unit: unit || '盒',
                 minStock: minStock || 10, batchNo: batchNo || '',
-                expiry: expiry || '', supplier: supplier || '', supplierId: finalSupplierId || '',
+                expiry: expiry || '', productionDate: productionDate || '', purchaseDate: todayKey(),
+                supplier: supplier || '', supplierId: finalSupplierId || '',
                 costPrice: toNum(cost), price: toNum(price),
                 createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
             });
@@ -525,7 +767,7 @@ app.post('/api/drug-inventory/stock-in', authMiddleware, async (req, res) => {
         inRecords.push({
             id: newId(),
             drugName, qty: qtyNum, batchNo: batchNo || '',
-            expiry: expiry || '', supplier: supplier || '', supplierId: finalSupplierId || '',
+            expiry: expiry || '', productionDate: productionDate || '', supplier: supplier || '', supplierId: finalSupplierId || '',
             cost: toNum(cost), date: new Date().toLocaleString(), operator: req.currentUser
         });
         await writeCollection(req.currentUser, 'drugInRecords', inRecords);
@@ -588,6 +830,8 @@ app.post('/api/drug-inventory/batch-import', authMiddleware, async (req, res) =>
                 if (item.category) existing.category = item.category;
                 if (item.code) existing.code = item.code;
                 if (item.approvalNo) existing.approvalNo = item.approvalNo;
+                if (item.productionDate) existing.productionDate = item.productionDate;
+                if (Math.max(0, toNum(item.stock)) > 0) existing.purchaseDate = item.purchaseDate || todayKey();
                 existing.updatedAt = new Date().toISOString();
                 updated++;
             } else {
@@ -599,7 +843,9 @@ app.post('/api/drug-inventory/batch-import', authMiddleware, async (req, res) =>
                     manufacturer: item.manufacturer || '', stock: Math.max(0, toNum(item.stock)),
                     minStock: item.minStock || 10, price: toNum(item.price),
                     costPrice: toNum(item.costPrice), batchNo: item.batchNo || '',
-                    expiry: item.expiry || '', supplier: supName || '', supplierId: finalSupplierId || '',
+                    expiry: item.expiry || '', productionDate: item.productionDate || '',
+                    purchaseDate: item.purchaseDate || (Math.max(0, toNum(item.stock)) > 0 ? todayKey() : ''),
+                    supplier: supName || '', supplierId: finalSupplierId || '',
                     createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
                 });
                 added++;
@@ -611,7 +857,7 @@ app.post('/api/drug-inventory/batch-import', authMiddleware, async (req, res) =>
                     id: newId(),
                     drugName: name, qty: inQty,
                     unit: item.unit || '盒', batchNo: item.batchNo || '',
-                    expiry: item.expiry || '', supplier: supName || '',
+                    expiry: item.expiry || '', productionDate: item.productionDate || '', supplier: supName || '',
                     cost: toNum(item.costPrice), date: new Date().toLocaleString(),
                     operator: req.currentUser, source: 'Excel导入'
                 });
@@ -628,13 +874,42 @@ app.post('/api/drug-inventory/batch-import', authMiddleware, async (req, res) =>
     }
 });
 
+// ==================== 患者档案同步（接诊后自动归拢） ====================
+async function upsertPatient(username, o) {
+    try {
+        const patients = await readCollection(username, 'patients');
+        const name = String(o.name || '').trim();
+        if (!name) return;
+        const phone = String(o.phone || '').trim();
+        const key = (name + '|' + phone).toLowerCase();
+        const idx = patients.findIndex(p => p.key === key);
+        const visit = {
+            id: o.id, date: o.opDate || o.date || '',
+            diagnosis: o.diagnosis || '',
+            prescriptions: (o.prescriptions || []).map(d => ({ name: d.name, qty: d.qty }))
+        };
+        const profile = {
+            key, name, phone, gender: o.gender || '', age: o.age || '',
+            allergy: o.allergy || '', past: o.past || '',
+            visitCount: (idx >= 0 ? patients[idx].visitCount : 0) + 1,
+            lastVisit: o.opDate || o.date || '',
+            visits: idx >= 0 ? [...(patients[idx].visits || []), visit] : [visit],
+            updatedAt: new Date().toISOString()
+        };
+        if (idx >= 0) patients[idx] = { ...patients[idx], ...profile };
+        else patients.push({ id: newId(), ...profile });
+        await writeCollection(username, 'patients', patients);
+    } catch (e) {
+        console.error('患者档案同步失败:', e.message);
+    }
+}
+
 // ==================== 事务化接诊（多模块联动核心） ====================
-// 一次请求内完成：挂号转门诊 / 更新门诊 + 收费写入 + 处方推送药房，
-// 避免原来“先删挂号、再逐条保存”中途失败导致的数据丢失。
+// 一次请求内完成：更新/新建门诊 + 收费写入 + 处方推送药房，
+// 避免分步保存中途失败导致的数据丢失。
 app.post('/api/visits/complete', authMiddleware, async (req, res) => {
     try {
         const body = req.body || {};
-        const registrationId = body.registrationId;
         const outpatientId = body.outpatientId;
         const patient = body.patient || {};
         const prescriptions = Array.isArray(body.prescriptions) ? body.prescriptions : [];
@@ -650,16 +925,11 @@ app.post('/api/visits/complete', authMiddleware, async (req, res) => {
         }
         const drugTotal = cleanRx.reduce((s, d) => s + d.subtotal, 0);
 
-        const registrations = await readCollection(req.currentUser, 'registrations');
         const outpatients = await readCollection(req.currentUser, 'outpatients');
         const inventory = await readCollection(req.currentUser, 'drugInventory');
 
-        // 患者姓名：挂号/门诊场景可从原记录继承，无需前端重复传
+        // 患者姓名：门诊场景可从原记录继承，无需前端重复传
         let name = String(patient.name || '').trim();
-        if (!name && registrationId) {
-            const reg = registrations.find(x => String(x.id) === String(registrationId));
-            if (reg) name = String(reg.name || '').trim();
-        }
         if (!name && outpatientId) {
             const op = outpatients.find(x => String(x.id) === String(outpatientId));
             if (op) name = String(op.name || '').trim();
@@ -693,29 +963,7 @@ app.post('/api/visits/complete', authMiddleware, async (req, res) => {
 
         let savedOutpatient = null;
 
-        if (registrationId) {
-            // 挂号 → 门诊：删除挂号记录并生成门诊记录（保留同一ID，保证历史连续性）
-            const regIdx = registrations.findIndex(r => String(r.id) === String(registrationId));
-            if (regIdx === -1) return res.status(404).json({ error: '挂号记录不存在，请刷新后重试' });
-            const reg = registrations[regIdx];
-            registrations.splice(regIdx, 1);
-            await writeCollection(req.currentUser, 'registrations', registrations);
-
-            savedOutpatient = {
-                ...reg,
-                ...baseFields,
-                name: reg.name,
-                gender: reg.gender || patient.gender || '',
-                age: reg.age !== undefined && reg.age !== '' ? reg.age : (patient.age || ''),
-                phone: reg.phone || patient.phone || '',
-                status: '已就诊',
-                date: todayStr,
-                opDate: todayStr,
-                createdAt: reg.createdAt || nowISO,
-                updatedAt: nowISO
-            };
-            outpatients.push(savedOutpatient);
-        } else if (outpatientId) {
+        if (outpatientId) {
             // 更新已有门诊记录
             const idx = outpatients.findIndex(o => String(o.id) === String(outpatientId));
             if (idx === -1) return res.status(404).json({ error: '门诊记录不存在，请刷新后重试' });
@@ -750,6 +998,7 @@ app.post('/api/visits/complete', authMiddleware, async (req, res) => {
             outpatients.push(savedOutpatient);
         }
         await writeCollection(req.currentUser, 'outpatients', outpatients);
+        await upsertPatient(req.currentUser, savedOutpatient);
 
         // 收费写入
         let revenueAmount = 0;
@@ -839,8 +1088,6 @@ app.get('/api/statistics/revenue', authMiddleware, async (req, res) => {
         const totalRev = revInPeriod.reduce((s, r) => s + toNum(r.amount), 0);
         const outpatientRev = revInPeriod.filter(r => (r.desc || '').includes('门诊')).reduce((s, r) => s + toNum(r.amount), 0);
         const retailRev = revInPeriod.filter(r => (r.desc || '').includes('零售')).reduce((s, r) => s + toNum(r.amount), 0);
-        const regRev = revInPeriod.filter(r => (r.desc || '').includes('挂号') || (r.desc || '').includes('预约')).reduce((s, r) => s + toNum(r.amount), 0);
-
         const payMap = {};
         revInPeriod.forEach(r => { const m = r.payMethod || r.method || '未分类'; payMap[m] = (payMap[m] || 0) + toNum(r.amount); });
         const feeMap = {};
@@ -856,7 +1103,6 @@ app.get('/api/statistics/revenue', authMiddleware, async (req, res) => {
                 { name: '营业收费', value: totalRev },
                 { name: '门诊收费', value: outpatientRev },
                 { name: '零售收费', value: retailRev },
-                { name: '挂号预约收费', value: regRev },
                 { name: '门诊诊量', value: opInPeriod.length },
                 { name: '零售客量', value: retailCount },
                 { name: '门诊客单价', value: opInPeriod.length > 0 ? outpatientRev / opInPeriod.length : 0 },
@@ -935,12 +1181,10 @@ app.get('/api/statistics/operations', authMiddleware, async (req, res) => {
         else if (period === 'quarter') { startDate = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate()); label = '近三月'; }
         else { startDate = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate()); label = '近半年'; }
 
-        const registrations = await readCollection(req.currentUser, 'registrations');
         const outpatients = await readCollection(req.currentUser, 'outpatients');
         const pharmacy = await readCollection(req.currentUser, 'pharmacy');
 
         const tKey = todayKey();
-        const todayReg = registrations.filter(r => toDateKey(r.date) === tKey);
         const todayOp = outpatients.filter(o => toDateKey(o.opDate || o.date) === tKey);
         const todayPharma = pharmacy.filter(p => toDateKey(p.date) === tKey);
 
@@ -954,16 +1198,13 @@ app.get('/api/statistics/operations', authMiddleware, async (req, res) => {
 
         const newPatientsCount = (() => {
             let n = 0;
-            todayReg.forEach(r => { if (!hasEarlierVisit(r.name, tKey)) n++; });
-            todayOp.filter(o => o.source === 'direct').forEach(o => { if (!hasEarlierVisit(o.name, tKey)) n++; });
+            todayOp.forEach(o => { if (!hasEarlierVisit(o.name, tKey)) n++; });
             return n;
         })();
 
         const dayKeys = [];
         for (let d = new Date(startDate); d <= now; d.setDate(d.getDate() + 1)) dayKeys.push(toDateKey(d));
 
-        const regByDay = {};
-        registrations.forEach(r => { const k = toDateKey(r.date); if (k && dayKeys.includes(k)) regByDay[k] = (regByDay[k] || 0) + 1; });
         const opByDay = {};
         outpatients.forEach(o => { const k = toDateKey(o.opDate || o.date); if (k && dayKeys.includes(k)) opByDay[k] = (opByDay[k] || 0) + 1; });
         const retailByDay = {};
@@ -974,11 +1215,10 @@ app.get('/api/statistics/operations', authMiddleware, async (req, res) => {
 
         const daily = dayKeys.map(k => {
             let newP = 0;
-            registrations.forEach(r => { if (toDateKey(r.date) === k && !hasEarlierVisit(r.name, k)) newP++; });
-            outpatients.forEach(o => { if (toDateKey(o.opDate || o.date) === k && o.source === 'direct' && !hasEarlierVisit(o.name, k)) newP++; });
+            outpatients.forEach(o => { if (toDateKey(o.opDate || o.date) === k && !hasEarlierVisit(o.name, k)) newP++; });
             return {
                 date: k,
-                visits: regByDay[k] || 0,
+                visits: opByDay[k] || 0,
                 finished: opByDay[k] || 0,
                 newPatients: newP,
                 retail: retailByDay[k] || 0
@@ -987,10 +1227,10 @@ app.get('/api/statistics/operations', authMiddleware, async (req, res) => {
 
         res.json({
             period: label,
-            cards: { visitCount: todayReg.length + todayOp.filter(o => o.source === 'direct').length, newPatients: newPatientsCount, retailCount: todayPharma.filter(p => p.source === 'retail' || !p.patient).length, finishedVisits: todayOp.length },
+            cards: { visitCount: todayOp.length, newPatients: newPatientsCount, retailCount: todayPharma.filter(p => p.source === 'retail' || !p.patient).length, finishedVisits: todayOp.filter(o => o.status === '已就诊').length },
             trend: {
                 labels: dayKeys,
-                visits: dayKeys.map(k => regByDay[k] || 0),
+                visits: dayKeys.map(k => opByDay[k] || 0),
                 finished: dayKeys.map(k => opByDay[k] || 0)
             },
             daily
@@ -1039,10 +1279,17 @@ app.use((req, res) => {
 
 // ==================== 启动服务 ====================
 initRootStorage().then(() => {
+    try {
+        knowledge.loadKnowledge();
+        const ks = knowledge.stats();
+        console.log(`  知识库已加载：单药 ${ks.pharma} 条 / 方剂 ${ks.formulas} 首 / 相互作用 ${ks.interactions} 条`);
+    } catch (err) {
+        console.error('知识库加载失败（请确认 data 目录存在）:', err.message);
+    }
     app.listen(PORT, '0.0.0.0', () => {
         const lanIP = getLANIP();
         console.log('========================================');
-        console.log('  愈康云诊所服务已启动（v3.1 修复版）');
+        console.log('  愈康云诊所服务已启动（v3.2）');
         console.log('========================================');
         console.log(`  电脑本机访问: http://localhost:${PORT}`);
         console.log(`  手机端访问:   http://${lanIP}:${PORT}`);

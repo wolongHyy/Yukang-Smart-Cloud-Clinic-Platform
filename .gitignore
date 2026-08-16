@@ -8,13 +8,16 @@
 
 # ---- npm 依赖包：可随时用 npm install 重新生成 ----
 node_modules/
-愈康v3.0/clinic_system/node/
+愈康v3.3/clinic_system/node/
 
 # ---- 旧备份目录 ----
-愈康v3.0/clinic_system/_backup_*/
+愈康v3.3/clinic_system/_backup_*/
 
 # ---- 运行时数据（含用户账号、病人记录等敏感信息；server.js 会自动重建）----
-愈康v3.0/clinic_system/clinic_database/
+愈康v3.3/clinic_system/clinic_database/
+
+# ---- 药典2025原始整理数据（21MB 素材，仅用于重新生成知识库，不入库）----
+药典2025原始数据/
 
 # ---- 日志与系统临时文件 ----
 *.log

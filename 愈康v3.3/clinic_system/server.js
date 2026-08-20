@@ -382,6 +382,16 @@ app.get('/api/pharmacopoeia/search', authMiddleware, async (req, res) => {
     }
 });
 
+// V3.5 中药饮片名称清单（处方中心饮片选择器使用）
+app.get('/api/pharmacopoeia/herbs', authMiddleware, async (req, res) => {
+    try {
+        const userEntries = await readCollection(req.currentUser, 'drugKnowledge');
+        res.json({ items: knowledge.herbNameList(userEntries) });
+    } catch (err) {
+        res.status(500).json({ error: '中药库加载失败' });
+    }
+});
+
 app.get('/api/pharmacopoeia/stats', authMiddleware, (req, res) => {
     res.json(knowledge.stats());
 });

@@ -1,5 +1,5 @@
 // ============================================================
-//  愈康云诊所 - 回归测试脚本（v3.1）
+//  愈康云诊所 - 回归测试脚本（v3.5）
 //  用法: node regression-test.js
 //  说明: 使用临时 DATA_DIR 运行，不会触碰真实 clinic_database 数据；
 //        测试完成后自动关闭服务器并清理临时数据。
@@ -248,6 +248,54 @@ async function main() {
            r.data.data.clinicData.symptoms.includes('咽痛') &&
            r.data.data.clinicData.prescription.herbs[0].name === '甘草',
             '门诊结构化病历保存成功', r.data && r.data.data && r.data.data.clinicData);
+
+        // 14.9.1 V3.5 中药饮片名称清单接口
+        r = await req('GET', '/api/pharmacopoeia/herbs', { token });
+        ok(r.status === 200 && Array.isArray(r.data.items) && r.data.items.length >= 400 &&
+           r.data.items.some(x => x.name === '甘草'),
+            'V3.5 中药库接口返回饮片名称清单', r.data && r.data.items && r.data.items.length);
+
+        // 14.9.2 V3.5 全类型处方（主诉/四诊/中西成药/输注/中药/贴敷/外治）结构化保存
+        r = await req('POST', '/api/visits/complete', {
+            token,
+            body: {
+                patient: {
+                    name: '测试患者V35',
+                    chief: '咳嗽、咽痛（病程：3 天）',
+                    clinicData: {
+                        duration_name: '3 天',
+                        symptoms: ['咳嗽', '咽痛', '胸闷', '眼干', '胃胀'],
+                        vital_signs: { 体温: '36.5', 血压: '120/80', 心率: '72' },
+                        tcm_exam: {
+                            body_shape: '形体中等', mental_state: '精神良好', facial_color: '面色淡白',
+                            tongue_color: '舌淡红', tongue_shape: ['舌齿痕'], coating_color: '苔白', coating_quality: ['苔薄'],
+                            pulse_types: ['脉浮', '溢脉', '脉弦', '紊脉']
+                        },
+                        prescription: {
+                            type: 'patch',
+                            level: '普通',
+                            remark: 'V3.5 备注',
+                            westernDrugs: [{ name: '测试阿莫西林', dosage: '0.5g', usage: '口服', frequency: 'tid', qty: 3, price: 12.5, subtotal: 37.5 }],
+                            infusionGroups: [{ name: '输注1', route: '静脉滴注', frequency: 'qd', days: 3, dripSpeed: '40滴/分', drugs: [{ name: '氯化钠注射液', qty: 1, price: 5 }] }],
+                            herbs: [{ name: '甘草', dosage: 6, unit: 'g', footnote: '后下' }],
+                            patchGroups: [{ name: '贴一', site: '背部', drug: '丁桂散', acupoints: ['大椎', '肺俞'], usage: '湿贴', prepareMethod: '临方加工', frequency: '1天1次', duration: 4, totalPatches: 3 }],
+                            treatmentGroups: [{ item: '刮痧', price: 80, acupoints: ['膀胱经'], times: 2, frequency: '1天1次', remark: '力度适中', countMode: '按穴位计数' }],
+                            externalType: '刮痧处方',
+                            externalExtra: { technique: '平补平泻' },
+                            medication_instruction: '饭后服用，忌辛辣'
+                        }
+                    }
+                }
+            }
+        });
+        ok(r.status === 200 && r.data.data && r.data.data.clinicData &&
+           r.data.data.clinicData.symptoms.length === 5 &&
+           r.data.data.clinicData.tcm_exam.pulse_types.includes('紊脉') &&
+           r.data.data.clinicData.prescription.patchGroups[0].site === '背部' &&
+           r.data.data.clinicData.prescription.infusionGroups[0].dripSpeed === '40滴/分' &&
+           r.data.data.clinicData.prescription.herbs[0].footnote === '后下' &&
+           r.data.data.clinicData.prescription.medication_instruction.includes('辛辣'),
+            'V3.5 全类型处方结构化保存成功', r.data && r.data.data && r.data.data.clinicData && r.data.data.clinicData.prescription);
 
         // 14.10 库存预警批量删除
         r = await req('POST', '/api/drug-inventory/stock-in', {

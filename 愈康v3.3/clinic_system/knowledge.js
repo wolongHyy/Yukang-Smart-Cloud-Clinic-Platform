@@ -77,6 +77,19 @@ function listEntries(userEntries, limit) {
     return mergeEntries(userEntries).slice(0, limit || 30);
 }
 
+// V3.5 中药饮片名称清单（供处方中心饮片选择器检索）
+function herbNameList(userEntries) {
+    const out = [];
+    const seen = new Set();
+    for (const e of mergeEntries(userEntries)) {
+        const nm = String(e.name || '').trim();
+        if (!nm || seen.has(nm)) continue;
+        seen.add(nm);
+        out.push({ name: nm, category: e.category || '' });
+    }
+    return out;
+}
+
 function listFormulas(userFormulas) {
     const map = new Map();
     for (const f of formulas) map.set(f.name, f);
@@ -161,5 +174,5 @@ function matchInteractions(drugNames) {
 module.exports = {
     loadKnowledge, stats, lookupDrug, searchEntries, expandQuery,
     retrieveDrugs, retrieveFormulas, matchInteractions, normalize,
-    listEntries, listFormulas
+    listEntries, listFormulas, herbNameList
 };

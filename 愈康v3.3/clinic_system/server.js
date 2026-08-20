@@ -649,7 +649,7 @@ app.get('/api/dashboard/stats', authMiddleware, async (req, res) => {
         res.json({
             period,
             today: {
-                visitCount: todayOp.length, pendingBill: todayOp.filter(o => !o.billed).length,
+                visitCount: todayOp.length,
                 pendingDrug: todayPharma.filter(p => p.status === '待发药').length,
                 expiryWarning: warningDrugs.length,
                 visited: todayOp.length, prescriptionCount: todayOp.filter(o => o.prescriptions && o.prescriptions.length > 0).length,
@@ -874,6 +874,21 @@ app.post('/api/drug-inventory/batch-import', authMiddleware, async (req, res) =>
     }
 });
 
+// 删除库存药品，供效期/库存预警页批量处理。
+app.delete('/api/drug-inventory', authMiddleware, async (req, res) => {
+    try {
+        const ids = Array.isArray(req.body && req.body.ids) ? req.body.ids.map(String) : [];
+        if (!ids.length) return res.status(400).json({ error: '请选择要删除的药品' });
+        const inventory = await readCollection(req.currentUser, 'drugInventory');
+        const kept = inventory.filter(item => !ids.includes(String(item.id)));
+        await writeCollection(req.currentUser, 'drugInventory', kept);
+        res.json({ success: true, deleted: inventory.length - kept.length });
+    } catch (err) {
+        console.error('删除库存药品失败:', err);
+        res.status(500).json({ error: '删除库存药品失败' });
+    }
+});
+
 // ==================== 患者档案同步（接诊后自动归拢） ====================
 async function upsertPatient(username, o) {
     try {
@@ -957,7 +972,9 @@ app.post('/api/visits/complete', authMiddleware, async (req, res) => {
             syndrome: String(patient.syndrome || '').trim(),
             advice: String(patient.advice || '').trim(),
             visitType: patient.visitType || '初诊',
-            feeType: patient.feeType || '自费',
+            // 系统统一自费结算，忽略旧客户端可能传来的医保值。
+            feeType: '自费',
+            clinicData: patient.clinicData && typeof patient.clinicData === 'object' ? patient.clinicData : {},
             prescriptions: cleanRx
         };
 
@@ -1010,7 +1027,7 @@ app.post('/api/visits/complete', authMiddleware, async (req, res) => {
                 amount: +drugTotal.toFixed(2),
                 desc: '门诊药品费',
                 category: '门诊收费',
-                payMethod: baseFields.feeType || '自费',
+                payMethod: '自费',
                 patient: savedOutpatient.name
             });
             await writeCollection(req.currentUser, 'revenue', revenue);
@@ -1260,7 +1277,20 @@ app.get('/api/statistics/inventory-overview', authMiddleware, async (req, res) =
             { name: '效期预警(30天内)', value: expiryAlert }
         ];
 
-        res.json({ pieData });
+        const now = new Date();
+        const alerts = [];
+        drugInventory.forEach(d => {
+            const stock = toNum(d.stock || d.quantity);
+            const min = toNum(d.minStock, 10);
+            const exp = parseDate(d.expiry);
+            const days = exp ? Math.ceil((exp - now) / (1000 * 60 * 60 * 24)) : null;
+            if (days !== null && days <= 0) alerts.push({ ...d, type: '已过期', severity: 4, color: '#d32f2f', time: `已过期${Math.abs(days)}天` });
+            else if (stock <= 0) alerts.push({ ...d, type: '库存耗尽', severity: 4, color: '#d32f2f', time: '当前库存为 0' });
+            else if (days !== null && days <= 30) alerts.push({ ...d, type: '效期预警', severity: 3, color: '#e67e00', time: `距效期 ${days} 天` });
+            else if (stock <= min) alerts.push({ ...d, type: '库存不足', severity: 2, color: '#f1c40f', time: `低于安全线 ${min}` });
+        });
+        alerts.sort((a, b) => b.severity - a.severity || String(a.time).localeCompare(String(b.time)));
+        res.json({ pieData, alerts });
     } catch (err) { console.error('库存统计失败:', err); res.status(500).json({ error: '库存统计失败' }); }
 });
 

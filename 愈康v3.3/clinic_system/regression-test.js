@@ -140,7 +140,7 @@ async function main() {
         let ol = await req('GET', '/api/outpatients', { token });
         ok(ol.data.some(x => String(x.id) === String(opId) && x.status === '已就诊'), '门诊记录已更新');
         let rv = await req('GET', '/api/revenue', { token });
-        ok(rv.data.some(x => x.amount === 125 && x.desc === '门诊药品费' && x.payMethod === '医保'), '收费记录已写入');
+        ok(rv.data.some(x => x.amount === 125 && x.desc === '门诊药品费' && x.payMethod === '自费'), '收费记录已写入且医保参数已按自费处理');
         let ph = await req('GET', '/api/pharmacy', { token });
         const pharmaItem = ph.data.find(x => x.patient === '测试患者甲' && x.drug === '测试阿莫西林');
         ok(!!pharmaItem && pharmaItem.status === '待发药', '药房待发药记录存在');
@@ -227,6 +227,42 @@ async function main() {
             body: { items: [{ name: '测试导入药品', stock: 5 }, { name: '', stock: 9 }] }
         });
         ok(r.status === 200 && r.data && r.data.added === 1, '批量导入：缺列可导入，无名称行自动跳过', r.data);
+
+        // 14.9 门诊结构化病历（症状/四诊/处方）随接诊保存
+        r = await req('POST', '/api/visits/complete', {
+            token,
+            body: {
+                patient: {
+                    name: '测试患者丁',
+                    chief: '咳嗽',
+                    clinicData: {
+                        duration_name: '3 天',
+                        symptoms: ['咳嗽', '咽痛'],
+                        tcm_exam: { body_shape: '形体中等', pulse_types: ['脉浮'] },
+                        prescription: { type: 'herbal', herbs: [{ name: '甘草', dosage: 6, footnote: '' }] }
+                    }
+                }
+            }
+        });
+        ok(r.status === 200 && r.data.data && r.data.data.clinicData &&
+           r.data.data.clinicData.symptoms.includes('咽痛') &&
+           r.data.data.clinicData.prescription.herbs[0].name === '甘草',
+            '门诊结构化病历保存成功', r.data && r.data.data && r.data.data.clinicData);
+
+        // 14.10 库存预警批量删除
+        r = await req('POST', '/api/drug-inventory/stock-in', {
+            token,
+            body: { drugName: '测试待删除药品', qty: 1, unit: '盒', batchNo: 'DEL1', price: 10, cost: 5 }
+        });
+        const delInv = (await req('GET', '/api/drugInventory', { token })).data.find(d => d.name === '测试待删除药品');
+        ok(!!delInv && delInv.id, '库存预警测试药品已入库', delInv);
+        const invStat = await req('GET', '/api/statistics/inventory-overview', { token });
+        ok(invStat.data && Array.isArray(invStat.data.alerts) && invStat.data.alerts.length > 0,
+            '库存统计返回统一预警列表', invStat.data && invStat.data.alerts && invStat.data.alerts.length);
+        r = await req('DELETE', '/api/drug-inventory', { token, body: { ids: [delInv.id] } });
+        ok(r.status === 200 && r.data.deleted === 1, '库存预警批量删除成功', r.data);
+        const delAfter = (await req('GET', '/api/drugInventory', { token })).data.find(d => d.name === '测试待删除药品');
+        ok(!delAfter, '删除后库存不再包含该药品');
 
         // ==================== v3.2 专项测试 ====================
 

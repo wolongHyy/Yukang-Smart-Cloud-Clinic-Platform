@@ -1,7 +1,7 @@
 {
     "name": "clinic_system",
-    "version": "1.0.0",
-    "description": "智慧云诊所管理系统",
+    "version": "3.5.0",
+    "description": "愈康项目 v3.5 智慧云诊所管理系统",
     "main": "server.js",
     "scripts": {
         "start": "node server.js"

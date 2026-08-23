@@ -185,6 +185,18 @@
         .rx-picker-item:hover { background:var(--primary-soft); }
         .rx-total-row { display:flex; justify-content:space-between; align-items:center; gap:8px; }
         @media(max-width:700px) { .symptom-layout { grid-template-columns:1fr; } }
+        /* V3.6: 主诉选择器改为病历信息字段弹出面板；旧接诊区不再展示四诊/生命体征。 */
+        .clinic-section:has(.legacy-symptom-marker), .clinic-section:has(.vital-tabs) { display:none; }
+        .chief-picker-modal { position:fixed; inset:0; z-index:10010; background:rgba(16,28,35,.28); display:flex; align-items:center; justify-content:center; padding:12px; }
+        .chief-picker-card { width:min(980px,96vw); max-height:92vh; overflow:auto; background:#fff; border:1px solid #9ccbc1; border-radius:8px; box-shadow:0 12px 40px rgba(0,0,0,.2); }
+        .chief-picker-head { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:var(--primary-soft); border-bottom:1px solid var(--border); }
+        .chief-picker-body { display:grid; grid-template-columns:165px 1fr; gap:14px; padding:14px; }
+        .chief-duration { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; align-content:start; }
+        .chief-symptom-cat { border-bottom:1px dashed #ccd8d5; padding:0 0 10px; margin:0 0 10px; }
+        .chief-symptom-cat:last-child { border-bottom:0; }
+        .chief-symptom-cat b { display:block; color:#567; font-size:12px; margin-bottom:6px; }
+        .chief-picker-foot { display:flex; justify-content:center; gap:8px; padding:10px 14px; border-top:1px solid #eee; background:#fafdfc; }
+        @media(max-width:700px){ .chief-picker-body{grid-template-columns:1fr;} }
         .prescription-item { display: flex; justify-content: space-between; align-items: center; padding: 4px 8px; border-bottom: 1px dashed #eee; font-size: 12px; }
         .prescription-item .remove-btn { color: var(--danger-text); cursor: pointer; font-size: 12px; }
         .history-item { padding: 6px 0; border-bottom: 1px solid #f5f5f5; font-size: 11px; cursor: pointer; }
@@ -698,6 +710,7 @@
         <div id="page-outpatient" class="page-content">
             <div class="clinic-three-col">
                 <div class="clinic-left">
+                    <button class="btn-primary" style="width:100%; margin-bottom:8px;" onclick="openDirectAddModal()"><i class="fas fa-plus"></i> 新建患者接诊</button>
                     <div style="font-weight:bold; margin-bottom:8px; font-size:13px;">患者列表</div>
                     <div class="filter-tabs" id="opFilterTabs">
                         <span class="active" data-filter="all">全部</span>
@@ -724,6 +737,7 @@
 
         <div id="page-patients" class="page-content">
             <div class="patient-search-box">
+                <button class="btn-primary" onclick="openDirectAddModal()"><i class="fas fa-plus"></i> 新建患者接诊</button>
                 <input type="text" id="patientSearchInput" class="server-input" style="flex:1; width:auto;" placeholder="按姓名或电话搜索患者档案…" oninput="patientSearch=this.value; renderPatientPage();">
                 <button class="btn-primary" onclick="syncPatientProfiles()"><i class="fas fa-sync"></i> 同步历史档案</button>
             </div>
@@ -1019,24 +1033,31 @@
                             <span data-wtab="stock">库存预警</span>
                             <span data-wtab="margin">毛利预警</span>
                         </div>
+                        <div style="display:flex;gap:8px;align-items:center;margin:8px 0 12px;flex-wrap:wrap;">
+                            <label style="font-size:12px;color:#678;">严重程度</label>
+                            <select id="warningSeverityFilter" onchange="filterWarningBySeverity(this.value)">
+                                <option value="all">全部状态</option><option value="critical">严重：已过期/库存耗尽/无毛利</option><option value="warning">一般：即将过期/库存不足/毛利偏低</option>
+                            </select>
+                            <button class="op-btn danger" onclick="deleteWarningBySeverity()"><i class="fas fa-trash"></i> 删除当前状态药品</button>
+                        </div>
                         <div id="warningExpiryPanel">
                             <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#666;margin-bottom:8px;"><span>30天内即将过期的药品（按严重程度排序）</span><button class="op-btn danger" onclick="deleteSelectedWarningDrugs()" title="删除已勾选药品"><i class="fas fa-trash"></i></button></div>
                             <table class="table-mock">
                                 <thead><tr><th><input type="checkbox" onchange="toggleWarningSelections('expiry',this.checked)" title="全选"></th><th>药品名称</th><th>库存</th><th>批号</th><th>效期</th><th>状态</th></tr></thead>
-                                <tbody id="expiryBody"><tr><td colspan="5" style="text-align:center;color:#999;">暂无预警</td></tr></tbody>
+                                <tbody id="expiryBody"><tr><td colspan="6" style="text-align:center;color:#999;">暂无预警</td></tr></tbody>
                             </table>
                         </div>
                         <div id="warningStockPanel" style="display:none;">
                             <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#666;margin-bottom:8px;"><span>库存低于安全线的药品（按严重程度排序）</span><button class="op-btn danger" onclick="deleteSelectedWarningDrugs()" title="删除已勾选药品"><i class="fas fa-trash"></i></button></div>
                             <table class="table-mock">
                                 <thead><tr><th><input type="checkbox" onchange="toggleWarningSelections('stock',this.checked)" title="全选"></th><th>药品名称</th><th>库存</th><th>安全线</th><th>单位</th><th>状态</th></tr></thead>
-                                <tbody id="lowStockBody"><tr><td colspan="5" style="text-align:center;color:#999;">暂无预警</td></tr></tbody>
+                                <tbody id="lowStockBody"><tr><td colspan="6" style="text-align:center;color:#999;">暂无预警</td></tr></tbody>
                             </table>
                         </div>
                         <div id="warningMarginPanel" style="display:none;">
-                            <div style="font-size:13px; color:#666; margin-bottom:8px;">无毛利或毛利偏低的药品（售价 ≤ 进价×1.15）</div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#666;margin-bottom:8px;"><span>无毛利或毛利偏低的药品（售价 ≤ 进价×1.15）</span><button class="op-btn danger" onclick="deleteSelectedWarningDrugs()" title="删除已勾选药品"><i class="fas fa-trash"></i></button></div>
                             <table class="table-mock">
-                                <thead><tr><th>药品名称</th><th>零售价</th><th>进价</th><th>毛利率</th><th>状态</th></tr></thead>
+                                <thead><tr><th><input type="checkbox" onchange="toggleWarningSelections('margin',this.checked)" title="全选"></th><th>药品名称</th><th>零售价</th><th>进价</th><th>毛利率</th><th>状态</th></tr></thead>
                                 <tbody id="marginBody"><tr><td colspan="5" style="text-align:center;color:#999;">暂无预警</td></tr></tbody>
                             </table>
                         </div>
@@ -1664,6 +1685,12 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
     const infusionFreqs = ['qd','bid','tid','qod','st'];
     const dripSpeeds = ['20滴/分','30滴/分','40滴/分','60滴/分','80滴/分','100滴/分','120滴/分'];
     const herbFootnotes = ['先煎','后下','包煎','冲服','烊化','另煎','兑服'];
+    const westernUsageOptions = ['口服','含服','嚼服','餐前服','餐中服','餐后服','晨服','睡前服','静脉滴注','静脉注射','肌内注射','腔内注射','雾化吸入','瓶喷雾化','皮下注射','皮内注射','穴位注射','直肠滴注','局部注射','局部麻醉','超声透药','冲管','静脉冲管','静脉滴注冲管','入壶','鼻腔冲洗','直肠给药','滴眼','滴鼻','滴耳','口腔喷入','鼻腔喷入','溶媒用','外用','含漱','涂抹','塞肛','阴道给药'];
+    const frequencyOptions = ['qd','bid','tid','qid','qod','prn','st'];
+    const quantityUnits = ['片','粒','袋','包','支','瓶','盒','丸','贴','剂'];
+    const dosageUnits = ['mg','g','ml','μg','IU'];
+    function optionList(values, selected) { return values.map(x => `<option value="${esc(x)}" ${String(selected || '') === String(x) ? 'selected' : ''}>${esc(x)}</option>`).join(''); }
+    function drugSpecLabel(d) { return d.spec ? `${d.name}（${d.spec}）` : d.name; }
 
     // ---------- 药品/饮片选择器（支持名称与拼音首字母检索） ----------
     let rxPickerCtx = null;
@@ -1803,14 +1830,14 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
     function refreshRxCenter() { if (editingOutpatientId) renderClinicCenter(dbOutpatient.find(i => i.id === editingOutpatientId)); }
     function renderWesternRx(rx) {
         const rows = (rx.westernDrugs || []).length
-            ? `<div class="rx-detail-row" style="grid-template-columns:1.5fr .85fr .9fr .8fr .65fr .7fr 28px;"><b>药品名称</b><b>剂量</b><b>用法</b><b>频次</b><b>数量</b><b style="text-align:right;">金额</b><b></b></div>` +
+            ? `<div class="rx-detail-row" style="grid-template-columns:1.5fr 1fr 1fr .8fr .9fr .7fr 28px;"><b>药品名称/规格</b><b>剂量</b><b>用法</b><b>频次</b><b>数量</b><b style="text-align:right;">金额</b><b></b></div>` +
               (rx.westernDrugs || []).map((d, i) => `
             <div class="rx-detail-row">
-                <input value="${esc(d.name)}" readonly title="${esc(d.name)}">
-                <input placeholder="剂量" value="${esc(d.dosage || '')}" oninput="rxDraft().westernDrugs[${i}].dosage=this.value">
-                <input placeholder="用法" value="${esc(d.usage || '')}" oninput="rxDraft().westernDrugs[${i}].usage=this.value">
-                <input placeholder="频次" value="${esc(d.frequency || '')}" oninput="rxDraft().westernDrugs[${i}].frequency=this.value">
-                <input type="number" min="1" value="${Number(d.qty) || 1}" oninput="updateWesternQty(${i}, this)">
+                <input value="${esc(drugSpecLabel(d))}" readonly title="${esc(drugSpecLabel(d))}">
+                <div style="display:flex;gap:3px"><input placeholder="剂量" value="${esc(d.dosage || '')}" oninput="rxDraft().westernDrugs[${i}].dosage=this.value" style="min-width:0"><select onchange="rxDraft().westernDrugs[${i}].dosageUnit=this.value">${optionList(dosageUnits, d.dosageUnit || 'mg')}</select></div>
+                <select onchange="rxDraft().westernDrugs[${i}].usage=this.value"><option value="">用法</option>${optionList(westernUsageOptions, d.usage)}</select>
+                <select onchange="rxDraft().westernDrugs[${i}].frequency=this.value"><option value="">频次</option>${optionList(frequencyOptions, d.frequency)}</select>
+                <div style="display:flex;gap:3px"><input type="number" min="1" value="${Number(d.qty) || 1}" oninput="updateWesternQty(${i}, this)" style="min-width:0"><select onchange="rxDraft().westernDrugs[${i}].qtyUnit=this.value">${optionList(quantityUnits, d.qtyUnit || '盒')}</select></div>
                 <span class="rx-sub" id="wx_sub_${i}">¥${((Number(d.price) || 0) * (Number(d.qty) || 0)).toFixed(2)}</span>
                 <button class="op-btn danger" onclick="removeWesternDrug(${i})"><i class="fas fa-trash"></i></button>
             </div>`).join('')
@@ -1826,7 +1853,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         const rx = rxDraft(); if (!rx) return;
         const inv = dbDrugInventory.find(d => d.name === item.name);
         const price = inv ? Number(inv.price) || 0 : Number(item.price) || 0;
-        rx.westernDrugs.push({ name: item.name, spec: item.spec || '', dosage: '', usage: '', frequency: '', qty: 1, price, subtotal: +price.toFixed(2) });
+        rx.westernDrugs.push({ name: item.name, spec: item.spec || '', dosage: '', dosageUnit: 'mg', usage: '', frequency: 'qd', qty: 1, qtyUnit: '盒', price, subtotal: +price.toFixed(2) });
         refreshRxCenter();
     }
     function updateWesternQty(i, input) {
@@ -1846,11 +1873,11 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
                 ? `<div class="rx-detail-row" style="grid-template-columns:1.5fr .85fr .9fr .8fr .65fr .7fr 28px;"><b>药品名称</b><b>剂量</b><b>用法</b><b>频次</b><b>数量</b><b style="text-align:right;">金额</b><b></b></div>` +
                   (g.drugs || []).map((d, di) => `
             <div class="rx-detail-row">
-                <input value="${esc(d.name)}" readonly title="${esc(d.name)}">
-                <input placeholder="剂量" value="${esc(d.dosage || '')}" oninput="rxDraft().infusionGroups[${i}].drugs[${di}].dosage=this.value">
-                <input placeholder="用法" value="${esc(d.usage || '')}" oninput="rxDraft().infusionGroups[${i}].drugs[${di}].usage=this.value">
-                <input placeholder="频次" value="${esc(d.frequency || '')}" oninput="rxDraft().infusionGroups[${i}].drugs[${di}].frequency=this.value">
-                <input type="number" min="1" value="${Number(d.qty) || 1}" oninput="updateInfQty(${i},${di}, this)">
+                <input value="${esc(drugSpecLabel(d))}" readonly title="${esc(drugSpecLabel(d))}">
+                <div style="display:flex;gap:3px"><input placeholder="剂量" value="${esc(d.dosage || '')}" oninput="rxDraft().infusionGroups[${i}].drugs[${di}].dosage=this.value" style="min-width:0"><select onchange="rxDraft().infusionGroups[${i}].drugs[${di}].dosageUnit=this.value">${optionList(dosageUnits, d.dosageUnit || 'mg')}</select></div>
+                <select onchange="rxDraft().infusionGroups[${i}].drugs[${di}].usage=this.value"><option value="">用法</option>${optionList(westernUsageOptions, d.usage || g.route)}</select>
+                <select onchange="rxDraft().infusionGroups[${i}].drugs[${di}].frequency=this.value"><option value="">频次</option>${optionList(frequencyOptions, d.frequency || g.frequency)}</select>
+                <div style="display:flex;gap:3px"><input type="number" min="1" value="${Number(d.qty) || 1}" oninput="updateInfQty(${i},${di}, this)" style="min-width:0"><select onchange="rxDraft().infusionGroups[${i}].drugs[${di}].qtyUnit=this.value">${optionList(['支','瓶','袋','盒'], d.qtyUnit || '瓶')}</select></div>
                 <span class="rx-sub" id="inf_sub_${i}_${di}">¥${((Number(d.price) || 0) * (Number(d.qty) || 0)).toFixed(2)}</span>
                 <button class="op-btn danger" onclick="removeInfusionDrug(${i},${di})"><i class="fas fa-trash"></i></button>
             </div>`).join('')
@@ -1882,7 +1909,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         const rx = rxDraft(); if (!rx || !rx.infusionGroups[gi]) return;
         const inv = dbDrugInventory.find(d => d.name === item.name);
         const price = inv ? Number(inv.price) || 0 : Number(item.price) || 0;
-        rx.infusionGroups[gi].drugs.push({ name: item.name, spec: item.spec || '', dosage: '', usage: '', frequency: '', qty: 1, price, subtotal: +price.toFixed(2) });
+        rx.infusionGroups[gi].drugs.push({ name: item.name, spec: item.spec || '', dosage: '', dosageUnit: 'mg', usage: rx.infusionGroups[gi].route || '静脉滴注', frequency: rx.infusionGroups[gi].frequency || 'qd', qty: 1, qtyUnit: '瓶', price, subtotal: +price.toFixed(2) });
         refreshRxCenter();
     }
     function removeInfusionDrug(gi, di) { const rx = rxDraft(); if (!rx || !rx.infusionGroups[gi]) return; rx.infusionGroups[gi].drugs.splice(di, 1); refreshRxCenter(); }
@@ -2071,35 +2098,8 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         if (!clinicDraft || clinicRenderedId !== p.id) clinicDraft = getClinicDraft(p);
         clinicRenderedId = p.id;
         const area = document.getElementById('clinicCenterArea');
-        const activeVital = clinicDraft.vitalTab || '望闻切';
         const rxType = clinicDraft.prescription.type || 'western';
         const infoTab = clinicDraft.prescription.infoTab || 'base';
-        const exam = clinicDraft.tcm_exam || {};
-        const vitalUnits = { '体温':'℃', '脉搏':'次/分', '呼吸':'次/分', '血压':'mmHg', '体重':'kg', '身高':'cm', '血氧':'%', '血糖':'mmol/L', '心率':'次/分' };
-        // ---- 望闻问切（四诊）内容区 ----
-        let vitalBody = '';
-        if (activeVital === '望闻切') {
-            vitalBody = tcmSections.map(sec => {
-                let body = '';
-                if (sec.cols) {
-                    body = `<div class="tcm-cols">${sec.cols.map((col, ci) => `<div class="tcm-col${ci > 0 ? ' tcm-divider' : ''}"><div class="sub-label">${col.label}</div><div class="tag-flow">${choiceTags(col.items, 'tcm.' + col.key, !col.single, exam[col.key] || (col.single ? '' : []))}</div></div>`).join('')}</div>`;
-                } else if (sec.rows) {
-                    body = sec.rows.map(row => `<div class="pulse-row"><div class="pulse-main">${choiceTags(row.main, 'tcm.pulse_types', true, exam.pulse_types || [])}</div><div class="pulse-special">${choiceTags(row.special, 'tcm.pulse_types', true, exam.pulse_types || [])}</div></div>`).join('');
-                } else {
-                    body = `<div class="tag-flow">${choiceTags(sec.items, 'tcm.' + sec.key, !sec.single, exam[sec.key] || (sec.single ? '' : []))}</div>`;
-                }
-                return `<div class="tag-group"><b>${sec.label}</b>${body}</div>`;
-            }).join('');
-        } else {
-            const unit = vitalUnits[activeVital] || '';
-            vitalBody = `<div class="vital-input"><label>${activeVital}</label><input type="number" step="0.1" value="${esc(clinicDraft.vital_signs[activeVital] || '')}" oninput="clinicDraft.vital_signs['${activeVital}']=this.value"><span>${unit}</span></div>`;
-        }
-        // ---- 患者主诉症状模块（左病程单选 + 右症状多选 + 底部添加） ----
-        const symptomHtml = `<div class="symptom-layout">
-            <div><b>病程</b><div class="duration-grid">${durationOptions.map((x) => `<button type="button" class="choice-tag ${clinicDraft.duration_name === x ? 'active' : ''}" onclick="setDuration('${esc(x)}')">${x}</button>`).join('')}</div></div>
-            <div>${Object.entries(symptomGroups).map(([k, v]) => `<div class="symptom-cat"><b>${k}</b><div class="tag-flow">${choiceTags(v.split('|'), 'symptoms', true, clinicDraft.symptoms)}</div></div>`).join('')}</div>
-        </div>
-        <div class="bottom-action"><button class="btn-primary" onclick="addClinicSymptoms()">添加</button></div>`;
         // ---- 处方中心导航（二级 Tab + 类型卡片 + 外治下拉） ----
         const rxNavTypes = rxTypeDefs.map(([k, n]) => {
             if (k === 'external') {
@@ -2120,23 +2120,13 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         <div class="clinic-section">
             <div class="label">病历信息</div>
             <div class="form-row"><div><label>初/复诊</label><select id="cf_visitType"><option value="初诊">初诊</option><option value="复诊" ${p.visitType === '复诊' ? 'selected' : ''}>复诊</option></select></div><div><label>收费方式</label><div class="readonly-field">自费</div></div></div>
-            <input id="cf_chief" placeholder="患者主诉" value="${esc(p.chief || '')}">
+            <div style="display:flex;gap:6px;align-items:center;"><input id="cf_chief" placeholder="患者主诉" value="${esc(p.chief || '')}" readonly style="flex:1"><button type="button" class="op-btn" onclick="openChiefPicker('cf_chief','cf_history')"><i class="fas fa-list"></i> 症状点选</button></div>
             <textarea id="cf_history" rows="2" placeholder="现病史">${esc(p.history || '')}</textarea>
             <textarea id="cf_past" rows="2" placeholder="既往史">${esc(p.past || '')}</textarea>
             <input id="cf_allergy" placeholder="过敏史" value="${esc(p.allergy || '')}">
             <textarea id="cf_exam" rows="2" placeholder="体格检查">${esc(p.exam || '')}</textarea>
-            <textarea id="cf_tcm" rows="2" placeholder="望闻切记录">${esc(p.tcm || '')}</textarea>
             <input id="cf_diagnosis" placeholder="诊断结果" value="${esc(p.diagnosis || '')}">
             <input id="cf_syndrome" placeholder="辨证" value="${esc(p.syndrome || '')}">
-        </div>
-        <div class="clinic-section">
-            <div class="label">患者主诉症状</div>
-            ${symptomHtml}
-        </div>
-        <div class="clinic-section">
-            <div class="label">望闻问切（四诊）及生命体征</div>
-            <div class="vital-tabs">${vitalTabs.map(x => `<button type="button" class="${activeVital === x ? 'active' : ''}" onclick="selectVitalTab('${x}')">${x}</button>`).join('')}</div>
-            <div class="vital-body">${vitalBody}</div>
         </div>
         <div class="clinic-section">
             <div class="label">处方中心</div>
@@ -2190,10 +2180,70 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         showToast(`已复制上次处方（${last.prescriptions.length} 种药品），请核对后保存`);
     }
 
+    function closeChiefPicker() {
+        const modal = document.getElementById('chiefPickerModal');
+        if (modal) modal.remove();
+    }
+    function openChiefPicker(chiefId, historyId) {
+        closeChiefPicker();
+        const chief = document.getElementById(chiefId);
+        const history = document.getElementById(historyId);
+        const existing = String(chief?.value || '').trim();
+        const existingHistory = String(history?.value || '').trim();
+        const selected = new Set(existing ? existing.split(/[、,，\s]+/).filter(Boolean) : []);
+        let selectedDuration = (clinicDraft && clinicDraft.duration_name) || '';
+        const durations = ['偶尔','1 天','2 天','3 天','4 天','5 天','1 周','2 周','3 周','1 个月','2 个月','3 个月','半年','1 年'];
+        const groups = Object.entries(symptomGroups).map(([label, raw]) => ({ label, items: String(raw).split('|').filter(Boolean) }));
+        const modal = document.createElement('div');
+        modal.id = 'chiefPickerModal';
+        modal.className = 'chief-picker-modal';
+        modal.innerHTML = `<div class="chief-picker-card" role="dialog" aria-modal="true">
+            <div class="chief-picker-head"><b>患者主诉症状</b><button type="button" class="op-btn" onclick="closeChiefPicker()" title="关闭"><i class="fas fa-times"></i></button></div>
+            <div class="chief-picker-body">
+                <div><div class="sub-label">病程</div><div class="chief-duration">${durations.map(x => `<button type="button" class="choice-tag ${selectedDuration === x ? 'active' : ''}" data-duration="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>
+                <div>${groups.map(g => `<div class="chief-symptom-cat"><b>${esc(g.label)}</b><div class="tag-flow">${g.items.map(x => `<button type="button" class="choice-tag ${selected.has(x) ? 'active' : ''}" data-symptom="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>`).join('')}</div>
+            </div>
+            <div class="chief-picker-foot"><button type="button" class="btn-primary" id="chiefPickerAdd">添加</button><button type="button" class="op-btn" onclick="closeChiefPicker()">取消</button></div>
+        </div>`;
+        document.body.appendChild(modal);
+        modal.addEventListener('click', event => {
+            const duration = event.target.closest('[data-duration]');
+            if (duration) {
+                selectedDuration = duration.dataset.duration;
+                modal.querySelectorAll('[data-duration]').forEach(x => x.classList.toggle('active', x === duration));
+            }
+            const symptom = event.target.closest('[data-symptom]');
+            if (symptom) { symptom.classList.toggle('active'); if (symptom.classList.contains('active')) selected.add(symptom.dataset.symptom); else selected.delete(symptom.dataset.symptom); }
+            if (event.target.id === 'chiefPickerAdd') {
+                if (!selectedDuration) return alert('请先选择病程时长');
+                if (!selected.size) return alert('请至少选择一个症状');
+                const symptoms = [...selected];
+                const symptomText = symptoms.join('、');
+                if (chief) chief.value = symptomText;
+                if (history) history.value = `${symptomText}（病程：${selectedDuration}）`;
+                if (clinicDraft) { clinicDraft.duration_name = selectedDuration; clinicDraft.duration_code = 'd' + (durations.indexOf(selectedDuration) + 1); clinicDraft.symptoms = symptoms; }
+                const patient = dbOutpatient.find(x => x.id === editingOutpatientId);
+                if (patient) { patient.chief = symptomText; patient.history = `${symptomText}（病程：${selectedDuration}）`; }
+                closeChiefPicker();
+                showToast('主诉症状已写入病历');
+            }
+        });
+        modal.addEventListener('click', event => { if (event.target === modal) closeChiefPicker(); });
+        if (existingHistory && history && !selected.size) history.value = existingHistory;
+    }
+
     function openDirectAddModal() {
-        ['direct_name','direct_age','direct_phone','direct_chief','direct_diagnosis'].forEach(id=>document.getElementById(id).value='');
-        document.getElementById('direct_gender').selectedIndex = 0;
-        document.getElementById('modalDirectAdd').style.display = 'flex';
+        gotoPage('page-outpatient');
+        const area = document.getElementById('clinicCenterArea');
+        if (!area) return;
+        area.innerHTML = `<div class="clinic-section">
+            <div class="label">新建患者接诊</div>
+            <div class="form-row"><div><label>患者姓名 *</label><input id="direct_inline_name" autofocus></div><div><label>性别</label><select id="direct_inline_gender"><option>男</option><option>女</option></select></div><div><label>年龄</label><input id="direct_inline_age" type="number"></div></div>
+            <div class="form-row"><div><label>联系电话</label><input id="direct_inline_phone"></div><div style="flex:2"><label>初步诊断</label><input id="direct_inline_diagnosis"></div></div>
+            <div><label>主诉（可点击右侧“症状点选”）</label><div style="display:flex;gap:6px"><input id="direct_inline_chief" style="flex:1"><button class="op-btn" type="button" onclick="openChiefPicker('direct_inline_chief','direct_inline_history')"><i class="fas fa-list"></i> 症状点选</button></div></div>
+            <textarea id="direct_inline_history" rows="2" placeholder="现病史"></textarea>
+            <div style="display:flex;gap:8px;margin-top:10px"><button class="btn-primary" onclick="saveDirectPatient()"><i class="fas fa-check"></i> 创建并进入接诊</button><button class="op-btn" onclick="renderClinicCenter(null)">取消</button></div>
+        </div>`;
     }
 
     function startQuickClinic() {
@@ -2202,12 +2252,13 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
     }
 
     async function saveDirectPatient() {
-        const name = document.getElementById('direct_name').value.trim();
-        const gender = document.getElementById('direct_gender').value;
-        const age = document.getElementById('direct_age').value || '';
-        const phone = document.getElementById('direct_phone').value.trim();
-        const chief = document.getElementById('direct_chief').value.trim();
-        const diagnosis = document.getElementById('direct_diagnosis').value.trim();
+        const val = (a,b) => (document.getElementById(a)?.value ?? document.getElementById(b)?.value ?? '').trim();
+        const name = val('direct_inline_name','direct_name');
+        const gender = document.getElementById('direct_inline_gender')?.value || document.getElementById('direct_gender')?.value || '男';
+        const age = val('direct_inline_age','direct_age');
+        const phone = val('direct_inline_phone','direct_phone');
+        const chief = val('direct_inline_chief','direct_chief');
+        const diagnosis = val('direct_inline_diagnosis','direct_diagnosis');
         if (!name) return alert('请输入患者姓名');
         const today = getTodayStr();
         try {
@@ -2246,7 +2297,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
             past: document.getElementById('cf_past')?.value || '',
             allergy: document.getElementById('cf_allergy')?.value || '',
             exam: document.getElementById('cf_exam')?.value || '',
-            tcm: document.getElementById('cf_tcm')?.value || '',
+            tcm: '',
             diagnosis: document.getElementById('cf_diagnosis')?.value || '',
             syndrome: document.getElementById('cf_syndrome')?.value || '',
             advice: document.getElementById('cf_advice')?.value || '',
@@ -2270,13 +2321,15 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         (rxDraft().infusionGroups || []).forEach(g => (g.drugs || []).forEach(d => {
             if (d.name) structuredRx.push({ name: d.name, qty: Number(d.qty)||1, price: Number(d.price)||0, subtotal: +(Number(d.qty)||1) * (Number(d.price)||0) });
         }));
-        if (structuredRx.length) prescriptionTempList = structuredRx;
+            if (structuredRx.length) prescriptionTempList = structuredRx;
 
         try {
             const body = {
                 patient,
                 prescriptions: prescriptionTempList.map(d => ({
-                    name: d.name, qty: d.qty, price: d.price, subtotal: d.subtotal
+                    name: d.name, spec: d.spec || '', dosage: d.dosage || '', dosageUnit: d.dosageUnit || '',
+                    usage: d.usage || '', frequency: d.frequency || '', qty: d.qty, qtyUnit: d.qtyUnit || '',
+                    prescriptionType: d.prescriptionType || rxDraft()?.type || '', price: d.price, subtotal: d.subtotal
                 }))
             };
             if (op) body.outpatientId = op.id;
@@ -2347,8 +2400,6 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
             <p><b>既往史：</b>${esc(document.getElementById('cf_past')?.value||'-')}</p>
             <p><b>过敏史：</b>${esc(document.getElementById('cf_allergy')?.value||'-')}</p>
             <p><b>体格检查：</b>${esc(document.getElementById('cf_exam')?.value||'-')}</p>
-            <p><b>望闻问切：</b>${esc(document.getElementById('cf_tcm')?.value||'-')}</p>
-            <p><b>四诊采集：</b>${esc(tcmSummary() || '-')}</p>
             <p><b>诊断结果：</b>${esc(document.getElementById('cf_diagnosis')?.value||p.diagnosis||'-')}</p>
             <p><b>辨证：</b>${esc(document.getElementById('cf_syndrome')?.value||'-')}</p>
             <p><b>处方：</b>${esc(rxPrintText())}</p>
@@ -2521,7 +2572,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
             history: document.getElementById('cf_history') ? document.getElementById('cf_history').value : (p.history || ''),
             past: document.getElementById('cf_past') ? document.getElementById('cf_past').value : (p.past || ''),
             exam: document.getElementById('cf_exam') ? document.getElementById('cf_exam').value : (p.exam || ''),
-            tcm: document.getElementById('cf_tcm') ? document.getElementById('cf_tcm').value : (p.tcm || ''),
+            tcm: '',
             diagnosis: document.getElementById('cf_diagnosis') ? document.getElementById('cf_diagnosis').value : (p.diagnosis || ''),
             syndrome: document.getElementById('cf_syndrome') ? document.getElementById('cf_syndrome').value : (p.syndrome || ''),
             visitType: document.getElementById('cf_visitType') ? document.getElementById('cf_visitType').value : (p.visitType || '初诊'),
@@ -2585,7 +2636,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         }
         prescriptionTempList.push({ name: s.name, qty: Number(s.qty)||1, price: Number(s.price)||0, subtotal: Number(s.subtotal)||0 });
         const rx = rxDraft();
-        if (rx) rx.westernDrugs.push({ name: s.name, spec: '', dosage: '', usage: '', frequency: '', qty: Number(s.qty)||1, price: Number(s.price)||0, subtotal: Number(s.subtotal)||0 });
+        if (rx) rx.westernDrugs.push({ name: s.name, spec: s.spec || '', dosage: '', dosageUnit: 'mg', usage: '', frequency: 'qd', qty: Number(s.qty)||1, qtyUnit: '盒', prescriptionType: 'western', price: Number(s.price)||0, subtotal: Number(s.subtotal)||0 });
         refreshRxCenter();
         showToast('已应用：' + s.name);
     }
@@ -2733,7 +2784,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
             if (prescriptionTempList.some(x => x.name === inv.name)) continue;
             prescriptionTempList.push({ name: inv.name, qty, price: Number(inv.price)||0, subtotal: +(qty * (Number(inv.price)||0)).toFixed(2) });
             const rx = rxDraft();
-            if (rx) rx.westernDrugs.push({ name: inv.name, spec: '', dosage: '', usage: '', frequency: '', qty, price: Number(inv.price)||0, subtotal: +(qty * (Number(inv.price)||0)).toFixed(2) });
+            if (rx) rx.westernDrugs.push({ name: inv.name, spec: inv.spec || '', dosage: '', dosageUnit: 'mg', usage: '', frequency: 'qd', qty, qtyUnit: '盒', prescriptionType: 'western', price: Number(inv.price)||0, subtotal: +(qty * (Number(inv.price)||0)).toFixed(2) });
             added++;
         }
         refreshRxCenter();
@@ -3613,6 +3664,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
             document.getElementById('warningExpiryPanel').style.display = tab==='expiry'?'block':'none';
             document.getElementById('warningStockPanel').style.display = tab==='stock'?'block':'none';
             document.getElementById('warningMarginPanel').style.display = tab==='margin'?'block':'none';
+            filterWarningBySeverity(document.getElementById('warningSeverityFilter')?.value || 'all');
         }
     });
 
@@ -3639,7 +3691,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
             const price = Number(d.price) || 0, cost = Number(d.costPrice) || 0, stock = Number(d.stock) || 0;
             const stockCost = stock * cost;
             const rate = price > 0 ? ((price - cost) / price * 100) : 0;
-            return `<tr>
+            return `<tr data-severity="${rate<=0 ? 'critical' : 'warning'}">
                 <td>${idx + 1}</td>
                 <td>${esc(d.code || '-')}</td>
                 <td><b class="drug-name" data-drug-name="${esc(d.name)}">${esc(d.name)}</b></td>
@@ -3882,7 +3934,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
             return {...d, _severity: days <= 0 ? 4 : 3, _time: days <= 0 ? `已过期${Math.abs(days)}天` : `距效期${days}天`};
         }).sort((a,b) => b._severity-a._severity || new Date(a.expiry)-new Date(b.expiry));
         if(expiryList.length) {
-            expTb.innerHTML = expiryList.map(d => `<tr>
+            expTb.innerHTML = expiryList.map(d => `<tr data-severity="${d._severity === 4 ? 'critical' : 'warning'}">
                 <td><input class="warning-select expiry-select" type="checkbox" value="${esc(d.id)}"></td><td><span class="drug-name" data-drug-name="${esc(d.name)}">${esc(d.name)}</span></td><td>${esc(d.stock||d.quantity||0)}</td><td>${esc(d.batchNo||'-')}</td><td>${esc(d.expiry||'-')}</td>
                 <td><span class="badge ${d._severity===4?'danger':'expire'}">${d._time}</span></td>
             </tr>`).join('');
@@ -3892,7 +3944,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         const stockTb = document.getElementById('lowStockBody');
         const lowList = ((dashboardStats && dashboardStats.warnings && dashboardStats.warnings.lowStockDrugs) || []).map(d => ({...d,_severity:Number(d.stock||d.quantity||0)<=0?4:2})).sort((a,b)=>b._severity-a._severity || Number(a.stock||a.quantity||0)-Number(b.stock||b.quantity||0));
         if(lowList.length) {
-            stockTb.innerHTML = lowList.map(d => `<tr>
+            stockTb.innerHTML = lowList.map(d => `<tr data-severity="${d._severity === 4 ? 'critical' : 'warning'}">
                 <td><input class="warning-select stock-select" type="checkbox" value="${esc(d.id)}"></td><td><span class="drug-name" data-drug-name="${esc(d.name)}">${esc(d.name)}</span></td><td>${esc(d.stock||0)}</td><td>${esc(d.minStock||10)}</td><td>${esc(d.unit||'盒')}</td>
                 <td><span class="badge ${d._severity===4?'danger':'warn'}">${d._severity===4?'库存耗尽':'库存不足'}</span></td>
             </tr>`).join('');
@@ -3935,20 +3987,44 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
             return cost > 0 && price > 0 && (price <= cost || (price - cost) / price < 0.15);
         });
         if(!list.length) {
-            tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#999;">暂无毛利预警</td></tr>';
+            tb.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#999;">暂无毛利预警</td></tr>';
             return;
         }
         tb.innerHTML = list.map(d => {
             const price = Number(d.price) || 0, cost = Number(d.costPrice) || 0;
             const rate = price > 0 ? ((price - cost) / price * 100) : 0;
             const cls = rate <= 0 ? 'margin-low' : '';
-            return `<tr>
-                <td><span class="drug-name" data-drug-name="${esc(d.name)}">${esc(d.name)}</span></td>
+            return `<tr data-severity="${rate <= 0 ? 'critical' : 'warning'}">
+                <td><input class="warning-select margin-select" type="checkbox" value="${esc(d.id)}"></td><td><span class="drug-name" data-drug-name="${esc(d.name)}">${esc(d.name)}</span></td>
                 <td>¥${price.toFixed(2)}</td><td>¥${cost.toFixed(2)}</td>
                 <td class="${cls}">${rate.toFixed(1)}%</td>
                 <td><span class="badge ${rate<=0?'danger':'warn'}">${rate<=0?'无毛利':'毛利偏低'}</span></td>
             </tr>`;
         }).join('');
+    }
+
+    function filterWarningBySeverity(level) {
+        const tab = document.querySelector('#warningTabs span.active')?.dataset.wtab || 'expiry';
+        const panelId = tab === 'expiry' ? 'warningExpiryPanel' : tab === 'stock' ? 'warningStockPanel' : 'warningMarginPanel';
+        const rows = document.querySelectorAll(`#${panelId} tbody tr`);
+        rows.forEach(row => { const severity = row.dataset.severity || (row.querySelector('.badge.danger') ? 'critical' : 'warning'); row.style.display = level === 'all' || severity === level ? '' : 'none'; });
+    }
+    async function deleteWarningBySeverity() {
+        const level = document.getElementById('warningSeverityFilter')?.value || 'all';
+        if (level === 'all') return alert('请先选择要删除的严重程度分类');
+        const tab = document.querySelector('#warningTabs span.active')?.dataset.wtab || 'expiry';
+        const panelId = tab === 'expiry' ? 'warningExpiryPanel' : tab === 'stock' ? 'warningStockPanel' : 'warningMarginPanel';
+        const rows = [...document.querySelectorAll(`#${panelId} tbody tr`)].filter(row => row.style.display !== 'none');
+        const ids = rows.map(row => row.querySelector('.warning-select')?.value).filter(Boolean);
+        if (!ids.length) return alert('当前分类没有可删除的药品');
+        if (!confirm(`确定删除当前分类的 ${ids.length} 个药品吗？删除后会同步刷新药品选择器与库存页面。`)) return;
+        try {
+            const res = await apiFetch(`${API_BASE}/drug-inventory`, { method:'DELETE', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ids:[...new Set(ids)]}) });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || '删除失败');
+            await loadAllData();
+            showToast(`已删除 ${data.deleted || 0} 个药品`);
+        } catch (err) { if (err.message !== '未登录') alert(err.message || '删除失败'); }
     }
 
     function openStockInModal() {

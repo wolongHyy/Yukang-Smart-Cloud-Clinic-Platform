@@ -892,7 +892,13 @@ app.delete('/api/drug-inventory', authMiddleware, async (req, res) => {
         const inventory = await readCollection(req.currentUser, 'drugInventory');
         const kept = inventory.filter(item => !ids.includes(String(item.id)));
         await writeCollection(req.currentUser, 'drugInventory', kept);
-        res.json({ success: true, deleted: inventory.length - kept.length });
+        const removed = inventory.filter(item => ids.includes(String(item.id)));
+        const removedNames = new Set(removed.map(item => String(item.name || '').trim()).filter(Boolean));
+        // 删除库存药品后，同步移除尚未发药的待发药记录，避免处方选择器和药房页面继续展示已删除药品。
+        const pharmacy = await readCollection(req.currentUser, 'pharmacy');
+        const pendingKept = pharmacy.filter(item => !(item.status !== '已发药' && removedNames.has(String(item.drug || '').trim())));
+        if (pendingKept.length !== pharmacy.length) await writeCollection(req.currentUser, 'pharmacy', pendingKept);
+        res.json({ success: true, deleted: inventory.length - kept.length, pendingRemoved: pharmacy.length - pendingKept.length });
     } catch (err) {
         console.error('删除库存药品失败:', err);
         res.status(500).json({ error: '删除库存药品失败' });
@@ -946,7 +952,19 @@ app.post('/api/visits/complete', authMiddleware, async (req, res) => {
             const qty = toNum(d.qty);
             const price = Math.max(0, toNum(d.price));
             if (!rxName || qty <= 0) continue;
-            cleanRx.push({ name: rxName, qty, price, subtotal: +(qty * price).toFixed(2) });
+            cleanRx.push({
+                name: rxName,
+                spec: String(d.spec || '').trim(),
+                dosage: d.dosage === undefined ? '' : String(d.dosage),
+                dosageUnit: String(d.dosageUnit || '').trim(),
+                usage: String(d.usage || '').trim(),
+                frequency: String(d.frequency || '').trim(),
+                qty,
+                qtyUnit: String(d.qtyUnit || '').trim(),
+                prescriptionType: String(d.prescriptionType || '').trim(),
+                price,
+                subtotal: +(qty * price).toFixed(2)
+            });
         }
         const drugTotal = cleanRx.reduce((s, d) => s + d.subtotal, 0);
 

@@ -1,4 +1,4 @@
-# 愈康项目 v3.5（YuKang Cloud Clinic）
+# 愈康项目 （YuKang Cloud Clinic）
 
 > **给每一个独立诊所，一个属于自己的免费管理平台。**
 

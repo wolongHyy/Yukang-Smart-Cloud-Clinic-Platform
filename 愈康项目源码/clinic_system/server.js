@@ -276,6 +276,52 @@ app.get('/api/server-info', (req, res) => {
     }
 });
 
+// ==================== 医疗点选词条与本地病症建议 ====================
+app.get('/api/clinical-terms', authMiddleware, async (req, res) => {
+    try {
+        const file = path.join(BASE_DIR, 'data', 'clinical_terms.json');
+        const raw = await fs.readFile(file, 'utf8');
+        const data = JSON.parse(raw);
+        res.json(data);
+    } catch (err) {
+        console.error('读取医疗点选词条失败:', err.message);
+        res.status(500).json({ error: '医疗点选词条加载失败' });
+    }
+});
+
+app.post('/api/clinical/suggestions', authMiddleware, async (req, res) => {
+    try {
+        const body = req.body || {};
+        const cleanText = (value, max = 2000) => String(value || '').replace(/\s+/g, ' ').trim().slice(0, max);
+        const input = {
+            chief: cleanText(body.chief || body.text),
+            history: cleanText(body.history),
+            past: cleanText(body.past),
+            allergy: cleanText(body.allergy),
+            exam: cleanText(body.exam),
+            diagnosis: cleanText(body.diagnosis),
+            syndrome: cleanText(body.syndrome),
+            tcm: cleanText(body.tcm)
+        };
+        const candidates = knowledge.suggestConditions(input, 8).map(item => ({
+            name: item.name,
+            type: item.type,
+            score: item.score,
+            evidence: item.evidence,
+            description: item.description,
+            advice: item.advice
+        }));
+        res.json({
+            candidates,
+            hasSuggestions: candidates.length > 0,
+            note: '由本地医疗知识库匹配生成，仅供医生参考，需医生确认。'
+        });
+    } catch (err) {
+        console.error('病症建议失败:', err);
+        res.status(500).json({ error: '病症建议生成失败' });
+    }
+});
+
 // ==================== 通用 CRUD ====================
 app.get('/api/:collection', authMiddleware, async (req, res) => {
     try {
@@ -362,8 +408,19 @@ app.get('/api/pharmacopoeia/lookup', authMiddleware, async (req, res) => {
         if (!name) return res.status(400).json({ error: '缺少药品名称' });
         const userEntries = await readCollection(req.currentUser, 'drugKnowledge');
         const entry = knowledge.lookupDrug(name, userEntries);
-        if (!entry) return res.json({ found: false });
-        res.json({ found: true, entry });
+        const textMatches = knowledge.searchTextChunks(name, 4);
+        // 无结构化条目时，要求完整药名出现在药典原文中，过滤 n-gram 假阳性
+        const normalized = name.toLowerCase().replace(/\s+/g, '');
+        const goodTextMatches = entry
+            ? textMatches
+            : textMatches.filter(m => (m.text || '').toLowerCase().replace(/\s+/g, '').includes(normalized));
+        if (!entry && !goodTextMatches.length) return res.json({ found: false });
+        const officialEntry = entry || {
+            name,
+            category: '药典原文',
+            functions: '详见下方中国药典原文摘录。'
+        };
+        res.json({ found: true, entry: officialEntry, textMatches: goodTextMatches });
     } catch (err) {
         res.status(500).json({ error: '知识库查询失败' });
     }
@@ -722,6 +779,77 @@ app.post('/api/pharmacy/dispense/:id', authMiddleware, async (req, res) => {
     }
 });
 
+app.post('/api/pharmacy/dispense-all', authMiddleware, async (req, res) => {
+    try {
+        const pharmacy = await readCollection(req.currentUser, 'pharmacy');
+        const pending = pharmacy.filter(p => p.status === '待发药');
+        if (!pending.length) return res.status(400).json({ error: '当前没有待发药处方' });
+
+        const inventory = await readCollection(req.currentUser, 'drugInventory');
+        const required = new Map();
+        for (const item of pending) {
+            const qty = toNum(item.qty);
+            if (qty <= 0) return res.status(400).json({ error: `存在无效发药数量：${item.drug || '未命名药品'}` });
+            const key = item.drug || '';
+            required.set(key, (required.get(key) || 0) + qty);
+        }
+
+        // 先做整体库存校验，任何一项不足都不写入，避免一次发药扣到一半失败。
+        for (const [drugName, qty] of required) {
+            const drug = inventory.find(d => d.name === drugName);
+            if (!drug) continue;
+            const stock = toNum(drug.stock || drug.quantity);
+            if (stock < qty) {
+                return res.status(400).json({
+                    error: `库存不足："${drugName}" 当前库存 ${stock} ${drug.unit || '盒'}，待发药合计需要 ${qty}`
+                });
+            }
+        }
+
+        for (const [drugName, qty] of required) {
+            const drug = inventory.find(d => d.name === drugName);
+            if (!drug) continue;
+            const stock = toNum(drug.stock || drug.quantity);
+            drug.stock = Math.max(0, stock - qty);
+            drug.updatedAt = new Date().toISOString();
+        }
+
+        const now = new Date().toISOString();
+        pending.forEach(item => {
+            item.status = '已发药';
+            item.dispensedAt = now;
+        });
+
+        await writeCollection(req.currentUser, 'drugInventory', inventory);
+        await writeCollection(req.currentUser, 'pharmacy', pharmacy);
+
+        const outRecords = await readCollection(req.currentUser, 'drugOutRecords');
+        const operator = req.currentUser;
+        const time = new Date().toLocaleString();
+        pending.forEach(item => {
+            outRecords.push({
+                id: newId(),
+                drugName: item.drug,
+                qty: toNum(item.qty),
+                patient: item.patient,
+                type: '发药',
+                date: time,
+                operator
+            });
+        });
+        await writeCollection(req.currentUser, 'drugOutRecords', outRecords);
+
+        res.json({
+            success: true,
+            dispensedCount: pending.length,
+            deductedCount: required.size
+        });
+    } catch (err) {
+        console.error('一键发药失败:', err);
+        res.status(500).json({ error: '一键发药失败' });
+    }
+});
+
 // ==================== 药品入库 ====================
 app.post('/api/drug-inventory/stock-in', authMiddleware, async (req, res) => {
     try {
@@ -989,6 +1117,12 @@ app.post('/api/visits/complete', authMiddleware, async (req, res) => {
 
         const todayStr = todayKey();
         const nowISO = new Date().toISOString();
+        if (outpatientId) {
+            const editingIdx = outpatients.findIndex(o => String(o.id) === String(outpatientId));
+            if (editingIdx !== -1 && outpatients[editingIdx].status === '已就诊') {
+                return res.status(403).json({ error: '已保存的接诊记录只能查看，不能修改' });
+            }
+        }
         const baseFields = {
             chief: String(patient.chief || '').trim(),
             history: String(patient.history || '').trim(),

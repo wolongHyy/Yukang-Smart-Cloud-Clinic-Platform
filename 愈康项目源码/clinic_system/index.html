@@ -196,6 +196,10 @@
         .chief-symptom-cat:last-child { border-bottom:0; }
         .chief-symptom-cat b { display:block; color:#567; font-size:12px; margin-bottom:6px; }
         .chief-picker-foot { display:flex; justify-content:center; gap:8px; padding:10px 14px; border-top:1px solid #eee; background:#fafdfc; }
+        .chief-picker-card.narrow { width:min(760px,96vw); }
+        .chief-picker-body.single { grid-template-columns:1fr; }
+        .history-card { display:block; width:100%; text-align:left; padding:9px 10px; margin-bottom:8px; border:1px solid var(--border); border-radius:6px; background:#fff; cursor:pointer; font-size:12px; }
+        .history-card:hover { background:var(--primary-soft); }
         @media(max-width:700px){ .chief-picker-body{grid-template-columns:1fr;} }
         .prescription-item { display: flex; justify-content: space-between; align-items: center; padding: 4px 8px; border-bottom: 1px dashed #eee; font-size: 12px; }
         .prescription-item .remove-btn { color: var(--danger-text); cursor: pointer; font-size: 12px; }
@@ -552,7 +556,7 @@
 <style>
 /* ===== v3.2 新增样式 ===== */
 .drug-name { cursor: pointer; border-bottom: 1px dashed #bbb; }
-#drugTooltip { position: fixed; z-index: 99999; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 8px 28px rgba(0,0,0,.14); max-width: 430px; max-height: 82vh; overflow-y: auto; font-size: 12px; display: none; pointer-events: none; }
+#drugTooltip { position: fixed; z-index: 99999; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 8px 28px rgba(0,0,0,.14); max-width: 430px; max-height: 82vh; overflow-y: auto; font-size: 12px; display: none; pointer-events: auto; }
 .patient-search-box { display: flex; gap: 8px; margin-bottom: 10px; }
 .patient-layout { display: grid; grid-template-columns: 300px 1fr; gap: 14px; }
 @media (max-width: 860px) { .patient-layout { grid-template-columns: 1fr; } }
@@ -583,6 +587,106 @@
 .record-term-item { padding: 4px 10px; border: 1px solid #dde5ea; border-radius: 14px; font-size: 12px; color: #333; cursor: pointer; background: #f8fbfc; }
 .record-term-item:hover { border-color: var(--primary); color: var(--primary); background: #eefaf7; }
 .record-term-footer { padding: 8px; border-top: 1px solid #eee; text-align: center; background: #fff; }
+/* ===== 门诊控件优化 ===== */
+.clinic-toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+.clinic-toolbar .btn-primary { flex: 1; white-space: nowrap; }
+.clinic-toolbar .server-input { flex: 1.15; width: auto; min-width: 0; height: 30px; background: #fff; }
+.patient-list-title { display: flex; align-items: center; justify-content: space-between; font-weight: bold; margin-bottom: 8px; font-size: 13px; color: var(--text); }
+.dispense-badge { margin-left: 6px; padding: 1px 6px; border-radius: 999px; font-size: 10px; font-weight: bold; color: #fff; vertical-align: middle; }
+.dispense-badge.waiting { background: #F5A623; }
+.dispense-badge.done { background: #27AE60; }
+.clinic-left .filter-tabs span { padding: 5px 4px; border: 1px solid transparent; transition: all .18s; }
+.clinic-left .filter-tabs span:hover { color: var(--primary); }
+.patient-item { border-bottom-color: #F0F4F3; transition: background-color .18s, border-radius .18s; }
+.patient-item:hover { background: #F7FCFA; }
+.patient-item.active { box-shadow: inset 2px 0 0 var(--primary); }
+.clinic-section .label { color: var(--text-sub); letter-spacing: .3px; }
+.clinic-section input, .clinic-section textarea, .clinic-section select {
+    background: #fff; border-color: #DDE6E3; transition: border-color .18s, box-shadow .18s, background-color .18s;
+}
+.clinic-section input:hover, .clinic-section textarea:hover, .clinic-section select:hover { border-color: #BFD9D2; }
+.clinic-section input[readonly] { background: #F7FBFA; color: #4E5C58; }
+.clinic-center.readonly-view,
+.clinic-section.readonly-view {
+    background: rgba(247, 251, 250, .72);
+    border-color: #E3EFEB;
+}
+.clinic-center.readonly-view .clinic-section { pointer-events: auto; }
+.clinic-center.readonly-view input,
+.clinic-center.readonly-view textarea,
+.clinic-center.readonly-view select {
+    pointer-events: none;
+    cursor: default;
+}
+.clinic-center.readonly-view .clinical-term-trigger,
+.clinic-center.readonly-view .clinic-section button,
+.clinic-center.readonly-view .rx-add-btn,
+.clinic-center.readonly-view .rx-remove {
+    pointer-events: none;
+    cursor: not-allowed;
+    opacity: .5;
+}
+.clinic-center.readonly-view .label,
+.clinic-section.readonly-view .label { border-left-color: #8FB8AE; }
+.clinic-center.readonly-view input,
+.clinic-center.readonly-view textarea,
+.clinic-center.readonly-view select,
+.clinic-section.readonly-view input,
+.clinic-section.readonly-view textarea,
+.clinic-section.readonly-view select {
+    background: #F5FAF9 !important;
+    color: #4E5C58 !important;
+    border-color: #E3EFEB !important;
+}
+.clinic-view-banner {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 9px 12px; margin-bottom: 12px; border: 1px solid #DCEBE6;
+    border-left: 4px solid var(--primary); border-radius: 8px;
+    background: #F4FBF9; font-size: 12px; color: #45665E;
+}
+.clinic-view-banner b { color: #256A5C; font-size: 13px; }
+.patient-summary {
+    padding: 11px 13px; background: #F7FCFA; border-color: #DCEBE6;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.72);
+}
+.patient-summary b { color: #22332F; }
+.clinic-section .op-btn { transition: background-color .18s, box-shadow .18s, transform .18s; }
+.clinic-section .op-btn:hover { background: rgba(0,163,136,.08); box-shadow: 0 1px 4px rgba(0,163,136,.10); }
+.clinic-section .op-btn:active { transform: translateY(1px); }
+.rx-nav { gap: 8px; margin-bottom: 10px; }
+.rx-side button { border-color: #DDE6E3; transition: all .18s; }
+.rx-side button:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
+.rx-type-card { border-radius: 8px; border-color: #DDE6E3; padding: 7px 12px; color: #556763; transition: all .18s; }
+.rx-type-card.active { background: #E9F8F4; box-shadow: inset 0 0 0 1px rgba(0,163,136,.75); }
+.rx-form { padding: 11px; border-radius: 9px; border-color: #E4EEEB; background: #FDFEFE; }
+.rx-group { border: 1px dashed #D9E8E3; border-radius: 8px; background: rgba(255,255,255,.78); }
+.rx-detail-row input, .rx-detail-row select, .inf-row select, .inf-row input { border-color: #DCE5E2; transition: border-color .18s, box-shadow .18s; }
+.rx-detail-row input:focus, .rx-detail-row select:focus, .inf-row select:focus, .inf-row input:focus {
+    border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,163,136,.10); outline: none;
+}
+.rx-summary {
+    border: 1px solid #DCEBE6; border-radius: 9px; background: #F7FCFA;
+    padding: 9px 10px; margin-bottom: 10px;
+}
+.rx-summary.empty { color: var(--text-sub); font-size: 12px; display: flex; align-items: center; gap: 6px; background: #FBFDFD; border-color: #E7EFED; }
+.rx-summary-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
+.rx-summary-head b { font-size: 12px; color: #33443F; }
+.rx-summary-head span { font-size: 11px; color: var(--primary); background: #E4F7F2; padding: 1px 7px; border-radius: 999px; }
+.rx-summary-list { max-height: 320px; overflow-y: auto; display: grid; grid-auto-rows: min-content; gap: 4px; }
+.rx-summary-row { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 6px; align-items: center; padding: 4px 7px; border-radius: 6px; background: #fff; border: 1px solid #EDF3F1; font-size: 12px; }
+.rx-summary-row.active { border-color: #C8E9E0; background: #FBFFFE; }
+.rx-summary-type { color: var(--primary); background: var(--primary-soft); border: 1px solid #DCEBE6; border-radius: 999px; padding: 1px 7px; white-space: nowrap; }
+.rx-summary-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #3C4A46; }
+.rx-summary-qty { color: var(--text-sub); white-space: nowrap; }
+.chief-picker-card { border-radius: 12px; border-color: #D5E8E2; box-shadow: 0 18px 48px rgba(15,35,30,.18); }
+.chief-picker-body.single input { margin-bottom: 10px; }
+.choice-tag { border-color: #DCE6E3; border-radius: 6px; padding: 4px 8px; transition: all .15s; }
+.choice-tag:hover { border-color: var(--primary); color: var(--primary); background: #F7FCFA; }
+.choice-tag.active { box-shadow: 0 1px 4px rgba(0,163,136,.16); }
+.chief-symptom-cat b { color: #44554F; }
+.history-card { border-color: #E1EAE7; border-radius: 8px; transition: all .18s; }
+.history-item { border-bottom-color: #EEF3F2; border-radius: 6px; padding: 8px 6px; transition: background-color .18s; }
+.clinic-right > div:first-child { color: var(--text); }
 </style>
 </head>
 <body>
@@ -710,14 +814,16 @@
         <div id="page-outpatient" class="page-content">
             <div class="clinic-three-col">
                 <div class="clinic-left">
-                    <button class="btn-primary" style="width:100%; margin-bottom:8px;" onclick="openDirectAddModal()"><i class="fas fa-plus"></i> 新建患者接诊</button>
-                    <div style="font-weight:bold; margin-bottom:8px; font-size:13px;">患者列表</div>
+                    <div class="clinic-toolbar">
+                        <button class="btn-primary" onclick="openDirectAddModal()"><i class="fas fa-plus"></i> 新建患者接诊</button>
+                        <input id="clinicSearchInput" class="server-input" placeholder="搜索姓名/电话/主诉/诊断…" oninput="setClinicSearch(this.value)">
+                    </div>
+                    <div class="patient-list-title">患者列表</div>
                     <div class="filter-tabs" id="opFilterTabs">
                         <span class="active" data-filter="all">全部</span>
                         <span data-filter="done">已诊</span>
                     </div>
                     <div id="clinicPatientList" style="flex:1; overflow-y:auto;"></div>
-                    <button class="btn-primary" style="width:100%; margin-top:8px;" onclick="openDirectAddModal()"><i class="fas fa-plus"></i> 新建患者接诊</button>
                 </div>
                 <div class="clinic-center" id="clinicCenterArea">
                     <div style="text-align:center; color:#999; padding:40px 0;">
@@ -1011,6 +1117,7 @@
                     <div id="pharma-panel-outbound" class="pharma-panel" style="display:none;">
                         <div class="section-title">
                             <span>出库记录 <small style="font-weight:normal; font-size:12px; color:#666;">待发药: <b id="pharma_wait">0</b> 单</small></span>
+                            <button class="btn-primary" onclick="dispenseAllDrugs()"><i class="fas fa-check-double"></i> 一键发药</button>
                         </div>
                         <div style="font-weight:bold; margin:10px 0 6px; font-size:13px;">待发药</div>
                         <div style="overflow-x:auto;">
@@ -1166,7 +1273,7 @@
                     </div>
                     <div class="kb-field" style="flex:1; min-width:140px;">
                         <label>模型名称</label>
-                        <input type="text" id="ai_model" placeholder="glm-4.7-flash">
+                        <input type="text" id="ai_model" placeholder="glm-4-flash">
                     </div>
                     <div class="kb-field" style="flex:1; min-width:120px;">
                         <label>超时（秒）</label>
@@ -1391,11 +1498,12 @@
     let dbSettings = { warningAlert: false, autoPharmacy: true };
     let dbDrugInventory = [], dbDrugInRecords = [], dbDrugOutRecords = [], dbSuppliers = [], dbMedicalTemplates = [];
     let dbPatients = [], dbDrugKnowledge = [], dbUserFormulas = [], dbFormulaLibrary = [];
-    let dbRecordTerms = {};
+    let dbRecordTerms = {}, dbClinicalTerms = {};
     let prescriptionTempList = [], editingOutpatientId = null, currentPatientId = null;
     let patientSearch = '', selectedPatientKey = null, kbEditId = null;
     let currentPeriod = 'today';
     let dashboardStats = null;
+    let clinicSearch = '', clinicSearchTimer = null;
 
     function showLoading(show) { document.getElementById('loadingToast').style.display = show ? 'block' : 'none'; }
 
@@ -1403,7 +1511,7 @@
         if (!currentUser) return;
         showLoading(true);
         try {
-            const [rOut, rPh, rRev, rSet, rInv, rIn, rOutRec, rSup, rTpl, rPat, rKb, rFml, rTerms] = await Promise.all([
+            const [rOut, rPh, rRev, rSet, rInv, rIn, rOutRec, rSup, rTpl, rPat, rKb, rFml, rTerms, rClinicalTerms] = await Promise.all([
                 apiFetch(`${API_BASE}/outpatients`),
                 apiFetch(`${API_BASE}/pharmacy`),
                 apiFetch(`${API_BASE}/revenue`),
@@ -1416,7 +1524,8 @@
                 apiFetch(`${API_BASE}/patients`),
                 apiFetch(`${API_BASE}/drugKnowledge`),
                 apiFetch(`${API_BASE}/userFormulas`),
-                apiFetch(`${API_BASE}/recordTerms`)
+                apiFetch(`${API_BASE}/recordTerms`),
+                apiFetch(`${API_BASE}/clinical-terms`)
             ]);
             if(!rOut.ok) throw new Error('连接失败');
             dbOutpatient = await rOut.json();
@@ -1432,6 +1541,7 @@
             dbDrugKnowledge = await rKb.json();
             dbUserFormulas = await rFml.json();
             dbRecordTerms = (await rTerms.json()) || {};
+            dbClinicalTerms = (await rClinicalTerms.json()) || {};
             renderAll();
             await loadDashboardStats();
             // 历史数据幂等迁移为患者档案
@@ -1533,19 +1643,46 @@
         const filter = document.querySelector('#opFilterTabs span.active').dataset.filter;
         let data = dbOutpatient;
         if(filter==='done') data = dbOutpatient.filter(o => o.status === '已就诊');
+        const q = clinicSearch.trim().toLowerCase();
+        if (q) {
+            data = data.filter(p => {
+                const hay = [
+                    p.name, p.phone, p.status, p.date, p.opDate,
+                    p.chief, p.history, p.past, p.allergy, p.exam, p.diagnosis,
+                    ...(p.prescriptions || []).map(x => x.name)
+                ].map(v => String(v || '')).join(' ').toLowerCase();
+                return hay.includes(q);
+            });
+        }
 
         const container = document.getElementById('clinicPatientList');
         if(!data.length) {
-            container.innerHTML = '<div style="text-align:center;color:#999;padding:15px;font-size:12px;">暂无患者</div>';
+            const message = !dbOutpatient.length ? '暂无患者' : (q ? '未找到匹配的门诊信息' : '当前筛选下暂无患者');
+            container.innerHTML = `<div style="text-align:center;color:#999;padding:15px;font-size:12px;">${esc(message)}</div>`;
             return;
         }
         container.innerHTML = data.map(p => `
             <div class="patient-item ${currentPatientId===p.id?'active':''}" onclick="selectClinicPatient(${p.id})">
                 <div class="name">${esc(p.name)} <span style="font-size:11px;color:#999;">${esc(p.gender||'')} ${esc(p.age||'')}岁</span></div>
                 <div class="info">${esc(p.phone||'无电话')}</div>
+                ${dispenseBadge(p.name)}
                 <span class="status ${p.status==='已就诊'?'done':'pending'}">${esc(p.status)}</span>
             </div>
         `).join('');
+    }
+
+    function dispenseBadge(patientName) {
+        const rows = (dbPharmacy || []).filter(x => x.patient === patientName);
+        if (!rows.length) return '';
+        if (rows.some(x => x.status === '待发药')) return '<span class="dispense-badge waiting">待发药</span>';
+        if (rows.some(x => x.status === '已发药')) return '<span class="dispense-badge done">已发药</span>';
+        return '';
+    }
+
+    function setClinicSearch(value) {
+        clinicSearch = value || '';
+        clearTimeout(clinicSearchTimer);
+        clinicSearchTimer = setTimeout(renderClinicPatientList, 250);
     }
 
     document.getElementById('opFilterTabs').addEventListener('click', e => {
@@ -1685,7 +1822,10 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
     const infusionFreqs = ['qd','bid','tid','qod','st'];
     const dripSpeeds = ['20滴/分','30滴/分','40滴/分','60滴/分','80滴/分','100滴/分','120滴/分'];
     const herbFootnotes = ['先煎','后下','包煎','冲服','烊化','另煎','兑服'];
-    const westernUsageOptions = ['口服','含服','嚼服','餐前服','餐中服','餐后服','晨服','睡前服','静脉滴注','静脉注射','肌内注射','腔内注射','雾化吸入','瓶喷雾化','皮下注射','皮内注射','穴位注射','直肠滴注','局部注射','局部麻醉','超声透药','冲管','静脉冲管','静脉滴注冲管','入壶','鼻腔冲洗','直肠给药','滴眼','滴鼻','滴耳','口腔喷入','鼻腔喷入','溶媒用','外用','含漱','涂抹','塞肛','阴道给药'];
+    // 中西成药专用：口服/外用类用法
+    const oralUsageOptions = ['口服','含服','嚼服','餐前服','餐中服','餐后服','晨服','睡前服','含漱','涂抹','塞肛','阴道给药','滴眼','滴鼻','滴耳','外用','鼻腔喷入','口腔喷入','直肠给药'];
+    // 输注专用：注射/输注类用法
+    const infusionUsageOptions = ['静脉滴注','静脉注射','肌内注射','腔内注射','雾化吸入','瓶喷雾化','皮下注射','皮内注射','穴位注射','直肠滴注','局部注射','局部麻醉','超声透药','冲管','静脉冲管','静脉滴注冲管','入壶','溶媒用'];
     const frequencyOptions = ['qd','bid','tid','qid','qod','prn','st'];
     const quantityUnits = ['片','粒','袋','包','支','瓶','盒','丸','贴','剂'];
     const dosageUnits = ['mg','g','ml','μg','IU'];
@@ -1700,13 +1840,26 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         const list = [];
         (dbDrugInventory || []).forEach(d => {
             const nm = String(d.name || '').trim(); if (!nm || seen[nm]) return; seen[nm] = 1;
-            list.push({ name: nm, spec: d.spec || '', price: Number(d.price) || 0, source: '库存' });
+            const kind = rxDrugKind(d);
+            list.push({ name: nm, spec: d.spec || '', price: Number(d.price) || 0, source: '库存', kind, kindText: d.category || kind });
         });
         (dbDrugKnowledge || []).forEach(d => {
             const nm = String(d.name || '').trim(); if (!nm || seen[nm]) return; seen[nm] = 1;
-            list.push({ name: nm, spec: d.spec || '', price: 0, source: d.category || '知识库' });
+            const kind = rxDrugKind(d);
+            list.push({ name: nm, spec: d.spec || '', price: 0, source: '知识库', kind, kindText: d.category || kind });
         });
         return list;
+    }
+    function rxDrugKind(item) {
+        const d = item || {};
+        const text = [d.category, d.drugClassZh, d.dosageForm, d.form, d.route, d.usage, d.functions,
+            d.indications, d.notes, d.name].map(v => String(v || '')).join(' ');
+        if (String(d.category || '').includes('中药饮片')) return 'herb';
+        if (/(注射液|注射用|静脉滴注|静脉注射|静滴|输液|溶媒|氯化钠注射液|葡萄糖注射液|皮试注射液)/i.test(text)) return 'infusion';
+        if (/(外用|涂剂|涂膜剂|搽剂|洗剂|凝胶|栓剂|软膏|乳膏|药膏|霜|滴眼|滴鼻|滴耳|口腔喷|鼻腔喷|喷雾剂|喷雾型|含漱|灌肠|开塞露|消毒液|消毒酒精|清凉油|外治)/i.test(text)) return 'external';
+        if (/(膏药|贴敷|敷贴|巴布膏|橡胶膏|硬膏|穴位贴|三伏贴|膏药贴|创口贴|退热贴|开胃贴|膏|贴|敷)/i.test(text)) return 'patch';
+        if (/(西药|中成药)/i.test(text) && !/(注射|输注|贴敷|膏药|外用)/i.test(text)) return 'western';
+        return 'unknown';
     }
     let rxHerbCache = null;
     async function rxHerbSource() {
@@ -1723,6 +1876,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         } catch (e) { console.error('药典库加载失败', e); }
         (dbDrugInventory || []).forEach(d => {
             const nm = String(d.name || '').trim(); if (!nm || seen[nm]) return; seen[nm] = 1;
+            if (String(d.category || '').trim() !== '中药饮片') return;
             merged.push({ name: nm, spec: d.spec || '', price: Number(d.price) || 0, source: '库存' });
         });
         rxHerbCache = merged;
@@ -1742,7 +1896,10 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         </div>`;
         document.body.appendChild(wrap);
         (async () => {
-            rxPickerCtx.source = (rxPickerCtx.mode === 'herb') ? await rxHerbSource() : rxPickerSource();
+            const source = (rxPickerCtx.mode === 'herb') ? await rxHerbSource() : rxPickerSource();
+            rxPickerCtx.source = rxPickerCtx.rxKind
+                ? source.filter(x => x.kind === rxPickerCtx.rxKind || x.kind === 'unknown')
+                : source;
             renderRxPickerList();
         })();
         setTimeout(() => { const i = document.getElementById('rxPickerSearch'); if (i) i.focus(); }, 30);
@@ -1758,15 +1915,34 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
             return x.name.toLowerCase().includes(q) ||
                 pyInitials(x.name).toLowerCase().includes(q) ||
                 String(x.spec || '').toLowerCase().includes(q);
-        }).slice(0, 80);
+        });
+        const matched = rxPickerFiltered.filter(x => x.kind !== 'unknown').slice(0, 80);
+        const unknown = rxPickerFiltered.filter(x => x.kind === 'unknown').slice(0, 80);
+        rxPickerFiltered = [...matched, ...unknown];
         if (!rxPickerFiltered.length) {
             box.innerHTML = '<div style="padding:16px;color:#999;font-size:12px;text-align:center;">未找到匹配项，可先在【药房 → 药品列表】添加药品</div>';
             return;
         }
-        box.innerHTML = rxPickerFiltered.map((x, i) => `<div class="rx-picker-item" onclick="rxPickerPick(${i})">
+        const knownHtml = matched.map(x => {
+            const i = rxPickerFiltered.indexOf(x);
+            return `<div class="rx-picker-item" onclick="rxPickerPick(${i})">
             <div><b>${esc(x.name)}</b> ${x.spec ? `<span style="color:#999;font-size:11px;">${esc(x.spec)}</span>` : ''} <span style="color:#bbb;font-size:10px;">${esc(x.source || '')}</span></div>
             <div style="color:var(--primary);font-size:12px;">¥${(x.price || 0).toFixed(2)}</div>
-        </div>`).join('');
+        </div>`;
+        }).join('');
+        const unknownHtml = unknown.map(x => {
+            const i = rxPickerFiltered.indexOf(x);
+            return `<div class="rx-picker-item" style="cursor:default;">
+            <div><b>${esc(x.name)}</b> ${x.spec ? `<span style="color:#999;font-size:11px;">${esc(x.spec)}</span>` : ''} <span style="color:#c47f00;font-size:10px;">${esc(x.source || '')} · 待确认分类</span></div>
+            <button class="op-btn" onclick="confirmUnknownRxPick(${i})">确认选择</button>
+        </div>`;
+        }).join('');
+        box.innerHTML = knownHtml + (unknown.length ? `<details style="margin-top:6px;"><summary style="cursor:pointer;color:#666;font-size:12px;padding:6px 0;">待确认分类（${unknown.length}）</summary>${unknownHtml}</details>` : '');
+    }
+    function confirmUnknownRxPick(i) {
+        const item = rxPickerFiltered[i];
+        if (!item) return;
+        if (confirm(`【${item.name}】未能自动识别为当前处方类型的药品，请确认临床用途后选择。是否继续添加？`)) rxPickerPick(i);
     }
     function rxPickerPick(i) {
         const item = rxPickerFiltered[i];
@@ -1797,15 +1973,102 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         right.push(`<button class="op-btn" onclick="printClinic()"><i class="fas fa-print"></i> 打印</button>`);
         return `<div class="rx-topbar"><div class="rx-topbar-left"><i class="fas ${opts.icon || 'fa-prescription-bottle'}"></i><b>${esc(title)}</b>${opts.leftExtra || ''}</div><div class="rx-topbar-right">${right.join('')}</div></div>`;
     }
-    function rxAddRow(placeholder, onPlus, value) {
-        return `<div class="rx-add-row"><button type="button" class="rx-add-btn" title="选择药品" onclick="${onPlus}">+</button><input class="rx-add-input" readonly placeholder="${esc(placeholder)}" value="${esc(value || '')}" onfocus="${onPlus}"></div>`;
+    function rxAddRow(placeholder, onPlus, value, drugName) {
+        return `<div class="rx-add-row"><button type="button" class="rx-add-btn" title="选择药品" onclick="${onPlus}">+</button><input class="rx-add-input" readonly placeholder="${esc(placeholder)}" value="${esc(value || '')}" onfocus="${onPlus}" ${drugName ? `data-drug-name="${esc(drugName)}"` : ''}></div>`;
     }
     function rxTotalAmount(rx) {
         let total = 0;
         (rx.westernDrugs || []).forEach(d => total += (Number(d.price) || 0) * (Number(d.qty) || 0));
         (rx.infusionGroups || []).forEach(g => (g.drugs || []).forEach(d => total += (Number(d.price) || 0) * (Number(d.qty) || 0)));
+        (rx.herbs || []).forEach(h => total += (Number(h.price) || 0) * (Number(h.dosage) || 0));
+        (rx.patchGroups || []).forEach(g => total += (Number(g.price) || 0) * (Number(g.totalPatches) || 0));
         (rx.treatmentGroups || []).forEach(g => total += (Number(g.price) || 0) * (Number(g.times) || 0));
         return total;
+    }
+    function rxAllItems(rx) {
+        const r = rx || (clinicDraft && clinicDraft.prescription) || {};
+        const items = [];
+        const push = (item) => {
+            if (!item || !item.name || !String(item.name).trim()) return;
+            const fallbackQty = Math.max(Number(item.qty) || 1, Number(item.dosage) || 1, Number(item.times) || 1, 1);
+            const explicitQty = Number(item.qty);
+            const qty = Number.isFinite(explicitQty) && explicitQty > 0 ? explicitQty : fallbackQty;
+            const price = Number(item.price) || 0;
+            items.push({
+                name: String(item.name).trim(),
+                spec: item.spec || '',
+                dosage: item.dosage === undefined ? '' : String(item.dosage),
+                dosageUnit: item.dosageUnit || '',
+                usage: item.usage || '',
+                frequency: item.frequency || '',
+                qty,
+                qtyUnit: item.qtyUnit || item.unit || '',
+                prescriptionType: item.prescriptionType || '',
+                price,
+                subtotal: +(qty * price).toFixed(2)
+            });
+        };
+        (r.westernDrugs || []).forEach(d => push({ ...d, prescriptionType: '中西成药' }));
+        (r.infusionGroups || []).forEach(g => (g.drugs || []).forEach(d => push({
+            ...d,
+            usage: d.usage || g.route || '',
+            frequency: d.frequency || g.frequency || '',
+            prescriptionType: '输注'
+        })));
+        (r.herbs || []).forEach(h => push({
+            ...h,
+            dosage: h.dosage,
+            qtyUnit: h.unit || 'g',
+            prescriptionType: '中药饮片'
+        }));
+        (r.patchGroups || []).forEach(g => {
+            if (!g.drug && !(g.acupoints || []).length && !g.site) return;
+            push({
+                name: g.drug || `${g.name || '贴敷'}${g.site ? '（' + g.site + '）' : ''}`,
+                usage: g.usage || '',
+                frequency: g.frequency || '',
+                qty: Number(g.totalPatches) || 1,
+                qtyUnit: '贴',
+                prescriptionType: '贴敷',
+                price: Number(g.price) || 0
+            });
+        });
+        (r.treatmentGroups || []).forEach(g => {
+            if (!g.item && !(g.acupoints || []).length) return;
+            push({
+                name: g.item || `${r.externalType || '外治'}${g.acupoints && g.acupoints.length ? '（' + g.acupoints.join('、') + '）' : ''}`,
+                usage: g.frequency || '',
+                frequency: g.frequency || '',
+                qty: Number(g.times) || 1,
+                qtyUnit: '次',
+                prescriptionType: r.externalType || '外治',
+                price: Number(g.price) || 0
+            });
+        });
+        return items;
+    }
+    function rxPrescriptionSummary() {
+        const rx = rxDraft();
+        if (!rx) return '';
+        const currentType = rx.type || 'western';
+        const groups = [
+            { type: '中西成药', key: 'western', rows: (rx.westernDrugs || []).filter(x => x.name).map(x => ({ text: drugSpecLabel(x), qty: x.qty, unit: x.qtyUnit || '盒' })) },
+            { type: '输注', key: 'infusion', rows: (rx.infusionGroups || []).flatMap(g => (g.drugs || []).filter(x => x.name).map(x => ({ text: `${g.name || '输注'}：${drugSpecLabel(x)}`, qty: x.qty, unit: x.qtyUnit || '瓶' }))) },
+            { type: '中药', key: 'herbal', rows: (rx.herbs || []).length ? [{ text: (rx.herbs || []).map(x => x.name).join('、'), qty: Number(rx.decoction && rx.decoction.totalDose) || 1, unit: '剂' }] : [] },
+            { type: '贴敷', key: 'patch', rows: (rx.patchGroups || []).filter(g => g.drug || g.site || (g.acupoints || []).length).map(g => ({ text: `${g.name || '贴敷'}：${g.drug || '临方调配'}${g.site ? '（' + g.site + '）' : ''}${g.acupoints && g.acupoints.length ? '　' + g.acupoints.join('、') : ''}`, qty: Number(g.totalPatches) || 1, unit: '贴' })) },
+            { type: rx.externalType || '外治', key: 'external', rows: (rx.treatmentGroups || []).filter(g => g.item || (g.acupoints || []).length).map(g => ({ text: g.item || (g.acupoints || []).join('、'), qty: Number(g.times) || 1, unit: '次' })) }
+        ].filter(group => group.rows.length);
+        const count = groups.reduce((sum, group) => sum + group.rows.length, 0);
+        if (!count) return `<div class="rx-summary empty"><i class="fas fa-circle-info"></i> 暂无已添加处方，可在下方选择类型后添加。</div>`;
+        return `<div class="rx-summary">
+            <div class="rx-summary-head"><b>已添加处方汇总</b><span>${count} 项</span></div>
+            <div class="rx-summary-list">${groups.map(group => group.rows.map(row => `
+                <div class="rx-summary-row ${group.key === currentType ? 'active' : ''}">
+                    <span class="rx-summary-type">${esc(group.type)}</span>
+                    <span class="rx-summary-name" title="${esc(row.text)}">${esc(row.text)}</span>
+                    <span class="rx-summary-qty">×${esc(row.qty)}${esc(row.unit || '')}</span>
+                </div>`).join('')).join('')}</div>
+        </div>`;
     }
     function rxUpdateTotal() {
         const rx = rxDraft(); if (!rx) return;
@@ -1833,9 +2096,9 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
             ? `<div class="rx-detail-row" style="grid-template-columns:1.5fr 1fr 1fr .8fr .9fr .7fr 28px;"><b>药品名称/规格</b><b>剂量</b><b>用法</b><b>频次</b><b>数量</b><b style="text-align:right;">金额</b><b></b></div>` +
               (rx.westernDrugs || []).map((d, i) => `
             <div class="rx-detail-row">
-                <input value="${esc(drugSpecLabel(d))}" readonly title="${esc(drugSpecLabel(d))}">
+                <input value="${esc(drugSpecLabel(d))}" readonly title="${esc(drugSpecLabel(d))}" data-drug-name="${esc(d.name)}">
                 <div style="display:flex;gap:3px"><input placeholder="剂量" value="${esc(d.dosage || '')}" oninput="rxDraft().westernDrugs[${i}].dosage=this.value" style="min-width:0"><select onchange="rxDraft().westernDrugs[${i}].dosageUnit=this.value">${optionList(dosageUnits, d.dosageUnit || 'mg')}</select></div>
-                <select onchange="rxDraft().westernDrugs[${i}].usage=this.value"><option value="">用法</option>${optionList(westernUsageOptions, d.usage)}</select>
+                <select onchange="rxDraft().westernDrugs[${i}].usage=this.value"><option value="">用法</option>${optionList(oralUsageOptions, d.usage)}</select>
                 <select onchange="rxDraft().westernDrugs[${i}].frequency=this.value"><option value="">频次</option>${optionList(frequencyOptions, d.frequency)}</select>
                 <div style="display:flex;gap:3px"><input type="number" min="1" value="${Number(d.qty) || 1}" oninput="updateWesternQty(${i}, this)" style="min-width:0"><select onchange="rxDraft().westernDrugs[${i}].qtyUnit=this.value">${optionList(quantityUnits, d.qtyUnit || '盒')}</select></div>
                 <span class="rx-sub" id="wx_sub_${i}">¥${((Number(d.price) || 0) * (Number(d.qty) || 0)).toFixed(2)}</span>
@@ -1844,7 +2107,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
             : '';
         return `<div class="rx-form">
             ${rxTopBar('中西成药处方', { level: true, icon: 'fa-tablets' })}
-            ${rxAddRow('输入药品名称或拼音码', "openRxPicker({mode:'drug', title:'中西成药', onPick: pickWesternDrug})")}
+            ${rxAddRow('输入药品名称或拼音码', "openRxPicker({mode:'drug', rxKind:'western', title:'中西成药', onPick: pickWesternDrug})")}
             ${rows}
             ${rxRemarkTotal(rx)}
         </div>`;
@@ -1873,9 +2136,9 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
                 ? `<div class="rx-detail-row" style="grid-template-columns:1.5fr .85fr .9fr .8fr .65fr .7fr 28px;"><b>药品名称</b><b>剂量</b><b>用法</b><b>频次</b><b>数量</b><b style="text-align:right;">金额</b><b></b></div>` +
                   (g.drugs || []).map((d, di) => `
             <div class="rx-detail-row">
-                <input value="${esc(drugSpecLabel(d))}" readonly title="${esc(drugSpecLabel(d))}">
+                <input value="${esc(drugSpecLabel(d))}" readonly title="${esc(drugSpecLabel(d))}" data-drug-name="${esc(d.name)}">
                 <div style="display:flex;gap:3px"><input placeholder="剂量" value="${esc(d.dosage || '')}" oninput="rxDraft().infusionGroups[${i}].drugs[${di}].dosage=this.value" style="min-width:0"><select onchange="rxDraft().infusionGroups[${i}].drugs[${di}].dosageUnit=this.value">${optionList(dosageUnits, d.dosageUnit || 'mg')}</select></div>
-                <select onchange="rxDraft().infusionGroups[${i}].drugs[${di}].usage=this.value"><option value="">用法</option>${optionList(westernUsageOptions, d.usage || g.route)}</select>
+                <select onchange="rxDraft().infusionGroups[${i}].drugs[${di}].usage=this.value"><option value="">用法</option>${optionList(infusionUsageOptions, d.usage || g.route)}</select>
                 <select onchange="rxDraft().infusionGroups[${i}].drugs[${di}].frequency=this.value"><option value="">频次</option>${optionList(frequencyOptions, d.frequency || g.frequency)}</select>
                 <div style="display:flex;gap:3px"><input type="number" min="1" value="${Number(d.qty) || 1}" oninput="updateInfQty(${i},${di}, this)" style="min-width:0"><select onchange="rxDraft().infusionGroups[${i}].drugs[${di}].qtyUnit=this.value">${optionList(['支','瓶','袋','盒'], d.qtyUnit || '瓶')}</select></div>
                 <span class="rx-sub" id="inf_sub_${i}_${di}">¥${((Number(d.price) || 0) * (Number(d.qty) || 0)).toFixed(2)}</span>
@@ -1892,7 +2155,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
                 <button class="btn-danger" onclick="removeInfusionGroup(${i})"><i class="fas fa-trash"></i> 删除</button>
                 <button class="btn-cyan" onclick="addInfusionGroup()"><i class="fas fa-plus"></i> 加一组</button>
             </div>
-            ${rxAddRow(`第 ${i + 1} 组药品 / 溶媒`, `openRxPicker({mode:'drug', title:'输注药品', onPick: function(it){ pickInfusionDrug(${i}, it); }})`)}
+            ${rxAddRow(`第 ${i + 1} 组药品 / 溶媒`, `openRxPicker({mode:'drug', rxKind:'infusion', title:'输注药品', onPick: function(it){ pickInfusionDrug(${i}, it); }})`)}
             ${drugRows}
         </div>`;
         }).join('');
@@ -1931,7 +2194,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
             ? `<div class="rx-detail-row" style="grid-template-columns:1.6fr .8fr 1fr 28px;"><b>饮片名称</b><b>剂量(g)</b><b>特殊煎法</b><b></b></div>` +
               herbs.map((h, i) => `
             <div class="rx-detail-row" style="grid-template-columns:1.6fr .8fr 1fr 28px;">
-                <input value="${esc(h.name)}" readonly title="${esc(h.name)}">
+                <input value="${esc(h.name)}" readonly title="${esc(h.name)}" data-drug-name="${esc(h.name)}">
                 <input type="number" min="0.1" step="0.1" value="${Number(h.dosage) || 0}" oninput="rxDraft().herbs[${i}].dosage=this.value;updateHerbStats()">
                 <select onchange="rxDraft().herbs[${i}].footnote=this.value"><option value="">脚注</option>${herbFootnotes.map(x => `<option ${(h.footnote || '') === x ? 'selected' : ''}>${x}</option>`).join('')}</select>
                 <button class="op-btn danger" onclick="removeHerb(${i})"><i class="fas fa-trash"></i></button>
@@ -1979,7 +2242,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
                 <button class="btn-danger" onclick="clearPatchGroup(${i})"><i class="fas fa-eraser"></i> 清空</button>
                 <button class="btn-cyan" onclick="addPatchGroup()"><i class="fas fa-plus"></i> 加一贴</button>
             </div></div>
-            ${rxAddRow('药品名称 / 简称', `openRxPicker({mode:'drug', title:'贴敷药品', onPick: function(it){ pickPatchDrug(${i}, it); }})`, g.drug)}
+            ${rxAddRow('药品名称 / 简称', `openRxPicker({mode:'drug', rxKind:'patch', title:'贴敷药品', onPick: function(it){ pickPatchDrug(${i}, it); }})`, g.drug, g.drug)}
             <div class="form-row" style="margin-bottom:7px;">
                 <div class="inf-field">部位<span class="required-star">*</span><input value="${esc(g.site || '')}" placeholder="如：背部 / 双膝" oninput="rxDraft().patchGroups[${i}].site=this.value"></div>
                 <div class="inf-field">穴位<input id="patch_acupoint_${i}" placeholder="搜索穴位" onkeydown="if(event.key==='Enter'){addPatchAcupoint(${i});}"><button class="op-btn" onclick="addPatchAcupoint(${i})"><i class="fas fa-plus"></i> 穴位</button></div>
@@ -2006,6 +2269,15 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         refreshRxCenter();
     }
     function pickPatchDrug(i, item) { const rx = rxDraft(); if (!rx || !rx.patchGroups[i]) return; rx.patchGroups[i].drug = item.name; refreshRxCenter(); }
+    function openExternalPicker(i) {
+        openRxPicker({ mode: 'drug', rxKind: 'external', title: '外治药品/项目', onPick: function(item) { pickTreatmentItem(i, item); } });
+    }
+    function pickTreatmentItem(i, item) {
+        const rx = rxDraft(); if (!rx || !rx.treatmentGroups[i]) return;
+        rx.treatmentGroups[i].item = item.name;
+        if (item.price) rx.treatmentGroups[i].price = Number(item.price) || 0;
+        refreshRxCenter();
+    }
     function addPatchAcupoint(i) {
         const rx = rxDraft(); if (!rx || !rx.patchGroups[i]) return;
         const val = document.getElementById('patch_acupoint_' + i).value.trim();
@@ -2036,7 +2308,8 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         <div class="rx-group">
             <div class="rx-add-row">
                 <span style="width:24px;text-align:center;color:#999;font-size:12px;">${i + 1}</span>
-                <input class="rx-add-input" placeholder="+ 输入项目名称或拼音码" value="${esc(g.item || '')}" oninput="rxDraft().treatmentGroups[${i}].item=this.value">
+                <input class="rx-add-input" placeholder="+ 输入项目名称或拼音码" value="${esc(g.item || '')}" oninput="rxDraft().treatmentGroups[${i}].item=this.value" ${g.item ? `data-drug-name="${esc(g.item)}"` : ''}>
+                <button class="op-btn" type="button" onclick="openExternalPicker(${i})"><i class="fas fa-list"></i> 选择</button>
                 <div class="inf-field">单价<input type="number" min="0" step="0.01" style="width:86px;" value="${Number(g.price) || 0}" oninput="rxDraft().treatmentGroups[${i}].price=this.value;rxUpdateTotal()">元</div>
                 <button class="btn-cyan" onclick="addTreatmentGroup()"><i class="fas fa-plus"></i> 加一组</button>
             </div>
@@ -2111,8 +2384,11 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         const rxNav = `<div class="rx-nav">
             <div class="rx-side"><button type="button" class="${infoTab === 'base' ? 'active' : ''}" onclick="setRxInfoTab('base')">处方信息</button><button type="button" class="${infoTab === 'instruction' ? 'active' : ''}" onclick="setRxInfoTab('instruction')">用药说明</button></div>
             <div class="rx-types">${rxNavTypes}</div>
-        </div>${rxBody}`;
+        </div>${rxPrescriptionSummary()}${rxBody}`;
+        const savedRecord = p.status === '已就诊';
+        area.classList.toggle('readonly-view', savedRecord);
         area.innerHTML = `
+        ${savedRecord ? '<div class="clinic-view-banner"><div><b>已保存接诊 · 查看模式</b><div>该门诊记录已保存，不可再修改。</div></div><span class="status done">已就诊</span></div>' : ''}
         <div class="clinic-section">
             <div class="label">患者信息</div>
             <div class="patient-summary"><b>${esc(p.name)}</b><span>${esc(p.gender || '-')} | ${esc(p.age || '-')}岁 | ${esc(p.phone || '-')}</span><div>接诊医师：${esc(p.doctor || '待分配')}　|　收费方式：自费</div></div>
@@ -2121,11 +2397,11 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
             <div class="label">病历信息</div>
             <div class="form-row"><div><label>初/复诊</label><select id="cf_visitType"><option value="初诊">初诊</option><option value="复诊" ${p.visitType === '复诊' ? 'selected' : ''}>复诊</option></select></div><div><label>收费方式</label><div class="readonly-field">自费</div></div></div>
             <div style="display:flex;gap:6px;align-items:center;"><input id="cf_chief" placeholder="患者主诉" value="${esc(p.chief || '')}" readonly style="flex:1"><button type="button" class="op-btn" onclick="openChiefPicker('cf_chief','cf_history')"><i class="fas fa-list"></i> 症状点选</button></div>
-            <textarea id="cf_history" rows="2" placeholder="现病史">${esc(p.history || '')}</textarea>
-            <textarea id="cf_past" rows="2" placeholder="既往史">${esc(p.past || '')}</textarea>
-            <input id="cf_allergy" placeholder="过敏史" value="${esc(p.allergy || '')}">
-            <textarea id="cf_exam" rows="2" placeholder="体格检查">${esc(p.exam || '')}</textarea>
-            <input id="cf_diagnosis" placeholder="诊断结果" value="${esc(p.diagnosis || '')}">
+            <div style="display:flex;gap:6px;align-items:flex-start;"><textarea id="cf_history" rows="2" placeholder="现病史" style="flex:1;">${esc(p.history || '')}</textarea><button type="button" class="op-btn" onclick="openClinicalTermPicker('history','cf_history')"><i class="fas fa-list"></i> 分类点选</button></div>
+            <div style="display:flex;gap:6px;align-items:flex-start;"><textarea id="cf_past" rows="2" placeholder="既往史（点击右侧关联历史档案）" style="flex:1;">${esc(p.past || '')}</textarea><button type="button" class="op-btn" onclick="openPastHistoryPicker()"><i class="fas fa-clock-rotate-left"></i> 历史档案</button></div>
+            <div style="display:flex;gap:6px;align-items:center;"><input id="cf_allergy" placeholder="过敏史" value="${esc(p.allergy || '')}" style="flex:1"><button type="button" class="op-btn" onclick="openClinicalTermPicker('allergy','cf_allergy')"><i class="fas fa-list"></i> 分类点选</button></div>
+            <div style="display:flex;gap:6px;align-items:flex-start;"><textarea id="cf_exam" rows="2" placeholder="体格检查" style="flex:1;">${esc(p.exam || '')}</textarea><button type="button" class="op-btn" onclick="openClinicalTermPicker('exam','cf_exam')"><i class="fas fa-list"></i> 分类点选</button></div>
+            <div style="display:flex;gap:6px;align-items:center;"><input id="cf_diagnosis" placeholder="诊断结果" value="${esc(p.diagnosis || '')}" style="flex:1"><button type="button" class="op-btn" onclick="openDiagnosisSuggestions()"><i class="fas fa-lightbulb"></i> 诊断建议</button></div>
             <input id="cf_syndrome" placeholder="辨证" value="${esc(p.syndrome || '')}">
         </div>
         <div class="clinic-section">
@@ -2137,12 +2413,14 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
             <textarea id="cf_advice" rows="2" placeholder="医嘱">${esc(p.advice || '')}</textarea>
         </div>
         <div style="display:flex;gap:8px;margin-top:10px;">
-            <button class="btn-primary" onclick="saveClinicData()"><i class="fas fa-save"></i> 保存接诊</button>
+            ${p.status === '已就诊'
+                ? '<button class="op-btn" onclick="printClinic()"><i class="fas fa-print"></i> 打印病历</button>'
+                : `<button class="btn-primary" onclick="saveClinicData()"><i class="fas fa-save"></i> 保存接诊</button>
             <button class="op-btn" onclick="printClinic()">打印病历</button>
-            <button class="op-btn" onclick="aiReviewRx()">AI审方</button>
+            <button class="op-btn" onclick="aiReviewRx()">AI审方</button>`}
         </div>`;
-        const rxSaved = clinicDraft.prescription.westernDrugs || [];
-        prescriptionTempList = rxSaved.length ? rxSaved.map(d => ({ name: d.name, qty: d.qty, price: d.price, subtotal: d.subtotal })) : (p.prescriptions ? [...p.prescriptions] : []);
+        const allRxItems = rxAllItems(clinicDraft.prescription);
+        prescriptionTempList = allRxItems.length ? allRxItems : (p.clinicData && p.clinicData.prescription ? [] : (p.prescriptions ? [...p.prescriptions] : []));
     }
     function renderClinicHistory(p) {
         const container = document.getElementById('clinicHistoryList');
@@ -2232,6 +2510,223 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         if (existingHistory && history && !selected.size) history.value = existingHistory;
     }
 
+    function appendClinicalTerm(inputId, terms) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        const existing = String(input.value || '').trim();
+        const additions = (terms || []).filter(term => term && !existing.includes(term));
+        if (!additions.length) return;
+        input.value = existing ? existing.replace(/[；;]\s*$/, '') + '；' + additions.join('；') : additions.join('；');
+    }
+
+    function closeClinicalTermPicker() {
+        const modal = document.getElementById('clinicalTermPickerModal');
+        if (modal) modal.remove();
+    }
+
+    function openClinicalTermPicker(field, inputId) {
+        const lib = (dbClinicalTerms && dbClinicalTerms[field]) || { label: '医疗词条', groups: [] };
+        closeClinicalTermPicker();
+        const selected = new Set();
+        const modal = document.createElement('div');
+        modal.id = 'clinicalTermPickerModal';
+        modal.className = 'chief-picker-modal';
+        modal.innerHTML = `<div class="chief-picker-card narrow" role="dialog" aria-modal="true">
+            <div class="chief-picker-head"><b>${esc(lib.label || '医疗词条')}</b><button type="button" class="op-btn" onclick="closeClinicalTermPicker()" title="关闭"><i class="fas fa-times"></i></button></div>
+            <div class="chief-picker-body single">
+                <input id="clinicalTermSearch" placeholder="搜索本页医疗词条…" oninput="renderClinicalTermPickerBody('${field}','${inputId}')">
+                <div id="clinicalTermPickerBody"></div>
+            </div>
+            <div class="chief-picker-foot">
+                <button type="button" class="btn-primary" onclick="applyClinicalTermPicker('${inputId}')">添加</button>
+                <button type="button" class="op-btn" onclick="closeClinicalTermPicker()">取消</button>
+            </div>
+            <div style="padding:0 12px 10px;color:#999;font-size:11px;">点选内容只追加到原字段，不覆盖医生手工输入；仅供医生参考，需医生确认。</div>
+        </div>`;
+        document.body.appendChild(modal);
+        modal._selected = selected;
+        modal._field = field;
+        modal._inputId = inputId;
+        renderClinicalTermPickerBody(field, inputId);
+        modal.addEventListener('click', event => {
+            const term = event.target.closest('[data-clinical-term]');
+            if (!term) return;
+            const value = term.dataset.clinicalTerm;
+            term.classList.toggle('active');
+            if (term.classList.contains('active')) selected.add(value); else selected.delete(value);
+        });
+        modal.addEventListener('click', event => { if (event.target === modal) closeClinicalTermPicker(); });
+        setTimeout(() => { const box = document.getElementById('clinicalTermSearch'); if (box) box.focus(); }, 30);
+    }
+
+    function renderClinicalTermPickerBody(field, inputId) {
+        const modal = document.getElementById('clinicalTermPickerModal');
+        const box = document.getElementById('clinicalTermPickerBody');
+        if (!modal || !box) return;
+        const lib = (dbClinicalTerms && dbClinicalTerms[field]) || { groups: [] };
+        const q = String((document.getElementById('clinicalTermSearch') || {}).value || '').trim().toLowerCase();
+        const selected = modal._selected || new Set();
+        const groups = (lib.groups || []).map(group => {
+            const items = (group.items || []).filter(item => !q ||
+                String(item).toLowerCase().includes(q) || pyInitials(String(item)).toLowerCase().includes(q));
+            return { label: group.label, items };
+        }).filter(group => group.items.length);
+        if (!groups.length) {
+            box.innerHTML = '<div style="text-align:center;color:#999;padding:16px;">没有匹配的医疗词条</div>';
+            return;
+        }
+        box.innerHTML = groups.map(group => `
+            <div class="chief-symptom-cat"><b>${esc(group.label)}</b>
+                <div class="tag-flow">${group.items.map(item => {
+                    const active = selected.has(item) ? ' active' : '';
+                    return `<button type="button" class="choice-tag${active}" data-clinical-term="${esc(item)}">${esc(item)}</button>`;
+                }).join('')}</div>
+            </div>`).join('');
+    }
+
+    function applyClinicalTermPicker(inputId) {
+        const modal = document.getElementById('clinicalTermPickerModal');
+        if (!modal) return;
+        const terms = [...(modal._selected || [])];
+        if (!terms.length) return alert('请至少选择一个医疗词条');
+        appendClinicalTerm(inputId, terms);
+        closeClinicalTermPicker();
+        showToast('词条已写入病历，请医生核对');
+    }
+
+    function openPastHistoryPicker() {
+        const p = dbOutpatient.find(item => item.id === editingOutpatientId);
+        if (!p) return;
+        const name = String(p.name || '').trim();
+        const phone = String(p.phone || '').trim();
+        const profile = (dbPatients || []).find(item => item.key === `${name}|${phone}`) ||
+            (dbPatients || []).find(item =>
+                String(item.name || '').trim() === name && String(item.phone || '').trim() === phone);
+        if (!profile) {
+            showToast('该患者在患者模块暂无历史档案', 'warning');
+            return;
+        }
+        const cards = [];
+        if (profile.past || profile.allergy) {
+            cards.push({
+                title: '患者档案基础信息',
+                summary: [
+                    profile.past ? `既往史：${profile.past}` : '',
+                    profile.allergy ? `过敏史：${profile.allergy}` : ''
+                ].filter(Boolean).join('；')
+            });
+        }
+        (profile.visits || []).slice().reverse().forEach(visit => {
+            const prescriptions = (visit.prescriptions || []).map(x => x.name).filter(Boolean).join('、');
+            cards.push({
+                title: visit.date || '未记录日期',
+                summary: [
+                    visit.diagnosis ? `诊断：${visit.diagnosis}` : '',
+                    prescriptions ? `曾用处方：${prescriptions}` : ''
+                ].filter(Boolean).join('；') || '本次就诊未记录诊断与处方'
+            });
+        });
+        if (!cards.length) {
+            showToast('该患者在患者模块暂无历史记录', 'warning');
+            return;
+        }
+        const modal = document.createElement('div');
+        modal.id = 'pastHistoryPickerModal';
+        modal.className = 'chief-picker-modal';
+        modal.innerHTML = `<div class="chief-picker-card narrow" role="dialog" aria-modal="true">
+            <div class="chief-picker-head"><b>历史档案</b><button type="button" class="op-btn" onclick="closePastHistoryPicker()"><i class="fas fa-times"></i></button></div>
+            <div class="chief-picker-body single" id="pastHistoryPickerBody"></div>
+            <div style="padding:0 12px 10px;color:#999;font-size:11px;">按姓名与手机号关联患者模块历史，仅供医生参考，需医生确认。</div>
+        </div>`;
+        document.body.appendChild(modal);
+        window.__pastHistoryRecords = cards;
+        const body = modal.querySelector('#pastHistoryPickerBody');
+        body.innerHTML = cards.map((item, index) => `
+            <button type="button" class="history-card" onclick="usePastHistory(${index})">
+                <b>${esc(item.title)}</b>
+                <div style="color:#666;">${esc(item.summary)}</div>
+            </button>`).join('');
+        modal.addEventListener('click', event => { if (event.target === modal) closePastHistoryPicker(); });
+    }
+
+    function closePastHistoryPicker() {
+        const modal = document.getElementById('pastHistoryPickerModal');
+        if (modal) modal.remove();
+    }
+
+    function usePastHistory(index) {
+        const record = (window.__pastHistoryRecords || [])[index];
+        if (!record) return;
+        appendClinicalTerm('cf_past', [record.summary]);
+        closePastHistoryPicker();
+        showToast('历史信息已写入既往史，请医生核对');
+    }
+
+    function closeDiagnosisSuggestionModal() {
+        const modal = document.getElementById('diagnosisSuggestionModal');
+        if (modal) modal.remove();
+    }
+
+    async function openDiagnosisSuggestions() {
+        const payload = {
+            chief: document.getElementById('cf_chief')?.value || '',
+            history: document.getElementById('cf_history')?.value || '',
+            past: document.getElementById('cf_past')?.value || '',
+            allergy: document.getElementById('cf_allergy')?.value || '',
+            exam: document.getElementById('cf_exam')?.value || '',
+            diagnosis: document.getElementById('cf_diagnosis')?.value || '',
+            syndrome: document.getElementById('cf_syndrome')?.value || ''
+        };
+        if (!payload.chief && !payload.history && !payload.exam && !payload.diagnosis) {
+            return alert('请先填写主诉、现病史或体格检查');
+        }
+        const modal = document.createElement('div');
+        modal.id = 'diagnosisSuggestionModal';
+        modal.className = 'chief-picker-modal';
+        modal.innerHTML = `<div class="chief-picker-card narrow" role="dialog" aria-modal="true">
+            <div class="chief-picker-head"><b>诊断建议</b><button type="button" class="op-btn" onclick="closeDiagnosisSuggestionModal()"><i class="fas fa-times"></i></button></div>
+            <div class="chief-picker-body single"><div style="text-align:center;color:#666;padding:18px;"><i class="fas fa-spinner fa-spin"></i> 正在匹配本地医疗知识库…</div></div>
+            <div style="padding:0 12px 10px;color:#999;font-size:11px;">由知识库匹配生成，仅供医生参考，需医生确认；点击“使用”仅写入候选名称。</div>
+        </div>`;
+        document.body.appendChild(modal);
+        modal.addEventListener('click', event => { if (event.target === modal) closeDiagnosisSuggestionModal(); });
+        try {
+            const res = await apiFetch(`${API_BASE}/clinical/suggestions`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            window.__diagnosisSuggestions = data.candidates || [];
+            const body = modal.querySelector('.chief-picker-body');
+            if (!data.hasSuggestions) {
+                body.innerHTML = '<div style="text-align:center;color:#666;padding:18px;">知识库证据不足，建议线下进一步评估。</div>';
+                return;
+            }
+            body.innerHTML = data.candidates.map((item, index) => `
+                <div class="history-card" style="text-align:left;cursor:default;">
+                    <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;">
+                        <b>${esc(item.name)}（${esc(item.type)}）</b>
+                        <button type="button" class="op-btn" onclick="useDiagnosisSuggestion(${index})">使用</button>
+                    </div>
+                    <div style="margin-top:5px;color:#666;">${esc((item.evidence || []).join('；') || '无明确匹配证据')}</div>
+                    ${item.advice ? `<div style="margin-top:5px;color:#666;">${esc(item.advice)}</div>` : ''}
+                    ${item.description ? `<div style="margin-top:5px;color:#888;">${esc(item.description)}</div>` : ''}
+                </div>`).join('');
+        } catch (err) {
+            if (err.message !== '未登录') {
+                modal.querySelector('.chief-picker-body').innerHTML = `<div style="text-align:center;color:#c0392b;padding:18px;">${esc(err.message)}</div>`;
+            }
+        }
+    }
+
+    function useDiagnosisSuggestion(index) {
+        const item = (window.__diagnosisSuggestions || [])[index];
+        if (!item) return;
+        appendClinicalTerm('cf_diagnosis', [item.name]);
+        closeDiagnosisSuggestionModal();
+        showToast('候选诊断已写入，请医生确认');
+    }
+
     function openDirectAddModal() {
         gotoPage('page-outpatient');
         const area = document.getElementById('clinicCenterArea');
@@ -2314,14 +2809,12 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
             }
         }
 
-        const structuredRx = [];
-        (rxDraft().westernDrugs || []).forEach(d => {
-            if (d.name) structuredRx.push({ name: d.name, qty: Number(d.qty)||1, price: Number(d.price)||0, subtotal: +(Number(d.qty)||1) * (Number(d.price)||0) });
-        });
-        (rxDraft().infusionGroups || []).forEach(g => (g.drugs || []).forEach(d => {
-            if (d.name) structuredRx.push({ name: d.name, qty: Number(d.qty)||1, price: Number(d.price)||0, subtotal: +(Number(d.qty)||1) * (Number(d.price)||0) });
-        }));
-            if (structuredRx.length) prescriptionTempList = structuredRx;
+        const structuredRx = rxAllItems(rxDraft());
+            if (structuredRx.length) {
+                prescriptionTempList = structuredRx;
+            } else if (op && op.clinicData && op.clinicData.prescription) {
+                prescriptionTempList = [];
+            }
 
         try {
             const body = {
@@ -2455,6 +2948,8 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
 
     function hideTooltip() { if (tooltipEl) tooltipEl.style.display = 'none'; }
 
+    let hideDelayTimer = null;
+
     function positionTooltip(ev, el) {
         const pad = 12;
         let x = ev.clientX + pad, y = ev.clientY + pad;
@@ -2473,7 +2968,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         el.style.display = 'block';
     }
 
-    function buildDrugTooltipHTML(name, entry, inv) {
+    function buildDrugTooltipHTML(name, entry, inv, textMatches) {
         const rows = [];
         if (entry) {
             rows.push(['类别', entry.category || '-']);
@@ -2487,7 +2982,10 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
             if (entry.storage) rows.push(['贮藏', entry.storage]);
         }
         let html = '<div style="padding:12px 14px; min-width:270px; max-width:420px;">';
+        html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">';
         html += '<div style="font-weight:bold; font-size:14px;">' + esc(name) + '</div>';
+        html += '<button onclick="document.getElementById(\'drugTooltip\').style.display=\'none\'" style="background:none; border:none; cursor:pointer; font-size:16px; color:#999; padding:2px 6px; line-height:1;" title="关闭">×</button>';
+        html += '</div>';
         if (entry && entry.category) html += '<div style="font-size:11px; color:#888; margin-top:2px;">' + esc(entry.category) + '</div>';
         if (!entry) {
             html += '<div style="margin:8px 0; padding:8px; background:#fff8e6; border-radius:6px; font-size:12px; color:#a06b00;">药典知识库暂无该药详情，可在【药房 → 药典知识库】中补充</div>';
@@ -2505,6 +3003,18 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
             if (inv.supplier) html += ' ｜ 供应商 ' + esc(inv.supplier);
             html += '</div>';
         }
+        const matches = textMatches || [];
+        if (matches.length) {
+            html += '<div style="margin-top:10px; padding-top:8px; border-top:1px solid #E3EFEB;">';
+            html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><b style="font-size:12px;color:#256A5C;">中国药典原文</b><span style="font-size:10px;color:#7B8B86;">共 ' + matches.length + ' 条命中</span></div>';
+            matches.forEach(m => {
+                html += '<div style="margin-bottom:6px; padding:7px 8px; background:#F7FCFA; border:1px solid #E3EFEB; border-radius:7px;">';
+                html += '<div style="font-size:10px; color:#3C6A60; margin-bottom:3px;">' + esc(m.book || '药典原文') + ' · 第 ' + esc(m.page || '-') + ' 页</div>';
+                html += '<div style="font-size:12px; line-height:1.55; color:#333;">' + esc(m.text || '') + '</div>';
+                html += '</div>';
+            });
+            html += '</div>';
+        }
         if (entry && entry.source) html += '<div style="margin-top:8px; font-size:10px; color:#bbb;">来源：' + esc(entry.source) + '</div>';
         html += '</div>';
         return html;
@@ -2517,15 +3027,15 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         positionTooltip(ev, el);
         el.style.display = 'block';
         try {
-            let entry = kbCache.get(name);
-            if (entry === undefined) {
+            let payload = kbCache.get(name);
+            if (payload === undefined) {
                 const res = await apiFetch(`${API_BASE}/pharmacopoeia/lookup?name=${encodeURIComponent(name)}`);
                 const d = await res.json();
-                entry = d && d.found ? d.entry : null;
-                kbCache.set(name, entry);
+                payload = d && d.found ? { entry: d.entry || null, textMatches: d.textMatches || [] } : { entry: null, textMatches: [] };
+                kbCache.set(name, payload);
             }
             const inv = dbDrugInventory.find(i => i.name === name);
-            el.innerHTML = buildDrugTooltipHTML(name, entry, inv);
+            el.innerHTML = buildDrugTooltipHTML(name, payload.entry, inv, payload.textMatches);
         } catch (err) {
             if (err.message !== '未登录') {
                 el.innerHTML = '<div style="padding:12px 14px;"><b>' + esc(name) + '</b><div style="margin-top:6px; color:#999;">详情加载失败</div></div>';
@@ -2536,17 +3046,28 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
     }
 
     document.addEventListener('mouseover', e => {
+        const inTooltip = e.target.closest('#drugTooltip');
         const t = e.target.closest('[data-drug-name]');
+        if (inTooltip) {
+            // 鼠标移入 tooltip 时取消关闭计时，允许滚动阅读
+            clearTimeout(hideDelayTimer);
+            return;
+        }
         if (t) {
             const name = t.getAttribute('data-drug-name');
+            clearTimeout(hideDelayTimer);
             clearTimeout(tooltipTimer);
             tooltipTimer = setTimeout(() => showDrugTooltip(name, e), 300);
         }
     });
     document.addEventListener('mouseout', e => {
-        if (e.target.closest('[data-drug-name]')) {
+        const fromTooltip = e.target.closest('#drugTooltip');
+        const fromDrug = e.target.closest('[data-drug-name]');
+        if (fromTooltip || fromDrug) {
             clearTimeout(tooltipTimer);
-            hideTooltip();
+            clearTimeout(hideDelayTimer);
+            // 延迟 2 秒再隐藏，给用户时间移到 tooltip 上继续阅读
+            hideDelayTimer = setTimeout(() => hideTooltip(), 2000);
         }
     });
     document.addEventListener('click', e => {
@@ -3001,7 +3522,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
     function onAIProviderChange() {
         const p = document.getElementById('ai_provider').value;
         const presets = {
-            zhipu: { url: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4.7-flash' },
+            zhipu: { url: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4-flash' },
             deepseek: { url: 'https://api.deepseek.com', model: 'deepseek-chat' },
             siliconflow: { url: 'https://api.siliconflow.cn/v1', model: 'THUDM/glm-4-9b-chat' },
             custom: { url: '', model: '' }
@@ -3767,6 +4288,18 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         } catch(err) { if(err.message!=='未登录') showToast(err.message || '发药失败', 'error'); }
     }
 
+    async function dispenseAllDrugs() {
+        const count = (dbPharmacy || []).filter(p => p.status === '待发药').length;
+        if (!count) return showToast('当前没有待发药处方', 'error');
+        if (!confirm(`确认一键发药 ${count} 条待发药处方？库存会同步扣减。`)) return;
+        try {
+            const res = await apiFetch(`${API_BASE}/pharmacy/dispense-all`, { method: 'POST' });
+            const result = await res.json();
+            await loadAllData();
+            showToast(`一键发药成功：${result.dispensedCount || count} 条处方已发药，库存已扣减`);
+        } catch(err) { if(err.message!=='未登录') showToast(err.message || '一键发药失败', 'error'); }
+    }
+
     async function addPharmacyItem() {
         const patient=prompt('患者姓名：'); if(!patient) return;
         const drug=prompt('药品名称：'); if(!drug) return;
@@ -4156,9 +4689,6 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
 
     function getRecordTermFieldKey(id) {
         if (id === 'cf_chief' || id === 'direct_chief') return 'chief';
-        if (id === 'cf_history') return 'history';
-        if (id === 'cf_past') return 'past';
-        if (id === 'cf_allergy') return 'allergy';
         if (id === 'cf_tcm') return 'tcm';
         return null;
     }
@@ -4237,11 +4767,11 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
 
     // 全局委托：聚焦打开、点击词条回填、添加自定义、点击外部关闭
     document.addEventListener('focusin', e => {
-        const input = e.target.closest('#cf_chief, #cf_history, #cf_past, #cf_allergy, #cf_tcm, #direct_chief');
+        const input = e.target.closest('#cf_chief, #cf_tcm, #direct_chief');
         if (input) openRecordTermPopup(input);
     });
     document.addEventListener('focusout', e => {
-        const input = e.target.closest('#cf_chief, #cf_history, #cf_past, #cf_allergy, #cf_tcm, #direct_chief');
+        const input = e.target.closest('#cf_chief, #cf_tcm, #direct_chief');
         if (input && recordTermPopup) {
             setTimeout(() => { if (recordTermPopup && !recordTermPopup.matches(':hover')) closeRecordTermPopup(); }, 150);
         }
@@ -4275,7 +4805,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
             }
             return;
         }
-        if (recordTermPopup && !e.target.closest('#recordTermPopup') && !e.target.closest('#cf_chief, #cf_history, #cf_past, #cf_allergy, #cf_tcm, #direct_chief')) {
+        if (recordTermPopup && !e.target.closest('#recordTermPopup') && !e.target.closest('#cf_chief, #cf_tcm, #direct_chief')) {
             closeRecordTermPopup();
         }
     });

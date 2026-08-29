@@ -109,7 +109,7 @@ async function main() {
         const todayKey6 = `${nowD6.getFullYear()}/${nowD6.getMonth() + 1}/${nowD6.getDate()}`;
         r = await req('POST', '/api/outpatients', {
             token,
-            body: { name: '测试患者甲', gender: '男', age: '30', phone: '13800000001', status: '已就诊', date: todayKey6, opDate: todayKey6, source: 'direct' }
+            body: { name: '测试患者甲', gender: '男', age: '30', phone: '13800000001', status: '待接诊', date: todayKey6, opDate: todayKey6, source: 'direct' }
         });
         ok(r.status === 201 && r.data && r.data.data && r.data.data.id, '直接建档成功', r.data);
         const opId = r.data && r.data.data && r.data.data.id;
@@ -359,7 +359,7 @@ async function main() {
         });
         const mock429 = async () => ({ ok: false, status: 429, json: async () => ({}) });
         const mockInvalid = async () => ({ ok: true, status: 200, json: async () => ({ choices: [{ message: { content: '这不是JSON' } }] }) });
-        const settingsOn = { aiConfig: { enabled: true, provider: 'zhipu', baseUrl: 'https://example.com', apiKey: 'test-key', model: 'glm-4.7-flash' } };
+        const settingsOn = { aiConfig: { enabled: true, provider: 'zhipu', baseUrl: 'https://example.com', apiKey: 'test-key', model: 'glm-4-flash' } };
         const inventory = [{ name: '测试阿莫西林', price: 12.5, unit: '盒', stock: 100 }];
         const patient = { chief: '咳嗽3天', diagnosis: '感冒', allergy: '', gender: '男', age: 30 };
 

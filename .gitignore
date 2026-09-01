@@ -24,3 +24,7 @@ node_modules/
 npm-debug.log*
 Thumbs.db
 .DS_Store
+
+# Local scratch dir
+_work/
+

@@ -1,5 +1,5 @@
 // ============================================================
-//  愈康项目 v4.0 - 服务器入口
+//  愈康项目 v5.0 - 服务器入口
 //  这里只负责装配中间件、路由、异常处理和启动流程；
 //  业务逻辑在 src/services，文件读写集中在 src/repository。
 // ============================================================
@@ -13,8 +13,11 @@ const { getLANIP } = require('./src/utils/helpers');
 const localCrypto = require('./src/security/localCryptoService');
 const { startEdgeAgent, stopEdgeAgent } = require('./src/services/edgeAgentService');
 const systemService = require('./src/services/systemService');
+const accountService = require('./src/services/accountService');
 
 const authRoutes = require('./src/routes/authRoutes');
+const accountRoutes = require('./src/routes/accountRoutes');
+const billingRoutes = require('./src/routes/billingRoutes');
 const clinicalRoutes = require('./src/routes/clinicalRoutes');
 const knowledgeRoutes = require('./src/routes/knowledgeRoutes');
 const aiRoutes = require('./src/routes/aiRoutes');
@@ -44,6 +47,8 @@ app.use((req, res, next) => {
 });
 
 authRoutes(app, PORT);
+accountRoutes(app);
+billingRoutes(app);
 clinicalRoutes(app);
 knowledgeRoutes(app);
 aiRoutes(app);
@@ -75,10 +80,18 @@ async function startServer() {
         const dataKey = await localCrypto.getOrCreateDataKey(repo.DATA_DIR);
         repo.setEncryptionKey(dataKey);
         await repo.initRootStorage();
+        const accountStatus = await accountService.initialize(repo.DATA_DIR, dataKey);
+        console.log(`  账号控制库已就绪：${accountStatus.database}（迁移 ${accountStatus.migrated} 个旧账号）`);
         const dbStatus = await repo.getStatus();
         console.log(`  SQLite 数据库已就绪：${dbStatus.database}`);
         repo.startAutoBackup();
-        startEdgeAgent({ dataDir: repo.DATA_DIR, aggregateProvider: systemService.clinicAggregate });
+        startEdgeAgent({
+            dataDir: repo.DATA_DIR,
+            aggregateProvider: period => systemService.clinicAggregate({
+                ...period,
+                clinicId: process.env.YUKONG_CLINIC_ID || '',
+            }),
+        });
     } catch (err) {
         logError('初始化根存储失败:', err);
         process.exit(1);
@@ -95,7 +108,7 @@ async function startServer() {
     app.listen(PORT, '0.0.0.0', () => {
         const lanIP = getLANIP();
         console.log('========================================');
-        console.log('  愈康项目服务已启动（v4.0）');
+        console.log('  愈康项目服务已启动（v5.0）');
         console.log('========================================');
         console.log(`  电脑本机访问: http://localhost:${PORT}`);
         console.log(`  手机端访问:   http://${lanIP}:${PORT}`);

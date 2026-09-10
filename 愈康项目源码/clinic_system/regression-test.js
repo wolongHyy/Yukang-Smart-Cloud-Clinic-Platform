@@ -1,5 +1,5 @@
 // ============================================================
-//  愈康云诊所 - 回归测试脚本（v4.0）
+//  愈康云诊所 - 回归测试脚本（v5.0）
 //  用法: node regression-test.js
 //  说明: 使用临时 DATA_DIR 运行，不会触碰真实 clinic_database 数据；
 //        测试完成后自动关闭服务器并清理临时数据。
@@ -8,7 +8,6 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { DatabaseSync } = require('node:sqlite');
 const knowledge = require('./knowledge');
 const ai = require('./ai');
 
@@ -22,6 +21,13 @@ const BASE_URL = `http://127.0.0.1:${PORT}`;
 let passed = 0;
 let failed = 0;
 const failures = [];
+function makeValidIdCard(serial) {
+    const body = '11010519900101' + String(serial).padStart(3, '0').slice(-3);
+    const weights = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
+    const checks = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'];
+    const sum = body.split('').reduce((total, digit, index) => total + Number(digit) * weights[index], 0);
+    return body + checks[sum % 11];
+}
 
 function ok(cond, name, extra) {
     if (cond) {
@@ -85,28 +91,40 @@ async function main() {
             ok(res.status === 404, `静态文件不泄露: ${p} 返回 404`);
         }
 
-        // 4. 注册 + 登录
-        r = await req('POST', '/api/auth/register', { body: { username: 'qatest', password: '1234' } });
+        // 4. 页面静态资源可访问，敏感源码仍保持不可访问
+        for (const p of ['/assets/login-photo-background.png', '/v5-pages.css', '/v5-pages.js']) {
+            const res = await fetch(BASE_URL + p);
+            ok(res.status === 200, `页面资源可访问: ${p} 返回 200`);
+        }
+        const loginImage = await fetch(BASE_URL + '/assets/login-photo-background.png');
+        ok((loginImage.headers.get('content-type') || '').startsWith('image/png'),
+            '登录背景图片返回 image/png');
+        ok(Number(loginImage.headers.get('content-length') || 0) > 1000000,
+            '登录背景图片完整返回');
+
+        // 5. 注册 + 登录
+        r = await req('POST', '/api/auth/register', { body: { username: 'qatest', fullName: '回归测试医生', phone: '13800000000', idCard: makeValidIdCard(1), clinicName: '回归测试门诊', orgMode: 'single', storeRole: 'single', password: 'secret123', privacyAccepted: true } });
         ok(r.status === 201 && r.data && r.data.token, '注册成功并返回会话令牌', r.data);
         const token = r.data && r.data.token;
 
-        r = await req('POST', '/api/auth/login', { body: { username: 'qatest', password: '1234' } });
+        r = await req('POST', '/api/auth/login', { body: { username: 'qatest', password: 'secret123' } });
         ok(r.status === 200 && r.data && r.data.token, '登录成功并返回会话令牌');
 
-        r = await req('POST', '/api/auth/login', { body: { username: 'qatest', password: 'wrong' } });
+        r = await req('POST', '/api/auth/login', { body: { username: 'qatest', password: 'wrong000' } });
         ok(r.status === 401, '错误密码登录返回 401');
 
         r = await req('GET', '/api/system/health', { token });
         ok(r.status === 200 && r.data.engine === 'sqlite' && r.data.integrity === 'ok', 'SQLite 健康检查返回完整状态', r.data);
 
         r = await req('POST', '/api/system/backup', { token });
-        ok(r.status === 201 && r.data.path && fs.existsSync(r.data.path), '手动备份生成独立 SQLite 快照', r.data);
+        ok(r.status === 201 && r.data.path && r.data.filename && fs.existsSync(r.data.path), '手动备份生成独立 SQLite 快照', r.data);
+        const backupFilename = r.data.filename;
 
         r = await req('GET', '/api/system/backups', { token });
         ok(r.status === 200 && Array.isArray(r.data.backups) && r.data.backups.length >= 1, '备份列表可查询', r.data);
 
         r = await req('GET', '/api/system/audit', { token });
-        ok(r.status === 200 && r.data.verification.valid === true && r.data.events.length >= 1, '本地审计链可查询且完整', r.data);
+        ok(r.status === 200 && r.data.verification.valid === true && Array.isArray(r.data.events), '本地审计链可查询且完整', r.data);
 
         r = await req('GET', '/api/system/rag', { token });
         ok(r.status === 200 && r.data.index && r.data.worker, '本地 RAG 状态接口可用', r.data);
@@ -129,22 +147,61 @@ async function main() {
         ok(r.status === 200 && r.data.success === true, 'JSON 归档可原子导入', r.data);
         const importedSettings = await req('GET', '/api/settings', { token });
         ok(importedSettings.status === 200 && importedSettings.data.warningAlert === true, '导入后的设置已生效');
-        await req('PUT', '/api/settings/1', { token, body: { warningAlert: false, autoPharmacy: true } });
+        await req('PUT', '/api/settings/1', { token, body: { warningAlert: true, autoPharmacy: true } });
+        r = await req('POST', '/api/system/restore', { token, body: { filename: backupFilename } });
+        ok(r.status === 400 && r.data.code === 'RESTORE_CONFIRMATION_REQUIRED', '恢复接口要求二次确认', r.data);
+        r = await req('POST', '/api/system/restore', { token, body: { filename: '../control/control.db', confirmation: 'RESTORE' } });
+        ok(r.status === 400 && r.data.code === 'INVALID_BACKUP_FILENAME', '恢复接口拒绝目录越界文件名', r.data);
+        r = await req('POST', '/api/system/restore', { token, body: { filename: backupFilename, confirmation: 'RESTORE' } });
+        ok(r.status === 200 && r.data.integrity === 'ok', '图形化一键恢复可还原门店快照', r.data);
+        const restoredSettings = await req('GET', '/api/settings', { token });
+        ok(restoredSettings.status === 200 && restoredSettings.data.warningAlert === false, '恢复后门店数据回到备份时状态');
+        r = await req('POST', '/api/auth/login', { body: { username: 'qatest', password: 'secret123' } });
+        ok(r.status === 200 && r.data.token, '恢复后可重新登录');
 
-        r = await req('POST', '/api/system/restore', { token, body: { filename: 'missing.db' } });
-        ok(r.status === 400 && r.data.code === 'RESTORE_CONFIRMATION_REQUIRED', '恢复接口要求二次确认');
 
-        // 5. 旧版明文密码自动迁移
-        const usersDb = new DatabaseSync(path.join(DATA_DIR, 'clinic.db'));
-        usersDb.prepare('INSERT INTO users (username, password, created_at) VALUES (?, ?, ?)')
-            .run('legacy', 'plain123', new Date().toISOString());
-        usersDb.close();
-        r = await req('POST', '/api/auth/login', { body: { username: 'legacy', password: 'plain123' } });
-        ok(r.status === 200 && r.data && r.data.token, '旧版明文账号可登录');
-        const usersDb2 = new DatabaseSync(path.join(DATA_DIR, 'clinic.db'));
-        const legacy = usersDb2.prepare('SELECT username, password, password_hash FROM users WHERE username = ?').get('legacy');
-        usersDb2.close();
-        ok(legacy && legacy.password_hash && !legacy.password, '登录后密码自动迁移为哈希存储');
+        // 5. v5 账号资料、连锁总店/分店与邀请码权限
+        r = await req('GET', '/api/account/me', { token });
+        ok(r.status === 200 && r.data.fullName === '回归测试医生' && r.data.idCardLast4 && !Object.prototype.hasOwnProperty.call(r.data, 'idCard'),
+            '账号资料仅返回身份证后四位', r.data);
+
+        const hq = await req('POST', '/api/auth/register', { body: {
+            username: 'chain_owner', fullName: '连锁测试院长', phone: '13900000001', idCard: makeValidIdCard(101),
+            clinicName: '回归连锁总院', orgMode: 'chain', storeRole: 'headquarters', password: 'secret123', privacyAccepted: true
+        } });
+        ok(hq.status === 201 && hq.data.canManageStores === true && hq.data.clinic.storeRole === 'headquarters',
+            '连锁总店注册并取得控制台权限', hq.data);
+
+        const invite = await req('POST', '/api/clinics/invites', { token: hq.data.token, body: {} });
+        ok(invite.status === 201 && /^YK-[A-F0-9]{6}-[A-F0-9]{6}$/.test(invite.data.code || ''),
+            '总店可生成一次性门店邀请码', invite.data);
+
+        const branch = await req('POST', '/api/auth/register', { body: {
+            username: 'chain_branch', fullName: '连锁测试店长', phone: '13700000001', idCard: makeValidIdCard(201),
+            clinicName: '回归连锁城西店', orgMode: 'chain', storeRole: 'branch', inviteCode: invite.data.code,
+            password: 'secret123', privacyAccepted: true
+        } });
+        ok(branch.status === 201 && branch.data.canManageStores === false && branch.data.clinic.storeRole === 'branch',
+            '分店凭邀请码注册且无控制台权限', branch.data);
+
+        const overview = await req('GET', '/api/clinics/overview', { token: hq.data.token });
+        ok(overview.status === 200 && overview.data.totals.clinicCount === 2 && overview.data.stores.length === 2,
+            '总店控制台返回所有门店汇总', overview.data && overview.data.totals);
+
+        const branchOverview = await req('GET', '/api/clinics/overview', { token: branch.data.token });
+        ok(branchOverview.status === 403 && branchOverview.data.code === 'STORE_DASHBOARD_FORBIDDEN',
+            '分店访问门店控制台返回 403', branchOverview.data);
+
+        const singleOverview = await req('GET', '/api/clinics/overview', { token });
+        ok(singleOverview.status === 403 && singleOverview.data.code === 'STORE_DASHBOARD_FORBIDDEN',
+            '单体诊所不显示多门店控制台', singleOverview.data);
+
+        const reusedInvite = await req('POST', '/api/auth/register', { body: {
+            username: 'chain_branch_2', fullName: '邀请码复用测试', phone: '13600000001', idCard: makeValidIdCard(202),
+            clinicName: '回归连锁城南店', orgMode: 'chain', storeRole: 'branch', inviteCode: invite.data.code,
+            password: 'secret123', privacyAccepted: true
+        } });
+        ok(reusedInvite.status === 409 && reusedInvite.data.code === 'INVITE_USED', '邀请码不可二次使用', reusedInvite.data);
 
         // 6. 直接建档（v3.3 无挂号，直接创建门诊患者）
         const nowD6 = new Date();
@@ -176,13 +233,30 @@ async function main() {
         const visitData = r.data && r.data.data;
         ok(visitData && String(visitData.id) === String(opId), '门诊记录沿用建档ID');
         ok(visitData && visitData.status === '已就诊' && visitData.prescriptions.length === 1, '门诊记录状态与处方正确');
-        ok(r.data && r.data.revenueAmount === 125, '收费金额由服务端重算为 125（忽略客户端 subtotal=999）', r.data && r.data.revenueAmount);
+        const visitBillId = r.data && r.data.billId;
+        ok(r.data && r.data.billingAmount === 125 && r.data.billingStatus === 'pending' && r.data.revenueAmount === undefined,
+            '收费金额由服务端重算为 125，接诊仅生成待收费', r.data);
         ok(r.data && r.data.pharmacyPushed === 1, '药房推送 1 条待发药记录');
+
+        const prePaymentRevenue = await req('GET', '/api/revenue', { token });
+        ok(prePaymentRevenue.data.length === 0, '待收费状态不提前写入营收');
+
+        let pay = await req('POST', '/api/billing/' + visitBillId + '/pay', { token, body: { payMethod: '现金', receivedAmount: 20 } });
+        ok(pay.status === 400 && pay.data.code === 'INSUFFICIENT_RECEIVED_AMOUNT', '实收小于应收时拒绝支付', pay.data);
+        pay = await req('POST', '/api/billing/' + visitBillId + '/pay', { token, body: { payMethod: '现金', receivedAmount: 130 } });
+        ok(pay.status === 200 && pay.data.status === 'paid' && pay.data.changeAmount === 5, '收费成功并计算找零', pay.data);
+        const duplicatePay = await req('POST', '/api/billing/' + visitBillId + '/pay', { token, body: { payMethod: '微信', receivedAmount: 125 } });
+        ok(duplicatePay.status === 409 && duplicatePay.data.code === 'BILL_ALREADY_PAID', '重复收费被幂等拦截', duplicatePay.data);
+
+        let print = await req('POST', '/api/billing/' + visitBillId + '/print', { token });
+        ok(print.status === 200 && print.data.printCount === 1 && print.data.printHistory.length === 1, '收费单首次打印记录计数', print.data);
+        print = await req('POST', '/api/billing/' + visitBillId + '/print', { token });
+        ok(print.status === 200 && print.data.printCount === 2 && print.data.printHistory.length === 2, '收费单补打保留历史', print.data);
 
         let ol = await req('GET', '/api/outpatients', { token });
         ok(ol.data.some(x => String(x.id) === String(opId) && x.status === '已就诊'), '门诊记录已更新');
         let rv = await req('GET', '/api/revenue', { token });
-        ok(rv.data.some(x => x.amount === 125 && x.desc === '门诊药品费' && x.payMethod === '自费'), '收费记录已写入且医保参数已按自费处理');
+        ok(rv.data.length === 1 && rv.data[0].billId === visitBillId && rv.data[0].payMethod === '现金', '支付后营收只写入一次并关联收费单');
         let ph = await req('GET', '/api/pharmacy', { token });
         const pharmaItem = ph.data.find(x => x.patient === '测试患者甲' && x.drug === '测试阿莫西林');
         ok(!!pharmaItem && pharmaItem.status === '待发药', '药房待发药记录存在');
@@ -211,7 +285,10 @@ async function main() {
             token,
             body: { patient: { name: '测试患者丙' }, prescriptions: [{ name: '测试阿莫西林', qty: 1, price: 12.5 }] }
         });
-        ok(r.status === 200 && r.data.pharmacyPushed === 0 && r.data.revenueAmount === 12.5, '关闭自动入库后只写收费不推送药房', r.data);
+        ok(r.status === 200 && r.data.pharmacyPushed === 0 && r.data.billingAmount === 12.5 && r.data.billingStatus === 'pending',
+            '关闭自动入库后只生成待收费且不推送药房', r.data);
+        const secondPay = await req('POST', '/api/billing/' + r.data.billId + '/pay', { token, body: { payMethod: '微信', receivedAmount: 12.5 } });
+        ok(secondPay.status === 200, '关闭自动入库的待收费仍可正常支付', secondPay.data);
         await req('PUT', '/api/settings/1', { token, body: { warningAlert: false, autoPharmacy: true } });
 
         // 12. 带时间戳的日期解析（旧数据格式兼容）

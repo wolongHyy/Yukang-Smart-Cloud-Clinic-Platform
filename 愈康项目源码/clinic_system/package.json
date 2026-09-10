@@ -1,7 +1,7 @@
 {
     "name": "clinic_system",
-    "version": "4.0.0",
-    "description": "愈康项目 v4.0 本地化智慧诊所管理系统",
+    "version": "5.0.0",
+    "description": "愈康项目 v5.0 本地化智慧诊所管理系统",
     "main": "server.js",
     "scripts": {
         "start": "node --disable-warning=ExperimentalWarning server.js",

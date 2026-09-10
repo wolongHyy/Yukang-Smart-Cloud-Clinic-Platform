@@ -43,6 +43,8 @@ local_rag_worker/**/*.pyc
 local_rag_worker/.env
 local_rag_worker/models/
 愈康项目源码/clinic_system/data/knowledge_index.db*
+愈康项目源码/clinic_system/clinic_database/control/
+愈康项目源码/clinic_system/clinic_database/stores/
 愈康项目源码/clinic_system/clinic_database/updates/
 愈康项目源码/clinic_system/data/_hybrid_input_*.jsonl
 

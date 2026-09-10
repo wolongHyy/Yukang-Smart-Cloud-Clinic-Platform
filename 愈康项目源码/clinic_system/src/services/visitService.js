@@ -1,6 +1,7 @@
-﻿const HttpError = require('../errors/HttpError');
+const HttpError = require('../errors/HttpError');
 const repo = require('../repository/sqliteRepository');
 const patientService = require('./patientService');
+const billingService = require('./billingService');
 const { newId, toNum, todayKey } = require('../utils/helpers');
 
 async function completeVisitUnsafe(username, body) {
@@ -110,20 +111,14 @@ async function completeVisitUnsafe(username, body) {
 
     await patientService.upsertPatient(username, savedOutpatient);
 
-    let revenueAmount = 0;
+    let pendingBill = null;
     if (drugTotal > 0) {
-        const revenue = await repo.readCollection(username, 'revenue');
-        revenue.push({
-            id: newId(),
-            date: todayStr,
+        pendingBill = await billingService.createPendingBill(username, {
+            outpatientId: savedOutpatient.id,
+            patientName: savedOutpatient.name,
             amount: +drugTotal.toFixed(2),
-            desc: '门诊药品费',
-            category: '门诊收费',
-            payMethod: '自费',
-            patient: savedOutpatient.name
+            items: cleanRx,
         });
-        await repo.writeCollection(username, 'revenue', revenue);
-        revenueAmount = +drugTotal.toFixed(2);
     }
 
     let pharmacyPushed = 0;
@@ -148,7 +143,14 @@ async function completeVisitUnsafe(username, body) {
         }
     }
 
-    return { data: savedOutpatient, pharmacyPushed, revenueAmount };
+    return {
+        data: savedOutpatient,
+        pharmacyPushed,
+        billingAmount: pendingBill ? pendingBill.amount : 0,
+        billId: pendingBill ? pendingBill.id : null,
+        billNo: pendingBill ? pendingBill.billNo : null,
+        billingStatus: pendingBill ? pendingBill.status : null,
+    };
 }
 
 async function completeVisit(username, body) {

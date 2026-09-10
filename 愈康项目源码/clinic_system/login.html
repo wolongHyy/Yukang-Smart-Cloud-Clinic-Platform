@@ -1,273 +1,336 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>愈康云诊所 - 登录</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #00A388;
-            --primary-dark: #007F6B;
-            --primary-light: #E6F6F2;
-            --blue: #2F80ED;
-            --danger-text: #E5484D;
-            --text: #1F2937;
-            --text-sub: #5F6B7A;
-            --text-faint: #9AA5B1;
-            --border: #E5EAF0;
-            --shadow: 0 20px 60px rgba(16,24,40,.18);
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif; }
-        body {
-            display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; padding: 20px;
-            background: linear-gradient(135deg, #0E9F8B 0%, #1E7FC4 55%, #2F80ED 100%);
-            background-attachment: fixed;
-            position: relative; overflow-x: hidden;
-        }
-        body::before, body::after {
-            content: ''; position: fixed; border-radius: 50%;
-            background: rgba(255,255,255,.08); pointer-events: none;
-        }
-        body::before { width: 420px; height: 420px; top: -120px; right: -100px; }
-        body::after { width: 320px; height: 320px; bottom: -110px; left: -80px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#17352e">
+<title>愈康云诊所 · 登录</title>
+<style>
+:root{
+  --ink:#17352e; --pine:#245c4a; --jade:#2f6e59; --herb:#8fa88f;
+  --paper:#f5f1e8; --paper-raised:#fffdf8; --cinnabar:#b64832; --gold:#b18a4a;
+  --line:#d9d4c7; --muted:#556760;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%;margin:0}
+body{font-family:"Source Han Sans SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif;color:var(--ink);background:#dfe7df;overflow-x:hidden}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.auth-shell{min-height:100vh;display:grid;grid-template-columns:minmax(420px,1.18fr) minmax(390px,.82fr);position:relative;isolation:isolate}
+.landscape{position:relative;overflow:hidden;min-height:620px;padding:8px;background:#17352e url("assets/login-photo-background.png") center top/cover no-repeat}
+.landscape::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(12,37,31,.74) 0%,rgba(12,37,31,.40) 42%,rgba(12,37,31,.10) 72%,rgba(12,37,31,.01) 100%);pointer-events:none}
 
-        .login-wrap { width: 100%; max-width: 980px; display: flex; align-items: center; gap: 48px; position: relative; z-index: 1; }
-        .login-intro { flex: 1; color: #fff; display: none; }
-        .login-intro .logo-row { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
-        .login-intro .logo-icon {
-            width: 48px; height: 48px; border-radius: 13px;
-            background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.25);
-            display: flex; align-items: center; justify-content: center; font-size: 22px;
-            backdrop-filter: blur(6px);
-        }
-        .login-intro h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
-        .login-intro p { font-size: 14px; line-height: 1.8; opacity: .92; max-width: 380px; }
-        .login-intro .feat { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
-        .login-intro .feat span {
-            font-size: 12px; padding: 6px 12px; border-radius: 20px;
-            background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.2);
-        }
+.brand-copy{position:absolute;z-index:3;top:clamp(32px,6vw,72px);left:clamp(28px,5vw,72px);right:clamp(28px,5vw,72px);color:#fdfbf5;max-width:560px;animation:rise .62s cubic-bezier(.2,.8,.2,1) both}
+.brand-mark{display:flex;align-items:center;gap:12px;margin-bottom:34px;width:max-content;padding:8px 12px 8px 8px;border:1px solid rgba(255,255,255,.25);border-radius:14px;background:rgba(17,48,40,.22);backdrop-filter:blur(10px)}
+.brand-seal{width:42px;height:42px;border-radius:12px;background:#f4eddd;color:var(--pine);display:grid;place-items:center;font-family:"STKaiti","KaiTi",serif;font-size:22px;font-weight:800;box-shadow:inset 0 0 0 2px rgba(36,92,74,.15)}
+.brand-name{font-size:16px;font-weight:750;letter-spacing:.08em}
+.brand-sub{display:block;font-size:12px;opacity:.86;letter-spacing:.14em;margin-top:3px}
+.brand-copy h1{margin:0;font-family:"Source Han Serif SC","Noto Serif CJK SC","STSong",serif;font-size:clamp(36px,5vw,68px);line-height:1.12;font-weight:650;letter-spacing:.02em}
+.brand-copy p{max-width:470px;margin:18px 0 0;color:rgba(255,253,247,.88);font-size:14px;line-height:1.9}
+.auth-side{display:flex;align-items:center;justify-content:center;background:var(--paper);padding:clamp(22px,4vw,58px);position:relative}
+.auth-side::before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(36,92,74,.09) .6px,transparent .6px);background-size:18px 18px;mask-image:linear-gradient(to bottom,#000,transparent 60%);pointer-events:none}
+.auth-panel{width:100%;max-width:470px;position:relative;background:rgba(255,253,248,.96);border:1px solid rgba(217,212,199,.96);border-radius:18px;padding:clamp(22px,3.4vw,38px);animation:rise .62s .08s cubic-bezier(.2,.8,.2,1) both}
+.auth-heading{margin-bottom:22px}
 
-        .login-box {
-            width: 100%; max-width: 400px; background: #fff; border-radius: 18px;
-            padding: 34px 30px 26px; box-shadow: var(--shadow);
-        }
-        .login-box .mb-logo { display: none; }
-        .login-box h2 { text-align: center; color: var(--text); margin-bottom: 4px; font-size: 22px; }
-        .login-box .subtitle { text-align: center; color: var(--text-faint); font-size: 13px; margin-bottom: 22px; }
-        .login-box .login-tabs {
-            display: flex; margin-bottom: 20px; background: #F3F6F9;
-            border-radius: 10px; padding: 4px; gap: 4px;
-        }
-        .login-box .login-tabs span {
-            flex: 1; text-align: center; padding: 8px 0; cursor: pointer;
-            font-size: 14px; color: var(--text-sub); border-radius: 8px; transition: all .2s;
-        }
-        .login-box .login-tabs span.active { background: #fff; color: var(--primary); font-weight: 600; box-shadow: 0 1px 4px rgba(16,24,40,.08); }
-        .login-box .form-group { margin-bottom: 15px; }
-        .login-box .form-group label { display: block; font-size: 13px; color: var(--text-sub); margin-bottom: 5px; font-weight: 500; }
-        .login-box .form-group .input-box { position: relative; }
-        .login-box .form-group .input-box i {
-            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-            color: var(--text-faint); font-size: 14px;
-        }
-        .login-box .form-group input {
-            width: 100%; padding: 11px 12px 11px 36px; border: 1px solid var(--border);
-            border-radius: 10px; outline: none; font-size: 14px; transition: all .2s; color: var(--text);
-        }
-        .login-box .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,163,136,.12); }
-        .login-box .btn-login {
-            width: 100%; padding: 12px; background: linear-gradient(135deg, var(--primary), #00B795);
-            color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600;
-            cursor: pointer; margin-top: 6px; transition: all .2s; box-shadow: 0 4px 12px rgba(0,163,136,.3);
-        }
-        .login-box .btn-login:hover { filter: brightness(1.05); box-shadow: 0 6px 16px rgba(0,163,136,.38); }
-        .login-box .btn-login:active { transform: translateY(1px); }
-        .login-box .login-error { color: var(--danger-text); font-size: 12px; text-align: center; margin-top: 10px; min-height: 16px; }
-        .server-hint { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); }
-        .server-hint .hint-label { font-size: 11px; color: var(--text-faint); margin-bottom: 6px; }
-        .server-hint input {
-            width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
-            font-size: 12px; color: var(--text-sub); text-align: center; outline: none; transition: all .2s;
-        }
-        .server-hint input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(47,128,237,.12); }
-        .footer-note { text-align: center; margin-top: 14px; font-size: 11px; color: var(--text-faint); }
 
-        @media (min-width: 860px) { .login-intro { display: block; } }
-        @media (max-width: 859px) { .login-wrap { justify-content: center; } }
-        @media (max-width: 480px) {
-            .login-box { padding: 26px 20px 20px; }
-        }
-    </style>
-</head>
-<body>
-    <div class="login-wrap">
-        <div class="login-intro">
-            <div class="logo-row">
-                <span class="logo-icon"><i class="fas fa-clinic-medical"></i></span>
-                <div>
-                    <div style="font-size:18px; font-weight:700;">愈康云诊所</div>
-                    <div style="font-size:12px; opacity:.85;">YuKang Cloud Clinic</div>
-                </div>
-            </div>
-            <h1>让每一次接诊<br>更高效、更安心</h1>
-            <p>集挂号、门诊病历、电子处方、药房库存与经营统计于一体，适合个人医生与医生团队使用，支持电脑 / 手机多端实时同步。</p>
-            <div class="feat">
-                <span><i class="fas fa-check-circle"></i> 全流程接诊管理</span>
-                <span><i class="fas fa-check-circle"></i> 药房库存联动</span>
-                <span><i class="fas fa-check-circle"></i> 经营数据看板</span>
-                <span><i class="fas fa-check-circle"></i> 多端数据同步</span>
-            </div>
-        </div>
-
-        <div class="login-box">
-            <h2><i class="fas fa-clinic-medical" style="color:var(--primary);"></i> 愈康云诊所</h2>
-            <div class="subtitle">诊所管理系统</div>
-            <div class="login-tabs">
-                <span class="active" id="tabLogin" onclick="switchLoginTab('login')">登录</span>
-                <span id="tabRegister" onclick="switchLoginTab('register')">注册</span>
-            </div>
-            <!-- 登录表单 -->
-            <div id="loginForm">
-                <div class="form-group">
-                    <label>用户名</label>
-                    <div class="input-box">
-                        <i class="fas fa-user"></i>
-                        <input type="text" id="loginUsername" placeholder="请输入用户名" autocomplete="username">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>密码</label>
-                    <div class="input-box">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="loginPassword" placeholder="请输入密码" autocomplete="current-password">
-                    </div>
-                </div>
-                <button class="btn-login" onclick="doLogin()">登 录</button>
-                <div class="login-error" id="loginError"></div>
-            </div>
-            <!-- 注册表单 -->
-            <div id="registerForm" style="display:none;">
-                <div class="form-group">
-                    <label>用户名</label>
-                    <div class="input-box">
-                        <i class="fas fa-user-plus"></i>
-                        <input type="text" id="regUsername" placeholder="字母/数字/下划线，2-20字符" autocomplete="username">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>密码</label>
-                    <div class="input-box">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="regPassword" placeholder="至少4位" autocomplete="new-password">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>确认密码</label>
-                    <div class="input-box">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="regPassword2" placeholder="再次输入密码" autocomplete="new-password">
-                    </div>
-                </div>
-                <button class="btn-login" onclick="doRegister()">注 册</button>
-                <div class="login-error" id="registerError"></div>
-            </div>
-            <!-- 服务器地址配置（手机外网访问时用） -->
-            <div class="server-hint">
-                <div class="hint-label">服务器地址（手机外网访问时修改，默认 http://IP:3002）</div>
-                <input type="text" id="serverUrlInput" value="http://localhost:3002" placeholder="http://IP:3002">
-            </div>
-            <div class="footer-note">愈康云诊所 · 本地部署，数据自管</div>
-        </div>
+.auth-heading h2{margin:0 0 5px;font-family:"Source Han Serif SC","Noto Serif CJK SC","STSong",serif;font-size:28px;font-weight:650;letter-spacing:.02em}
+.auth-heading p{margin:0;color:var(--muted);font-size:13px;line-height:1.65}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:#ece8dd;border-radius:12px;margin-bottom:22px}
+.tab-btn{border:0;background:transparent;color:#6c746f;border-radius:9px;padding:10px 12px;font-size:14px;font-weight:650;transition:background .18s,color .18s,box-shadow .18s}
+.tab-btn.active{background:var(--paper-raised);color:var(--pine);box-shadow:0 2px 9px rgba(0,0,0,.10)}
+.form-panel{display:none}
+.form-panel.active{display:block;animation:fade .2s ease both}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{display:flex;flex-direction:column;gap:7px;min-width:0}
+.field.full{grid-column:1/-1}
+.field label{font-size:12px;color:#47544f;font-weight:650}
+.field label .required{color:var(--cinnabar);margin-left:2px}
+.control{width:100%;height:45px;border:1px solid #d6d2c7;border-radius:10px;background:#fffefa;color:var(--ink);padding:0 13px;outline:none;transition:border-color .18s,box-shadow .18s,background .18s}
+textarea.control{height:auto;padding-top:11px;resize:vertical}
+select.control{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#60716a 50%),linear-gradient(135deg,#60716a 50%,transparent 50%);background-position:calc(100% - 17px) 19px,calc(100% - 12px) 19px;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:34px}
+.control::placeholder{color:#66736d}
+.control:focus{border-color:var(--jade);box-shadow:0 0 0 3px rgba(78,140,117,.14);background:#fff}
+.control[aria-invalid="true"]{border-color:var(--cinnabar);box-shadow:0 0 0 3px rgba(182,72,50,.1)}
+.hint{font-size:12px;color:#556760;line-height:1.55}
+.dynamic-group{display:none}
+.dynamic-group.show{display:block}
+.inline-check{display:flex;align-items:flex-start;gap:10px;font-size:12px;line-height:1.6;color:#59655f}
+.inline-check input{flex:0 0 auto;width:17px;height:17px;accent-color:var(--pine);margin-top:2px}
+.inline-check a{color:var(--pine);font-weight:700;text-decoration:none}
+.form-actions{grid-column:1/-1;display:flex;gap:10px;align-items:center;margin-top:4px}
+.primary-btn{flex:1;min-height:46px;border:0;border-radius:10px;background:var(--pine);color:#fff;font-weight:750;letter-spacing:.02em;box-shadow:0 7px 18px rgba(0,0,0,.14);transition:transform .18s,background .18s;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.primary-btn:hover{background:#1e503f;transform:translateY(-1px)}
+.primary-btn:disabled{opacity:.62;cursor:not-allowed;transform:none}
+.ghost-btn{min-height:44px;border:1px solid #d5d0c4;border-radius:10px;background:#fffdf8;color:#4f5f59;padding:0 14px}
+.spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+.form-message{grid-column:1/-1;min-height:20px;font-size:12px;line-height:1.55;color:var(--cinnabar)}
+.form-message:empty{display:none}
+.server-settings{grid-column:1/-1;margin-top:2px;border-top:1px solid #e4dfd4;padding-top:13px}
+.server-settings summary{list-style:none;cursor:pointer;color:#556760;font-size:12px;display:flex;align-items:center;justify-content:space-between}
+.server-settings summary::-webkit-details-marker{display:none}
+.server-settings summary::after{content:"展开";color:var(--jade)}
+.server-settings[open] summary::after{content:"收起"}
+.server-settings .details-body{display:grid;gap:8px;margin-top:10px}
+.footer-note{text-align:center;color:#556760;font-size:12px;letter-spacing:.05em;margin-top:20px}
+.privacy-note{grid-column:1/-1;margin-top:-1px;color:#556760;font-size:12px;line-height:1.65}
+.toast{position:fixed;z-index:20;left:50%;top:20px;transform:translateX(-50%) translateY(-20px);opacity:0;pointer-events:none;background:#17352e;color:#fff;border-radius:10px;padding:10px 15px;font-size:13px;box-shadow:0 12px 30px rgba(0,0,0,.2);transition:.22s}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.password-wrap{position:relative}
+.password-wrap .control{padding-right:44px}
+.password-toggle{position:absolute;right:5px;top:5px;width:35px;height:35px;border:0;background:transparent;color:#556760;border-radius:8px}
+.password-toggle:hover{background:#f0ede4;color:var(--pine)}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (max-width:920px){
+  .auth-shell{display:block}
+  .landscape{min-height:310px}
+  .brand-copy{top:26px;left:24px;right:24px}
+  .brand-mark{margin-bottom:22px}
+  .brand-copy h1{font-size:38px}
+  .brand-copy p{display:none}
+  .auth-side{min-width:0;padding:0;background:var(--paper)}
+  .auth-panel{width:calc(100% - 32px);max-width:470px;margin:-34px 16px 28px;border-radius:20px;padding:24px 20px}
+}
+@media (max-width:560px){
+  .landscape{min-height:250px}
+  .brand-copy{top:18px;left:18px;right:18px}
+  .brand-mark{margin-bottom:16px;padding:6px 10px 6px 6px}
+  .brand-seal{width:36px;height:36px;font-size:19px}
+  .brand-copy h1{font-size:30px}
+  .auth-panel{width:calc(100% - 20px);margin:-24px 10px 20px;padding:20px 16px}
+  .form-grid{grid-template-columns:minmax(0,1fr)}
+  .field.full,.form-actions,.form-message,.server-settings,.privacy-note{grid-column:1}
+  .auth-heading h2{font-size:24px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head><body>
+<main class="auth-shell">
+  <section class="landscape" aria-label="青绿山水视觉">
+    <div class="brand-copy">
+      <div class="brand-mark"><span class="brand-seal">愈</span><span><span class="brand-name">愈康云诊所</span><span class="brand-sub">YUKANG CLOUD CLINIC</span></span></div>
+      <h1>让每一次诊疗<br>都清晰有据</h1>
+      <p>从接诊、处方、药房到收费与经营统计，一套在本地安静运行、数据自主可控的诊所工作台。</p>
     </div>
+  </section>
 
-    <script>
-        // ==================== 服务器地址配置 ====================
-        const SERVER_URL = (localStorage.getItem('clinic_server_url') || window.location.origin).replace(/\/+$/, '');
-        const API_BASE = SERVER_URL + '/api';
-        document.getElementById('serverUrlInput').value = SERVER_URL === 'null' || SERVER_URL === 'file://' ? 'http://localhost:3002' : SERVER_URL;
+  <section class="auth-side">
+    <div class="auth-panel">
+      <div class="auth-heading">
+        <h2 id="authTitle">欢迎回来</h2>
+        <p id="authSubtitle">登录后继续今天的诊疗工作。</p>
+      </div>
 
-        // 输入框变化时保存地址
-        document.getElementById('serverUrlInput').addEventListener('change', () => {
-            const url = document.getElementById('serverUrlInput').value.trim().replace(/\/+$/, '');
-            if (url) {
-                localStorage.setItem('clinic_server_url', url);
-            }
-        });
+      <div class="tabs" role="tablist" aria-label="登录或注册">
+        <button class="tab-btn active" id="tabLogin" type="button" role="tab" aria-selected="true" onclick="switchLoginTab('login')">账号登录</button>
+        <button class="tab-btn" id="tabRegister" type="button" role="tab" aria-selected="false" onclick="switchLoginTab('register')">创建诊所</button>
+      </div>
 
-        // 已登录则直接跳转主页
-        if (localStorage.getItem('clinic_user') && localStorage.getItem('clinic_token')) {
-            window.location.href = 'index.html';
-        }
+      <form class="form-panel active" id="loginForm" onsubmit="event.preventDefault();doLogin()" novalidate>
+        <div class="form-grid">
+          <div class="field full"><label for="loginUsername">用户名</label><input class="control" id="loginUsername" name="username" autocomplete="username" placeholder="请输入用户名"></div>
+          <div class="field full"><label for="loginPassword">密码</label><div class="password-wrap"><input class="control" id="loginPassword" name="password" type="password" autocomplete="current-password" placeholder="请输入密码"><button class="password-toggle" type="button" onclick="togglePassword('loginPassword',this)" aria-label="显示密码">◉</button></div></div>
+          <div class="form-message" id="loginError" role="alert" aria-live="polite"></div>
+          <div class="form-actions"><button class="primary-btn" id="loginSubmit" type="submit">进入工作台</button></div>
+          <details class="server-settings">
+            <summary>服务器设置</summary>
+            <div class="details-body"><label class="hint" for="serverUrlInput">API 服务器地址（手机外网访问时可修改）</label><input class="control" type="url" id="serverUrlInput" value="http://localhost:3002" placeholder="http://IP:3002"></div>
+          </details>
+        </div>
+      </form>
 
-        function switchLoginTab(tab) {
-            const tabLogin = document.getElementById('tabLogin');
-            const tabRegister = document.getElementById('tabRegister');
-            const loginForm = document.getElementById('loginForm');
-            const registerForm = document.getElementById('registerForm');
-            if (tab === 'login') {
-                tabLogin.classList.add('active'); tabRegister.classList.remove('active');
-                loginForm.style.display = 'block'; registerForm.style.display = 'none';
-            } else {
-                tabRegister.classList.add('active'); tabLogin.classList.remove('active');
-                registerForm.style.display = 'block'; loginForm.style.display = 'none';
-            }
-        }
+      <form class="form-panel" id="registerForm" onsubmit="event.preventDefault();doRegister()" novalidate>
+        <div class="form-grid">
+          <div class="field"><label for="regFullName">姓名<span class="required">*</span></label><input class="control" id="regFullName" name="fullName" autocomplete="name" placeholder="负责人姓名"></div>
+          <div class="field"><label for="regPhone">手机号<span class="required">*</span></label><input class="control" id="regPhone" name="phone" inputmode="numeric" autocomplete="tel" maxlength="11" placeholder="11 位手机号"></div>
+          <div class="field full"><label for="regIdCard">身份证号<span class="required">*</span></label><input class="control" id="regIdCard" name="idCard" autocomplete="off" maxlength="18" placeholder="18 位身份证号，加密保存"></div>
+          <div class="field full"><label for="regClinicName">诊所名称<span class="required">*</span></label><input class="control" id="regClinicName" name="clinicName" autocomplete="organization" placeholder="例如：知微中医门诊"></div>
+          <div class="field"><label for="regOrgMode">机构类型<span class="required">*</span></label><select class="control" id="regOrgMode" name="orgMode" onchange="onOrgModeChange()"><option value="single">单体诊所</option><option value="chain">连锁诊所</option></select></div>
+          <div class="field dynamic-group" id="storeRoleField"><label for="regStoreRole">门店身份<span class="required">*</span></label><select class="control" id="regStoreRole" name="storeRole" onchange="onStoreRoleChange()"><option value="headquarters">总店</option><option value="branch">分店</option></select></div>
+          <div class="field full dynamic-group" id="inviteField"><label for="regInviteCode">总部邀请码<span class="required">*</span></label><input class="control" id="regInviteCode" name="inviteCode" autocomplete="off" placeholder="由连锁总店控制台生成"><div class="hint">邀请码仅可使用一次，有效期 24 小时。</div></div>
+          <div class="field"><label for="regUsername">用户名<span class="required">*</span></label><input class="control" id="regUsername" name="username" autocomplete="username" maxlength="32" placeholder="字母、数字、下划线"></div>
+          <div class="field"><label for="regPassword">密码<span class="required">*</span></label><div class="password-wrap"><input class="control" id="regPassword" name="password" type="password" autocomplete="new-password" placeholder="至少 6 位"><button class="password-toggle" type="button" onclick="togglePassword('regPassword',this)" aria-label="显示密码">◉</button></div></div>
+          <div class="field full"><label for="regPassword2">确认密码<span class="required">*</span></label><input class="control" id="regPassword2" name="password2" type="password" autocomplete="new-password" placeholder="再次输入密码"></div>
+          <label class="inline-check full"><input type="checkbox" id="regPrivacy"><span>我已阅读并同意<a href="#" onclick="showPrivacy(event)">《隐私与数据使用说明》</a>，同意系统在本机加密保存身份证号等必要信息。</span></label>
+          <div class="form-message" id="registerError" role="alert" aria-live="polite"></div>
+          <div class="form-actions"><button class="primary-btn" id="registerSubmit" type="submit">创建诊所账号</button></div>
+          <div class="privacy-note">敏感身份信息仅保存在本地控制库中，其他账号不能跨门店读取。</div>
+        </div>
+      </form>
+      <div class="footer-note">愈康云诊所 · 本地部署 · 数据自管</div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div><script>
+const savedServer = (localStorage.getItem('clinic_server_url') || window.location.origin || '').replace(/\/+$/, '');
+let apiBase = (savedServer === 'null' || savedServer === 'file://' ? 'http://localhost:3002' : savedServer || 'http://localhost:3002') + '/api';
+const serverInput = document.getElementById('serverUrlInput');
+serverInput.value = apiBase.slice(0, -4);
+serverInput.addEventListener('change', () => {
+  const value = serverInput.value.trim().replace(/\/+$/, '');
+  if (!value) return;
+  localStorage.setItem('clinic_server_url', value);
+  apiBase = value + '/api';
+  toast('服务器地址已保存');
+});
 
-        function afterAuth(data, username) {
-            if (!data || !data.token) throw new Error('登录状态获取失败，请重试');
-            localStorage.setItem('clinic_user', username);
-            localStorage.setItem('clinic_token', data.token);
-            window.location.href = 'index.html';
-        }
+if (localStorage.getItem('clinic_user') && localStorage.getItem('clinic_token')) {
+  window.location.replace('index.html');
+}
 
-        async function doLogin() {
-            const username = document.getElementById('loginUsername').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            const errEl = document.getElementById('loginError');
-            errEl.innerText = '';
-            if (!username || !password) { errEl.innerText = '请输入用户名和密码'; return; }
-            try {
-                const res = await fetch(`${API_BASE}/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-                const data = await res.json();
-                if (!res.ok) { errEl.innerText = data.error || '登录失败'; return; }
-                afterAuth(data, username);
-            } catch (err) {
-                errEl.innerText = '连接服务器失败，请检查网络或服务器地址';
-            }
-        }
+function toast(message) {
+  const el = document.getElementById('toast');
+  el.textContent = message;
+  el.classList.add('show');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.remove('show'), 2600);
+}
 
-        async function doRegister() {
-            const username = document.getElementById('regUsername').value.trim();
-            const password = document.getElementById('regPassword').value;
-            const password2 = document.getElementById('regPassword2').value;
-            const errEl = document.getElementById('registerError');
-            errEl.innerText = '';
-            if (!username || !password) { errEl.innerText = '请输入用户名和密码'; return; }
-            if (password !== password2) { errEl.innerText = '两次密码不一致'; return; }
-            try {
-                const res = await fetch(`${API_BASE}/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-                const data = await res.json();
-                if (!res.ok) { errEl.innerText = data.error || '注册失败'; return; }
-                afterAuth(data, username);
-            } catch (err) {
-                errEl.innerText = '连接服务器失败，请检查网络或服务器地址';
-            }
-        }
+function setMessage(id, message) {
+  const el = document.getElementById(id);
+  el.textContent = message || '';
+}
 
-        document.getElementById('loginUsername').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
-        document.getElementById('loginPassword').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
-        document.getElementById('regPassword2').addEventListener('keydown', e => { if(e.key==='Enter') doRegister(); });
-    </script>
+function setLoading(button, loading, label) {
+  if (!button) return;
+  button.disabled = loading;
+  if (loading) {
+    button.dataset.label = button.textContent;
+    button.innerHTML = '<span class="spinner" aria-hidden="true"></span><span>处理中…</span>';
+  } else {
+    button.textContent = label || button.dataset.label || '提交';
+  }
+}
+
+function switchLoginTab(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('tabLogin').classList.toggle('active', isLogin);
+  document.getElementById('tabRegister').classList.toggle('active', !isLogin);
+  document.getElementById('tabLogin').setAttribute('aria-selected', String(isLogin));
+  document.getElementById('tabRegister').setAttribute('aria-selected', String(!isLogin));
+  document.getElementById('loginForm').classList.toggle('active', isLogin);
+  document.getElementById('registerForm').classList.toggle('active', !isLogin);
+  document.getElementById('authTitle').textContent = isLogin ? '欢迎回来' : '建立你的诊所';
+  document.getElementById('authSubtitle').textContent = isLogin ? '登录后继续今天的诊疗工作。' : '填写负责人信息，并选择单体或连锁机构。';
+  setMessage('loginError', '');
+  setMessage('registerError', '');
+  const focusId = isLogin ? 'loginUsername' : 'regFullName';
+  setTimeout(() => document.getElementById(focusId).focus(), 50);
+}
+
+function onOrgModeChange() {
+  const chain = document.getElementById('regOrgMode').value === 'chain';
+  document.getElementById('storeRoleField').classList.toggle('show', chain);
+  if (!chain) document.getElementById('regStoreRole').value = 'headquarters';
+  onStoreRoleChange();
+}
+
+function onStoreRoleChange() {
+  const chain = document.getElementById('regOrgMode').value === 'chain';
+  const branch = document.getElementById('regStoreRole').value === 'branch';
+  document.getElementById('inviteField').classList.toggle('show', chain && branch);
+  if (!chain || !branch) document.getElementById('regInviteCode').value = '';
+}
+
+function togglePassword(inputId, button) {
+  const input = document.getElementById(inputId);
+  const visible = input.type === 'text';
+  input.type = visible ? 'password' : 'text';
+  button.textContent = visible ? '◉' : '○';
+  button.setAttribute('aria-label', visible ? '显示密码' : '隐藏密码');
+}
+
+function showPrivacy(event) {
+  event.preventDefault();
+  alert('隐私与数据使用说明：\n\n1. 系统在本机保存诊所业务数据，并按门店隔离。\n2. 身份证号使用 AES-256-GCM 加密保存，界面仅显示末四位。\n3. 仅在你主动调用 AI 辅助诊断时，症状、主诉和诊断等必要片段会发送给所选 AI 服务商，不发送姓名和手机号。\n4. 备份与恢复均由管理员在本机执行，恢复前系统会自动留存保护性快照。');
+}
+
+function afterAuth(data, fallbackUsername) {
+  if (!data || !data.token) throw new Error('登录状态获取失败，请稍后重试');
+  const username = data.username || (data.user && data.user.username) || fallbackUsername;
+  const profile = data.user || data.clinic || { username };
+  localStorage.setItem('clinic_user', username);
+  localStorage.setItem('clinic_token', data.token);
+  localStorage.setItem('clinic_profile', JSON.stringify(profile));
+  window.location.replace('index.html');
+}
+
+async function parseResponse(response) {
+  let data = {};
+  try { data = await response.json(); } catch (_) {}
+  if (!response.ok) throw new Error(data.error || `请求失败（${response.status}）`);
+  return data;
+}
+
+async function doLogin() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const button = document.getElementById('loginSubmit');
+  setMessage('loginError', '');
+  if (!username || !password) return setMessage('loginError', '请输入用户名和密码');
+  setLoading(button, true);
+  try {
+    const response = await fetch(`${apiBase}/auth/login`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    afterAuth(await parseResponse(response), username);
+  } catch (error) {
+    setMessage('loginError', error.message || '连接服务器失败，请检查服务器地址');
+  } finally {
+    setLoading(button, false, '进入工作台');
+  }
+}
+
+function validateRegister(input) {
+  if (!input.fullName || input.fullName.length < 2) return '请输入真实姓名（至少 2 个字符）';
+  if (!/^1[3-9]\d{9}$/.test(input.phone)) return '请输入有效的 11 位手机号';
+  if (!/^\d{17}[\dXx]$/.test(input.idCard)) return '请输入有效的 18 位身份证号';
+  if (!input.clinicName || input.clinicName.length < 2) return '请输入诊所名称';
+  if (!/^[a-zA-Z0-9_]{2,32}$/.test(input.username)) return '用户名仅支持 2-32 位字母、数字或下划线';
+  if (input.password.length < 6) return '密码长度至少 6 位';
+  if (input.password !== document.getElementById('regPassword2').value) return '两次输入的密码不一致';
+  if (input.orgMode === 'chain' && input.storeRole === 'branch' && !input.inviteCode) return '分店注册必须填写总部邀请码';
+  if (!document.getElementById('regPrivacy').checked) return '请阅读并勾选隐私与数据使用说明';
+  return '';
+}
+
+async function doRegister() {
+  const orgMode = document.getElementById('regOrgMode').value;
+  const input = {
+    fullName: document.getElementById('regFullName').value.trim(),
+    phone: document.getElementById('regPhone').value.trim(),
+    idCard: document.getElementById('regIdCard').value.trim().toUpperCase(),
+    clinicName: document.getElementById('regClinicName').value.trim(),
+    orgMode,
+    storeRole: orgMode === 'single' ? 'single' : document.getElementById('regStoreRole').value,
+    inviteCode: document.getElementById('regInviteCode').value.trim().toUpperCase(),
+    username: document.getElementById('regUsername').value.trim(),
+    password: document.getElementById('regPassword').value,
+    privacyAccepted: document.getElementById('regPrivacy').checked,
+  };
+  const button = document.getElementById('registerSubmit');
+  setMessage('registerError', '');
+  const validationError = validateRegister(input);
+  if (validationError) return setMessage('registerError', validationError);
+  setLoading(button, true);
+  try {
+    const response = await fetch(`${apiBase}/auth/register`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input)
+    });
+    afterAuth(await parseResponse(response), input.username);
+  } catch (error) {
+    setMessage('registerError', error.message || '注册失败，请检查服务器连接');
+  } finally {
+    setLoading(button, false, '创建诊所账号');
+  }
+}
+
+document.getElementById('tabLogin').addEventListener('keydown', event => { if (event.key === 'Enter') switchLoginTab('login'); });
+document.getElementById('tabRegister').addEventListener('keydown', event => { if (event.key === 'Enter') switchLoginTab('register'); });
+onOrgModeChange();
+</script>
 </body>
 </html>

@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          "愈康项目源码/clinic_system/index.html"
+        ],
+        "createdAt": "2026-09-10T18:00:41.521Z",
+        "reason": "DESIGN.md intentionally uses the paper palette as the clinic work-record surface"
+      }
+    ]
+  }
+}

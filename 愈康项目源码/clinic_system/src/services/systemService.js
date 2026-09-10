@@ -1,4 +1,4 @@
-﻿const path = require('path');
+const path = require('path');
 const repo = require('../repository/sqliteRepository');
 const HttpError = require('../errors/HttpError');
 const { indexStatus } = require('./hybridKnowledgeService');
@@ -24,7 +24,7 @@ async function exportJson(username) {
     return {
         format: 'yukang-clinic-export',
         formatVersion: 1,
-        appVersion: '4.0.0',
+        appVersion: '5.0.0',
         exportedAt: new Date().toISOString(),
         username,
         collections,
@@ -77,7 +77,7 @@ async function restoreBackup(filename) {
     if (!safeName || safeName !== filename) {
         throw new HttpError(400, '备份文件名无效', 'INVALID_BACKUP_FILENAME');
     }
-    return repo.restoreBackup(path.join(repo.BACKUP_DIR, safeName));
+    return repo.restoreBackup(path.join(repo.getActiveBackupDir(), safeName));
 }
 
 async function importJson(username, archive) {
@@ -129,38 +129,32 @@ async function clinicAggregate(options = {}) {
     const end = options.periodEnd ? new Date(options.periodEnd) : new Date();
     const start = options.periodStart ? new Date(options.periodStart) : new Date(end.getFullYear(), end.getMonth(), end.getDate(), 0, 0, 0, 0);
     const endOfDay = options.periodEnd ? new Date(options.periodEnd) : new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999);
-    const users = await repo.readUsers();
-    let visitCount = 0;
-    let revenue = 0;
-    let profileCount = 0;
-    let lowStockCount = 0;
+    const requestedClinicId = String(options.clinicId || '').trim();
+    const clinicId = requestedClinicId || (repo.listStoreIds().length === 1 ? repo.listStoreIds()[0] : '');
 
-    for (const user of users) {
-        const [outpatients, revenueRows, inventory] = await Promise.all([
-            repo.readCollection(user.username, 'outpatients'),
-            repo.readCollection(user.username, 'revenue'),
-            repo.readCollection(user.username, 'drugInventory'),
-        ]);
-        visitCount += outpatients.filter(item => {
-            const date = parseFlexibleDate(item.opDate || item.date);
-            return date && date >= start && date <= endOfDay;
-        }).length;
-        revenue += revenueRows.filter(item => {
-            const date = parseFlexibleDate(item.date);
-            return date && date >= start && date <= endOfDay;
-        }).reduce((sum, item) => sum + Number(item.amount || 0), 0);
-        profileCount += outpatients.length;
-        lowStockCount += inventory.filter(item => Number(item.stock || 0) <= Number(item.minStock || 0)).length;
+    let aggregate = {
+        visitCount: 0,
+        revenue: 0,
+        patientCount: 0,
+        lowStockCount: 0,
+        pendingBillingCount: 0,
+        pendingPharmacyCount: 0,
+    };
+    if (clinicId) {
+        aggregate = await repo.getStoreAggregate(clinicId, { start, end: endOfDay });
     }
 
     return {
         periodStart: start.toISOString(),
         periodEnd: endOfDay.toISOString(),
+        clinicId,
         metrics: {
-            visit_count: visitCount,
-            revenue: +revenue.toFixed(2),
-            profile_count: profileCount,
-            low_stock_count: lowStockCount,
+            visit_count: aggregate.visitCount,
+            revenue: +Number(aggregate.revenue || 0).toFixed(2),
+            profile_count: aggregate.patientCount,
+            low_stock_count: aggregate.lowStockCount,
+            pending_billing_count: aggregate.pendingBillingCount,
+            pending_pharmacy_count: aggregate.pendingPharmacyCount,
         },
     };
 }

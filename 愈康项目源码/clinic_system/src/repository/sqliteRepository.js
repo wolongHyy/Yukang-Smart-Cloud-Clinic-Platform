@@ -16,6 +16,7 @@ const COLLECTIONS = {
     outpatients:      { type: 'array', default: [] },
     pharmacy:         { type: 'array', default: [] },
     revenue:          { type: 'array', default: [] },
+    billing:          { type: 'array', default: [] },
     settings:         { type: 'object', default: { warningAlert: false, autoPharmacy: true } },
     drugInventory:    { type: 'array', default: [] },
     drugInRecords:    { type: 'array', default: [] },
@@ -74,6 +75,7 @@ function createRepository(dataDir = DEFAULT_DATA_DIR, options = {}) {
     const backupDir = path.join(rootDir, 'backups');
     const migrationDir = path.join(rootDir, 'migrations');
     const backupLimit = Math.max(1, Number(options.backupLimit) || 30);
+    const storageUser = options.storageUser ? String(options.storageUser).trim() : null;
     const txContext = new AsyncLocalStorage();
     let encryptionKey = options.encryptionKey ? Buffer.from(options.encryptionKey) : null;
 
@@ -396,19 +398,27 @@ function createRepository(dataDir = DEFAULT_DATA_DIR, options = {}) {
     }
 
     function ensureUserStorageDirect(username) {
-        if (initializedUsers.has(username)) return;
+        const owner = storageUser || username;
+        if (initializedUsers.has(owner)) return;
         const database = ensureDb();
-        const user = database.prepare('SELECT username FROM users WHERE username = ?').get(username);
-        if (!user) throw new Error(`用户不存在: ${username}`);
+        let user = database.prepare('SELECT username FROM users WHERE username = ?').get(owner);
+        if (!user && storageUser) {
+            database.prepare(`
+                INSERT INTO users (username, password, salt, password_hash, created_at)
+                VALUES (?, NULL, NULL, NULL, ?)
+            `).run(owner, nowIso());
+            user = database.prepare('SELECT username FROM users WHERE username = ?').get(owner);
+        }
+        if (!user) throw new Error(`用户不存在: ${owner}`);
         const insert = database.prepare(`
             INSERT OR IGNORE INTO collections (username, collection, data_json, updated_at)
             VALUES (?, ?, ?, ?)
         `);
         for (const collection of Object.keys(COLLECTIONS)) {
-            insert.run(username, collection, JSON.stringify(cloneDefault(collection)), nowIso());
+            insert.run(owner, collection, JSON.stringify(cloneDefault(collection)), nowIso());
         }
-        initializedUsers.add(username);
-        appendAuditDirect(username, '__all__', 'initialize', '', { collections: Object.keys(COLLECTIONS).length });
+        initializedUsers.add(owner);
+        appendAuditDirect(owner, '__all__', 'initialize', '', { collections: Object.keys(COLLECTIONS).length });
     }
 
     async function initUserStorage(username) {
@@ -418,10 +428,11 @@ function createRepository(dataDir = DEFAULT_DATA_DIR, options = {}) {
 
     function readCollectionDirect(username, collection) {
         assertCollection(collection);
-        const row = ensureDb().prepare('SELECT data_json FROM collections WHERE username = ? AND collection = ?').get(username, collection);
+        const owner = storageUser || username;
+        const row = ensureDb().prepare('SELECT data_json FROM collections WHERE username = ? AND collection = ?').get(owner, collection);
         if (!row) {
-            ensureUserStorageDirect(username);
-            writeCollectionDirect(username, collection, cloneDefault(collection));
+            ensureUserStorageDirect(owner);
+            writeCollectionDirect(owner, collection, cloneDefault(collection));
             return cloneDefault(collection);
         }
         return JSON.parse(decryptPayload(row.data_json));
@@ -437,8 +448,9 @@ function createRepository(dataDir = DEFAULT_DATA_DIR, options = {}) {
     function writeCollectionDirect(username, collection, data) {
         assertCollection(collection);
         const database = ensureDb();
-        const user = database.prepare('SELECT username FROM users WHERE username = ?').get(username);
-        if (!user) throw new Error(`用户不存在: ${username}`);
+        const owner = storageUser || username;
+        const user = database.prepare('SELECT username FROM users WHERE username = ?').get(owner);
+        if (!user) throw new Error(`用户不存在: ${owner}`);
         const updatedAt = nowIso();
         database.prepare(`
             INSERT INTO collections (username, collection, data_json, updated_at)
@@ -446,8 +458,8 @@ function createRepository(dataDir = DEFAULT_DATA_DIR, options = {}) {
             ON CONFLICT(username, collection) DO UPDATE SET
                 data_json = excluded.data_json,
                 updated_at = excluded.updated_at
-        `).run(username, collection, encryptPayload(JSON.stringify(data)), updatedAt);
-        appendAuditDirect(username, collection, 'write', '', {
+        `).run(owner, collection, encryptPayload(JSON.stringify(data)), updatedAt);
+        appendAuditDirect(owner, collection, 'write', '', {
             type: Array.isArray(data) ? 'array' : typeof data,
             count: Array.isArray(data) ? data.length : Object.keys(data || {}).length,
         });
@@ -680,8 +692,152 @@ function createRepository(dataDir = DEFAULT_DATA_DIR, options = {}) {
 }
 
 const defaultRepository = createRepository(DEFAULT_DATA_DIR);
+const repositoryContext = new AsyncLocalStorage();
+const storeRepositories = new Map();
+let activeEncryptionKey = null;
+
+function assertStoreId(clinicId) {
+    const value = String(clinicId || '').trim();
+    if (!/^[a-zA-Z0-9_-]{3,80}$/.test(value)) throw new Error('门店 ID 无效');
+    return value;
+}
+
+function getStoreDirectory(clinicId) {
+    return path.join(DEFAULT_DATA_DIR, 'stores', assertStoreId(clinicId));
+}
+
+function getStoreRepository(clinicId) {
+    const id = assertStoreId(clinicId);
+    if (storeRepositories.has(id)) return storeRepositories.get(id);
+    const repository = createRepository(getStoreDirectory(id), {
+        encryptionKey: activeEncryptionKey,
+        storageUser: '__clinic__',
+        backupLimit: 60,
+    });
+    storeRepositories.set(id, repository);
+    return repository;
+}
+
+async function initStore(clinicId) {
+    const repository = getStoreRepository(clinicId);
+    await repository.initRootStorage();
+    await repository.initUserStorage('__clinic__');
+    return repository;
+}
+
+function runWithStore(clinicId, fn) {
+    const repository = getStoreRepository(clinicId);
+    return repositoryContext.run({ clinicId: assertStoreId(clinicId), repository }, fn);
+}
+
+function activeRepository() {
+    return repositoryContext.getStore()?.repository || defaultRepository;
+}
+
+async function readStoreCollection(clinicId, collection) {
+    const repository = await initStore(clinicId);
+    return repository.readCollection('__clinic__', collection);
+}
+
+async function getStoreStatus(clinicId) {
+    const repository = await initStore(clinicId);
+    return repository.getStatus();
+}
+
+async function getStoreAggregate(clinicId, options = {}) {
+    const repository = await initStore(clinicId);
+    const [outpatients, revenue, inventory, patients, pharmacy] = await Promise.all([
+        repository.readCollection('__clinic__', 'outpatients'),
+        repository.readCollection('__clinic__', 'revenue'),
+        repository.readCollection('__clinic__', 'drugInventory'),
+        repository.readCollection('__clinic__', 'patients'),
+        repository.readCollection('__clinic__', 'pharmacy'),
+    ]);
+    const start = options.start ? new Date(options.start).getTime() : new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime();
+    const end = options.end ? new Date(options.end).getTime() : Date.now() + 86400000;
+    const inRange = value => {
+        const time = new Date(value).getTime();
+        return Number.isFinite(time) && time >= start && time <= end;
+    };
+    const revenueInRange = revenue.filter(item => inRange(item.date));
+    return {
+        clinicId: assertStoreId(clinicId),
+        database: repository.DB_FILE,
+        visitCount: outpatients.filter(item => inRange(item.opDate || item.date)).length,
+        patientCount: patients.length,
+        revenue: +revenueInRange.reduce((sum, item) => sum + Number(item.amount || 0), 0).toFixed(2),
+        pendingBillingCount: (await repository.readCollection('__clinic__', 'billing')).filter(item => item.status === 'pending').length,
+        pendingPharmacyCount: pharmacy.filter(item => item.status === '待发药').length,
+        lowStockCount: inventory.filter(item => Number(item.stock || item.quantity || 0) <= Number(item.minStock || 0)).length,
+        integrity: (await repository.getStatus()).integrity,
+    };
+}
+
+function listStoreIds() {
+    const storesDir = path.join(DEFAULT_DATA_DIR, 'stores');
+    if (!fs.existsSync(storesDir)) return [];
+    return fs.readdirSync(storesDir, { withFileTypes: true })
+        .filter(entry => entry.isDirectory() && /^[a-zA-Z0-9_-]{3,80}$/.test(entry.name))
+        .map(entry => entry.name);
+}
+
+function setEncryptionKey(key) {
+    activeEncryptionKey = normalizeModuleKey(key);
+    defaultRepository.setEncryptionKey(activeEncryptionKey);
+    for (const repository of storeRepositories.values()) repository.setEncryptionKey(activeEncryptionKey);
+}
+
+function normalizeModuleKey(key) {
+    if (!key) return null;
+    const value = Buffer.isBuffer(key) ? key : Buffer.from(key);
+    if (value.length !== 32) throw new Error('AES-256-GCM 密钥必须为 32 字节');
+    return value;
+}
+
+function delegate(name) {
+    return (...args) => activeRepository()[name](...args);
+}
+
+function getActiveBackupDir() {
+    return activeRepository().BACKUP_DIR;
+}
+
+function startAutoBackup(intervalMs) {
+    defaultRepository.startAutoBackup(intervalMs);
+    for (const clinicId of listStoreIds()) {
+        getStoreRepository(clinicId).startAutoBackup(intervalMs);
+    }
+}
 
 module.exports = {
-    ...defaultRepository,
-    createRepository
+    DATA_DIR: defaultRepository.DATA_DIR,
+    DB_FILE: defaultRepository.DB_FILE,
+    BACKUP_DIR: defaultRepository.BACKUP_DIR,
+    COLLECTIONS: defaultRepository.COLLECTIONS,
+    createRepository,
+    initRootStorage: (...args) => defaultRepository.initRootStorage(...args),
+    readUsers: (...args) => defaultRepository.readUsers(...args),
+    writeUsers: (...args) => defaultRepository.writeUsers(...args),
+    initUserStorage: (...args) => defaultRepository.initUserStorage(...args),
+    readCollection: delegate('readCollection'),
+    writeCollection: delegate('writeCollection'),
+    createBackup: delegate('createBackup'),
+    restoreBackup: delegate('restoreBackup'),
+    listAuditEvents: delegate('listAuditEvents'),
+    verifyAuditChain: delegate('verifyAuditChain'),
+    listBackups: delegate('listBackups'),
+    ensureDailyBackup: delegate('ensureDailyBackup'),
+    getStatus: delegate('getStatus'),
+    transaction: delegate('transaction'),
+    close: () => defaultRepository.close(),
+    activeRepository,
+    getActiveBackupDir,
+    initStore,
+    runWithStore,
+    readStoreCollection,
+    getStoreStatus,
+    getStoreAggregate,
+    listStoreIds,
+    setEncryptionKey,
+    startAutoBackup,
 };

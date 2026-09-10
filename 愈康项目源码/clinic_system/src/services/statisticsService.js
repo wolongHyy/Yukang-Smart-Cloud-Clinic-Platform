@@ -86,6 +86,7 @@ async function dashboard(username, query) {
     const outpatients = await repo.readCollection(username, 'outpatients');
     const pharmacy = await repo.readCollection(username, 'pharmacy');
     const revenue = await repo.readCollection(username, 'revenue');
+    const billing = await repo.readCollection(username, 'billing');
     const drugInventory = await repo.readCollection(username, 'drugInventory');
 
     const inRange = d => {
@@ -99,6 +100,8 @@ async function dashboard(username, query) {
     const tKey = todayKey();
     const todayOp = outpatients.filter(o => toDateKey(o.opDate || o.date) === tKey);
     const todayPharma = pharmacy.filter(p => toDateKey(p.date) === tKey);
+    const todayPaidBilling = billing.filter(item => item.status === 'paid' && toDateKey(item.paidAt || item.createdAt) === tKey);
+    const pendingBilling = billing.filter(item => item.status === 'pending').length;
 
     const totalRev = revInPeriod.reduce((s, r) => s + toNum(r.amount), 0);
     const outpatientRev = revInPeriod.filter(r => (r.desc || '').includes('门诊')).reduce((s, r) => s + toNum(r.amount), 0);
@@ -144,7 +147,8 @@ async function dashboard(username, query) {
             expiryWarning: warningDrugs.length,
             visited: todayOp.length,
             prescriptionCount: todayOp.filter(o => o.prescriptions && o.prescriptions.length > 0).length,
-            billed: todayOp.filter(o => o.billed).length,
+            billed: todayPaidBilling.length,
+            pendingBilling,
             dispensed: todayPharma.filter(p => p.status === '已发药').length,
             stockWarning: lowStockDrugs.length
         },

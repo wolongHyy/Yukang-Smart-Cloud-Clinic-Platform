@@ -2,6 +2,12 @@
 
 This directory contains the packaging-only Electron shell for the existing `clinic_system` application. It does not change the web application's routes, database format, or business logic.
 
+## Download
+
+Prebuilt installers are published at:
+
+https://github.com/wolongHyy/Yukang-Smart-Cloud-Clinic-Platform/releases/tag/v5.0.0-preview.1
+
 ## Default Logo
 
 The installer uses the inner rounded YuKang logo without its outer border:

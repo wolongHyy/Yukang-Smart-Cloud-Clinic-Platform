@@ -51,7 +51,7 @@ jobs:
           ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/
         run: |
           npm run prepare:runtime
-          npx electron-builder --linux AppImage deb --x64 --arm64
+          npx electron-builder --linux AppImage deb --x64 --arm64 --publish never
       - name: Smoke test Linux package
         working-directory: desktop
         run: |

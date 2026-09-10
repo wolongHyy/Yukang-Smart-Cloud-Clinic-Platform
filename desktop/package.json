@@ -11,9 +11,9 @@
   "license": "MIT",
   "scripts": {
     "prepare:runtime": "node scripts/prepare-runtime.js",
-    "dist:win": "npm run prepare:runtime && electron-builder --win nsis",
-    "dist:linux": "npm run prepare:runtime && electron-builder --linux AppImage deb",
-    "dist:mac": "npm run prepare:runtime && electron-builder --mac dmg zip --x64 --arm64",
+    "dist:win": "npm run prepare:runtime && electron-builder --win nsis --publish never",
+    "dist:linux": "npm run prepare:runtime && electron-builder --linux AppImage deb --publish never",
+    "dist:mac": "npm run prepare:runtime && electron-builder --mac dmg zip --x64 --arm64 --publish never",
     "install:electron": "node scripts/ensure-electron.js"
   },
   "devDependencies": {

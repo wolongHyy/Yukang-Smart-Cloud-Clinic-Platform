@@ -55,7 +55,7 @@ jobs:
       - name: Smoke test Linux package
         working-directory: desktop
         run: |
-          xvfb-run -a env YUKANG_DESKTOP_SMOKE=1 YUKANG_DESKTOP_PORT=32121 YUKANG_DESKTOP_DATA_DIR="$RUNNER_TEMP/yukang-linux-smoke" ./artifacts/linux-unpacked/YuKangClinic
+          xvfb-run -a env YUKANG_DESKTOP_SMOKE=1 YUKANG_DESKTOP_PORT=32121 YUKANG_DESKTOP_DATA_DIR="$RUNNER_TEMP/yukang-linux-smoke" ./artifacts/linux-unpacked/YuKangClinic --no-sandbox
       - name: Upload Linux packages
         uses: actions/upload-artifact@v4
         with:
@@ -67,6 +67,7 @@ jobs:
             desktop/artifacts/*.deb
 
   macos:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4

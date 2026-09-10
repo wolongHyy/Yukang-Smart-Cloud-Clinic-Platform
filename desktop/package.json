@@ -119,5 +119,10 @@
   "allowScripts": {
     "electron@44.3.0": true
   },
-  "productName": "YuKangClinic"
+  "productName": "YuKangClinic",
+  "homepage": "https://github.com/wolongHyy/Yukang-Smart-Cloud-Clinic-Platform",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wolongHyy/Yukang-Smart-Cloud-Clinic-Platform.git"
+  }
 }

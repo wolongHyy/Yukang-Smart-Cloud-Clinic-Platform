@@ -84,9 +84,9 @@ cd 愈康项目源码/clinic_system
 
 采用轻量架构的目的很简单：**普通诊所电脑即可运行，数据迁移和备份不再依赖多个 JSON 文件的人工拼接**。
 
-### 商业云边架构（开发中）
+### 商业云边架构（预览可用）
 
-- `cloud_control_plane/`：Python FastAPI + PostgreSQL 控制面，管理机构、门店、边缘设备、角色、版本、健康状态、经营汇总和授权查询。
+- `cloud_control_plane/`：Python FastAPI + PostgreSQL 控制面，并提供 `/admin` 管理控制面板，已覆盖组织、门店、成员角色、边缘设备、版本、更新任务、经营汇总、授权查询和审计日志。
 - `local_rag_worker/`：本地 FastAPI RAG Worker，使用 `BAAI/bge-small-zh-v1.5` ONNX 模型生成向量，患者文本不离开门店。
 - 门店端使用 SQLite FTS5/BM25 + 向量召回 + RRF，Worker 可用时自动启用混合检索，不可用时回退现有关键词检索。
 - 控制面与门店通过出站 WebSocket 连接；门店不需要公网 IP，总部默认只接收聚合指标，不存储患者明细。
@@ -146,13 +146,13 @@ cd 愈康项目源码/clinic_system
 
 ## 版本记录
 
-### v5.0 商业底座（开发中，未作为正式版本发布）
+### v5.0 商业底座（预览版，已提供管理控制面板）
 
-- 新增 FastAPI + PostgreSQL 控制面，覆盖组织、门店、用户角色、边缘设备、版本、更新任务、经营聚合、授权查询和审计元数据；
+- 新增 FastAPI + PostgreSQL 控制面与管理控制面板 `/admin`，管理界面已覆盖总览、组织门店、终端设备、版本升级、经营汇总、授权查询、成员角色和审计日志；
 - 门店端新增 DPAPI 密钥、AES-GCM 业务数据加密、防篡改审计链、备份恢复和 JSON/CSV/HTML 导入导出；
 - 新增出站 WebSocket 边缘代理，支持心跳、每日聚合上报、发布包下载、Ed25519 签名和 SHA-256 校验；
 - 新增本地 `bge-small-zh-v1.5` RAG Worker、SQLite FTS5/向量混合检索和 RRF；无完整知识包时自动回退关键词检索；
-- 升级执行、正式 mTLS 证书、GPU 全量知识包、RBAC 强制执行和真实试点验收仍需环境中继续完成。
+- 管理控制面板现已可用；正式投产前仍需完成升级执行、正式 mTLS 证书、GPU 全量知识包、RBAC 强制执行和真实试点验收。
 
 ### v4.0（正式版本）
 

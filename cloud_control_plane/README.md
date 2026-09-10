@@ -4,6 +4,20 @@ FastAPI + PostgreSQL control plane for clinics, edge devices, releases, aggregat
 
 Patient-identifying data must never be stored in this service. Aggregate payloads reject patient-related keys.
 
+## Management console
+
+The control plane mounts the management console at `/admin`. It requires the platform API key and can optionally use the provisioning key for edge registration. Current modules include:
+
+- Dashboard and aggregate metrics
+- Organizations and clinics
+- Edge devices and online status
+- Releases and update jobs
+- Authorized lookup requests
+- Users and role metadata
+- Audit events
+
+The console and APIs are available as a preview. Production rollout still requires formal mTLS certificates, enforced RBAC, update execution, a full GPU-built knowledge package, and pilot acceptance.
+
 ## Local tests
 
 ```powershell

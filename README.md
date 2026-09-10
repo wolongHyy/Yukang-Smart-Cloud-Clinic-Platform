@@ -6,34 +6,20 @@
 
 ---
 
-## 快速开始
+## 免费开源承诺
 
-### 三平台启动对照表
+做这个项目的初衷很简单：很多独立诊所买不起动辄几千上万的商业管理系统，或者不想把自己的病人数据交给第三方平台。
 
-| 平台       | 路径                                               | 操作 |
-|------------|----------------------------------------------------|------|
-| Windows    | `愈康项目源码/clinic_system/start.bat`             | 双击运行（已内置 `node\node.exe`，无需装任何环境） |
-| macOS      | `愈康项目源码/clinic_system/start.command`         | 双击运行（脚本会 `chmod +x` 并保持 Terminal 窗口打开方便看日志） |
-| Linux      | `愈康项目源码/clinic_system/start.sh`              | 终端执行 `bash start.sh` 或 `./start.sh`（需要 Node.js 18+） |
+因此我们承诺：
 
-### 方式一：免安装版（推荐给不会配置电脑的用户）
+- **永久免费**：核心功能全部免费，不内置广告，不搞功能订阅收费；
+- **真正开源**：源码公开，你可以自由查看、修改、二次开发；
+- **数据自管**：业务数据保存在你自己的电脑/服务器上，内置程序不主动上传；启用第三方 AI 时，会按隐私说明发送去标识化诊疗片段；
+- **自由分发**：你可以把本系统拷贝给你的同行诊所使用，也可以基于它开发自己的版本。
 
-1. 解压项目中的免安装包到任意目录；
-2. 双击运行对应平台的 `start.bat` / `start.command` / `start.sh`；
-3. 浏览器会自动打开登录页，**注册账号后即可开始使用**。
+我们相信，每一家用心经营的独立诊所，都值得拥有一套顺手、安心、属于自己的管理平台。
 
-> 免安装版已内置运行环境，**无需安装 Node.js** 或任何其他组件。
-
-### 方式二：源码运行（开发者）
-
-```bash
-cd 愈康项目源码/clinic_system
-# 任选其一：
-bash start.sh        # Linux/macOS
-# 或 start.bat       # Windows
-# 或 double-click start.command   # macOS GUI
-```
-
+---
 
 ## 功能一览
 
@@ -52,15 +38,24 @@ bash start.sh        # Linux/macOS
 | 📈 处方分析 | 处方量趋势、药品毛利、复诊率统计 |
 | 📱 多端访问 | 同一局域网内电脑、手机、平板均可访问，数据实时同步 |
 | 🔐 账号体系 | 注册/登录、会话令牌、密码哈希存储，多用户各自独立的数据空间 |
+| 💾 数据安全 | SQLite 本地数据库、旧 JSON 自动迁移、每日自动快照、手动备份与备份列表接口 |
 
 ---
 
 ## 快速开始
 
+### 三平台启动对照表
+
+| 平台 | 路径 | 操作 |
+|------|------|------|
+| Windows | `愈康项目源码/clinic_system/start.bat` | 双击运行（已内置 `node\node.exe`，无需安装 Node.js） |
+| macOS | `愈康项目源码/clinic_system/start.command` | 双击运行（脚本会 `chmod +x` 并保持 Terminal 窗口打开以查看日志） |
+| Linux | `愈康项目源码/clinic_system/start.sh` | 终端执行 `bash start.sh` 或 `./start.sh`（需要 Node.js 22.5+） |
+
 ### 方式一：免安装版（推荐给不会配置电脑的用户）
 
 1. 解压项目中的免安装包到任意目录；
-2. 双击运行 `start.bat`；
+2. 按上表运行对应平台的启动文件；
 3. 浏览器会自动打开登录页，**注册账号后即可开始使用**。
 
 > 免安装版已内置运行环境，**无需安装 Node.js** 或任何其他组件。
@@ -69,11 +64,12 @@ bash start.sh        # Linux/macOS
 
 ```bash
 cd 愈康项目源码/clinic_system
-npm install
-npm start
+# Windows: start.bat
+# macOS: ./start.command
+# Linux: bash start.sh
 ```
 
-浏览器访问 `http://localhost:3002`（手机同局域网访问时，登录后可在「设置」页查看局域网地址）。
+要求 Node.js 22.5 及以上。浏览器访问 `http://localhost:3002`（手机同局域网访问时，登录后可在「设置」页查看局域网地址）。
 
 ---
 
@@ -81,44 +77,93 @@ npm start
 
 - **后端**：Node.js + Express
 - **前端**：原生 HTML/CSS/JavaScript（无框架依赖，轻量易维护）
-- **数据存储**：本地 JSON 文件（`clinic_database/` 目录，按用户隔离）
+- **数据存储**：SQLite（`clinic_database/clinic.db`，WAL 模式），按账号保存业务集合
+- **旧数据兼容**：首次启动只读导入旧版 `users.json` 和账号 JSON 集合，原文件保留
+- **备份机制**：每天自动生成独立 SQLite 快照，默认保留最近 30 份；支持手动备份接口
 - **运行方式**：本地部署，默认端口 `3002`
 
-采用轻量架构的目的很简单：**任何一台普通电脑都能跑，数据备份就是复制一个文件夹**。
+采用轻量架构的目的很简单：**普通诊所电脑即可运行，数据迁移和备份不再依赖多个 JSON 文件的人工拼接**。
+
+### 商业云边架构（开发中）
+
+- `cloud_control_plane/`：Python FastAPI + PostgreSQL 控制面，管理机构、门店、边缘设备、角色、版本、健康状态、经营汇总和授权查询。
+- `local_rag_worker/`：本地 FastAPI RAG Worker，使用 `BAAI/bge-small-zh-v1.5` ONNX 模型生成向量，患者文本不离开门店。
+- 门店端使用 SQLite FTS5/BM25 + 向量召回 + RRF，Worker 可用时自动启用混合检索，不可用时回退现有关键词检索。
+- 控制面与门店通过出站 WebSocket 连接；门店不需要公网 IP，总部默认只接收聚合指标，不存储患者明细。
+
+#### 本地 RAG 启动与索引
+
+1. 安装本地 RAG 环境到 `D:\CodexEnvs\yukang-rag`。
+2. 运行 `local_rag_worker/scripts/download_embedding_model.py`，模型缓存到 `D:\CodexModels\fastembed`。
+3. 双击 `start_rag.bat`；门店端启动时会自动尝试拉起该进程。
+4. 使用 `node tools/build_hybrid_index.js` 离线构建知识包；生产环境应在控制面侧使用 GPU/批处理构建后分发，不在医生电脑上重建全量索引。
+5. 索引或 Worker 不可用时，AI 自动回退关键词检索，不阻塞接诊。
+
+#### 商业能力验证
+
+- 测试：`npm test`、`node regression-test.js`
+- 控制面：`../../cloud_control_plane/README.md`
+- RAG Worker：`../../local_rag_worker/README.md`
 
 ---
 
 ## 目录结构
 
 ```
-愈康项目源码/clinic_system/（v3.6）
-├─ server.js          # 服务器主程序（业务逻辑、数据接口）
+愈康项目源码/clinic_system/（v4.0）
+├─ server.js          # 服务器入口（装配中间件、路由、异常处理与启动）
+├─ src/               # 后端分层模块：routes 接口层 / services 服务层 / repository 数据仓储层
+├─ src/repository/
+│  └─ sqliteRepository.js # SQLite 仓储、旧 JSON 迁移、WAL、备份与恢复基础能力
 ├─ knowledge.js       # 药典/方剂知识库加载与检索（RAG）
 ├─ ai.js              # AI 辅助诊断（智谱/DeepSeek/硅基流动/自定义接口）
-├─ index.html         # 主界面（工作台 / 挂号 / 门诊 / 统计 / 药房 / 设置）
+├─ index.html         # 主界面（工作台 / 门诊 / 统计 / 药房 / 设置）
 ├─ login.html         # 登录 / 注册页
 ├─ package.json       # 项目配置
 ├─ start.bat          # Windows 一键启动
 ├─ start.sh           # Linux / macOS 启动脚本
-├─ data/              # 药典知识库（pharmacopoeia.json / formulas.json / interactions.json / kb_support.json / clinical_terms.json / pharmacopoeia_texts.jsonl）
-├─ 药典2025原始数据/    # 中国药典2025版整理数据（Markdown，用于 tools/build_chp2025.js 重新生成知识库）
-├─ tools/             # 知识库构建脚本（build_knowledge.py / extract_pharmacopoeia_pdf.py，可从本草典开放数据或药典 PDF 重新生成）
-└─ clinic_database/   # 运行后自动生成，存放全部业务数据（请定期备份）
+├─ data/              # 药典知识库与 14638 条药典原文文本块
+├─ tools/             # 知识库构建脚本（build_knowledge.py / extract_pharmacopoeia_pdf.py）
+└─ clinic_database/   # SQLite 数据库、自动备份和迁移报告（敏感数据，不纳入 Git）
+   ├─ clinic.db       # 主数据库
+   ├─ backups/        # 自动/手动快照，默认保留 30 份
+   ├─ migrations/     # 旧 JSON 导入报告
+   └─ *.json          # 旧版数据，首次迁移后保留用于回滚核对
 ```
 
 ---
 
 ## 数据与隐私
 
-- 所有数据保存在本机 `clinic_database/` 目录，**不依赖任何云端服务**；
-- 备份 = 复制 `clinic_database/` 文件夹；恢复 = 把备份放回原目录；
-- 密码采用哈希加密存储，登录采用会话令牌机制，接口做了访问鉴权与目录防护。
+- 业务数据默认保存在本机 `clinic_database/clinic.db`，不依赖云端数据库；
+- 首次启动会只读导入旧版 `users.json` 与账号子目录 JSON，原文件不删除；导入报告写入 `clinic_database/migrations/`；
+- 每天自动生成一份独立 SQLite 快照，默认保留最近 30 份；也可通过 `/api/system/backup` 手动触发；
+- 备份迁移时可优先复制 `clinic_database/backups/` 中最新快照；完整目录复制仍可作为整库迁移方式；
+- 敏感业务集合使用 AES-GCM 加密，密钥由 Windows DPAPI 保护；密码采用哈希存储，登录采用会话令牌机制，数据目录和源码均不通过静态页面对外暴露。防篡改审计链可检测历史记录被修改。
+- 启用第三方 AI 时，主诉、症状、诊断等诊疗片段会发送给所选模型服务商，不会发送患者姓名和手机号；对数据不出域有硬要求时应关闭 AI 或改用本地模型。
 
 ---
 
 ## 版本记录
 
-### v3.6（当前版本）
+### v5.0 商业底座（开发中，未作为正式版本发布）
+
+- 新增 FastAPI + PostgreSQL 控制面，覆盖组织、门店、用户角色、边缘设备、版本、更新任务、经营聚合、授权查询和审计元数据；
+- 门店端新增 DPAPI 密钥、AES-GCM 业务数据加密、防篡改审计链、备份恢复和 JSON/CSV/HTML 导入导出；
+- 新增出站 WebSocket 边缘代理，支持心跳、每日聚合上报、发布包下载、Ed25519 签名和 SHA-256 校验；
+- 新增本地 `bge-small-zh-v1.5` RAG Worker、SQLite FTS5/向量混合检索和 RRF；无完整知识包时自动回退关键词检索；
+- 升级执行、正式 mTLS 证书、GPU 全量知识包、RBAC 强制执行和真实试点验收仍需环境中继续完成。
+
+### v4.0（正式版本）
+
+- **SQLite 持久化**：业务数据由账号 JSON 文件升级为 `clinic_database/clinic.db`，启用 WAL、外键、完整性检查；接诊、发药、入库、认证等跨集合操作使用同一数据库事务。
+- **无损迁移**：首次启动自动读取旧版 `users.json` 和账号 JSON 集合，导入后保留原文件，并生成 `clinic_database/migrations/legacy-import-*.json` 报告；
+- **自动备份**：启动时检查当天快照，每日备份，默认保留最近 30 份；新增 `/api/system/health`、`/api/system/backup`、`/api/system/backups`；
+- **推广稳定性**：保留浏览器/局域网访问方式，不增加 Node 原生依赖；旧 API、页面和业务回归保持兼容；
+- 本版本发布验证：Node 单测 14/14、本地业务回归 92/92、控制面 12/12、RAG 1/1，并完成浏览器 E2E、并发/事务和控制面-Edge 联调。
+
+### v3.6
+
 
 - **药典 PDF 原文 RAG 知识库**：新增 `tools/extract_pharmacopoeia_pdf.py`，将四本《中国药典》官方 PDF 全文提取为 5954 页 / 14638 条知识块（`data/pharmacopoeia_texts.jsonl`，约 32MB），写入 AI RAG 检索管道；AI 辅助诊断与开方建议在现有药品/方剂/相互作用基础上，自动匹配药典原文并注入上下文，提升用药依据的权威性；
 - **门诊病历症状点选**：现病史、过敏史、体格检查改为分类弹窗点选（新增 `data/clinical_terms.json` 词条库 + `/api/clinical/termentries` 接口），覆盖起病/病程、发热呼吸道、消化、疼痛神经、泌尿、皮肤、伴随/阴性症状、药物/食物/环境过敏、生命体征、头颈/胸肺/心脏/腹部/神经系统等，点选内容追加到字段并去重；既往史点击自动按姓名+手机号关联患者档案，有历史记录则弹出可点击写入，无记录不弹窗；诊断结果基于知识库（`kb_support.json`）匹配候选病症/证型/同义词，弹窗展示候选与依据，医生确认后写入；
@@ -179,7 +224,8 @@ npm start
 ## 后续规划
 
 - [ ] Electron 桌面版打包（双击即用，无需浏览器）
-- [ ] 数据自动备份与一键恢复
+- [x] SQLite 自动迁移与每日备份
+- [ ] 图形化一键恢复
 - [ ] 门诊收费 / 收费单打印
 - [ ] 就诊排队叫号
 - [ ] 化验、影像等检查项目接入

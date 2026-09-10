@@ -1,5 +1,5 @@
 // ============================================================
-//  愈康云诊所 - 回归测试脚本（v3.5）
+//  愈康云诊所 - 回归测试脚本（v4.0）
 //  用法: node regression-test.js
 //  说明: 使用临时 DATA_DIR 运行，不会触碰真实 clinic_database 数据；
 //        测试完成后自动关闭服务器并清理临时数据。
@@ -8,12 +8,15 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const { DatabaseSync } = require('node:sqlite');
 const knowledge = require('./knowledge');
 const ai = require('./ai');
 
 const BASE = __dirname;
 const PORT = 3917; // 专用测试端口，避免与正式 3002 冲突
-const DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'yk_test_'));
+const TEST_ROOT = process.env.YUKANG_TEST_ROOT || (fs.existsSync('D:\\') ? 'D:\\CodexTemp' : os.tmpdir());
+fs.mkdirSync(TEST_ROOT, { recursive: true });
+const DATA_DIR = fs.mkdtempSync(path.join(TEST_ROOT, 'yk_test_'));
 const BASE_URL = `http://127.0.0.1:${PORT}`;
 
 let passed = 0;
@@ -77,7 +80,7 @@ async function main() {
         ok(r.status === 401, '错误令牌返回 401');
 
         // 3. 静态目录泄露防护
-        for (const p of ['/clinic_database/users.json', '/server.js', '/package.json', '/node_modules/express/package.json', '/clinic_database']) {
+        for (const p of ['/clinic_database/users.json', '/clinic_database/clinic.db', '/server.js', '/package.json', '/node_modules/express/package.json', '/clinic_database']) {
             const res = await fetch(BASE_URL + p);
             ok(res.status === 404, `静态文件不泄露: ${p} 返回 404`);
         }
@@ -93,16 +96,55 @@ async function main() {
         r = await req('POST', '/api/auth/login', { body: { username: 'qatest', password: 'wrong' } });
         ok(r.status === 401, '错误密码登录返回 401');
 
+        r = await req('GET', '/api/system/health', { token });
+        ok(r.status === 200 && r.data.engine === 'sqlite' && r.data.integrity === 'ok', 'SQLite 健康检查返回完整状态', r.data);
+
+        r = await req('POST', '/api/system/backup', { token });
+        ok(r.status === 201 && r.data.path && fs.existsSync(r.data.path), '手动备份生成独立 SQLite 快照', r.data);
+
+        r = await req('GET', '/api/system/backups', { token });
+        ok(r.status === 200 && Array.isArray(r.data.backups) && r.data.backups.length >= 1, '备份列表可查询', r.data);
+
+        r = await req('GET', '/api/system/audit', { token });
+        ok(r.status === 200 && r.data.verification.valid === true && r.data.events.length >= 1, '本地审计链可查询且完整', r.data);
+
+        r = await req('GET', '/api/system/rag', { token });
+        ok(r.status === 200 && r.data.index && r.data.worker, '本地 RAG 状态接口可用', r.data);
+
+        const logsExport = await fetch(BASE_URL + '/api/system/logs', { headers: { 'x-auth-token': token } });
+        ok(logsExport.status === 200 && /text\/plain/.test(logsExport.headers.get('content-type') || ''), '脱敏日志可导出');
+
+        r = await req('GET', '/api/system/export/json', { token });
+        ok(r.status === 200 && r.data.format === 'yukang-clinic-export' && r.data.collections.settings, 'JSON 全量导出可用', r.data);
+
+        const csvExport = await fetch(BASE_URL + '/api/system/export/csv/outpatients', { headers: { 'x-auth-token': token } });
+        ok(csvExport.status === 200 && /text\/csv/.test(csvExport.headers.get('content-type') || ''), 'CSV 导出可用');
+
+        const htmlExport = await fetch(BASE_URL + '/api/system/export/html', { headers: { 'x-auth-token': token } });
+        ok(htmlExport.status === 200 && /愈康项目数据导出/.test(await htmlExport.text()), 'HTML 可打印导出可用');
+
+        const archive = JSON.parse(JSON.stringify(r.data));
+        archive.collections.settings.warningAlert = true;
+        r = await req('POST', '/api/system/import/json', { token, body: { confirmation: 'IMPORT', archive } });
+        ok(r.status === 200 && r.data.success === true, 'JSON 归档可原子导入', r.data);
+        const importedSettings = await req('GET', '/api/settings', { token });
+        ok(importedSettings.status === 200 && importedSettings.data.warningAlert === true, '导入后的设置已生效');
+        await req('PUT', '/api/settings/1', { token, body: { warningAlert: false, autoPharmacy: true } });
+
+        r = await req('POST', '/api/system/restore', { token, body: { filename: 'missing.db' } });
+        ok(r.status === 400 && r.data.code === 'RESTORE_CONFIRMATION_REQUIRED', '恢复接口要求二次确认');
+
         // 5. 旧版明文密码自动迁移
-        const usersFile = path.join(DATA_DIR, 'users.json');
-        const users = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
-        users.push({ username: 'legacy', password: 'plain123' });
-        fs.writeFileSync(usersFile, JSON.stringify(users, null, 2), 'utf8');
+        const usersDb = new DatabaseSync(path.join(DATA_DIR, 'clinic.db'));
+        usersDb.prepare('INSERT INTO users (username, password, created_at) VALUES (?, ?, ?)')
+            .run('legacy', 'plain123', new Date().toISOString());
+        usersDb.close();
         r = await req('POST', '/api/auth/login', { body: { username: 'legacy', password: 'plain123' } });
         ok(r.status === 200 && r.data && r.data.token, '旧版明文账号可登录');
-        const users2 = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
-        const legacy = users2.find(u => u.username === 'legacy');
-        ok(legacy && legacy.passwordHash && !legacy.password, '登录后密码自动迁移为哈希存储');
+        const usersDb2 = new DatabaseSync(path.join(DATA_DIR, 'clinic.db'));
+        const legacy = usersDb2.prepare('SELECT username, password, password_hash FROM users WHERE username = ?').get('legacy');
+        usersDb2.close();
+        ok(legacy && legacy.password_hash && !legacy.password, '登录后密码自动迁移为哈希存储');
 
         // 6. 直接建档（v3.3 无挂号，直接创建门诊患者）
         const nowD6 = new Date();

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -2365,7 +2365,27 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         closeExternalMenu();
         refreshRxCenter();
     }
-    function renderClinicCenter(p) {
+    function captureClinicFormState(patientId = clinicRenderedId) {
+        if (!patientId) return;
+        const patient = dbOutpatient.find(item => String(item.id) === String(patientId));
+        if (!patient) return;
+        const fields = {
+            cf_chief: 'chief',
+            cf_history: 'history',
+            cf_past: 'past',
+            cf_allergy: 'allergy',
+            cf_exam: 'exam',
+            cf_diagnosis: 'diagnosis',
+            cf_syndrome: 'syndrome',
+            cf_advice: 'advice',
+            cf_visitType: 'visitType'
+        };
+        Object.entries(fields).forEach(([elementId, field]) => {
+            const element = document.getElementById(elementId);
+            if (element) patient[field] = element.value;
+        });
+    }    function renderClinicCenter(p) {
+        if (clinicRenderedId) captureClinicFormState(clinicRenderedId);
         closeRecordTermPopup();
         if (!p) return;
         if (!clinicDraft || clinicRenderedId !== p.id) clinicDraft = getClinicDraft(p);
@@ -3106,17 +3126,82 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         if (!p) return alert('请先选择患者');
         const patient = collectPatientPayload();
         if (!patient.chief && !patient.diagnosis) return alert('请先填写患者主诉或诊断');
-        openAiModal('<div class="ai-info"><i class="fas fa-spinner fa-spin"></i> 正在调用 AI 生成处方建议，请稍候…（免费额度有限，如失败请稍后重试）</div>');
+        openAiModal('<div class="ai-info"><i class="fas fa-spinner fa-spin"></i> 辅助诊疗 Agent 正在规划检查清单、检索证据并审查处方，请稍候…</div>');
         try {
-            const res = await apiFetch(`${API_BASE}/ai/generate-prescription`, {
+            const res = await apiFetch(`${API_BASE}/ai/assist-agent`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ patient, prescriptions: prescriptionTempList })
             });
             const d = await res.json();
-            renderAiSuggestions(d);
+            renderAssistAgent(d);
         } catch (err) {
             if (err.message !== '未登录') renderAiError(err.message);
         }
+    }
+
+    function renderAssistAgent(d) {
+        let html = '';
+        const v = d.verification || {};
+        const plan = d.plan || {};
+        const evidence = d.evidence || {};
+        const knowledge = evidence.knowledge || {};
+
+        html += '<div class="ai-info"><i class="fas fa-robot"></i> <b>辅助诊疗 Agent</b> · ' +
+            (plan.plannerUsed ? 'Planner 已规划' : '默认检查清单') + ' · 待医生确认</div>';
+
+        if (plan.checks && plan.checks.length) {
+            html += '<div class="ai-info"><b>检查清单</b><br>' +
+                plan.checks.map((c, i) => (i + 1) + '. ' + esc(c.reason || c.tool) +
+                    (c.tool === 'search_drug_knowledge' && c.query ? '（' + esc(c.query) + '）' : '')).join('<br>') + '</div>';
+        }
+        if (plan.note) html += '<div class="ai-warn">' + esc(plan.note) + '</div>';
+
+        html += '<div class="ai-info"><b>证据摘要</b><br>' +
+            '过敏史：' + esc(evidence.allergy || '无') + '；本店库存：' + ((evidence.inventory || []).length) + ' 种；' +
+            '知识库命中：单药 ' + ((knowledge.drugs || []).length) + '、方剂 ' + ((knowledge.formulas || []).length) +
+            '、药典原文 ' + ((knowledge.textChunks || []).length) + '、相互作用 ' + ((knowledge.interactions || []).length) + '</div>';
+
+        if (v.whitelist && v.whitelist.issues && v.whitelist.issues.length) {
+            html += '<div class="ai-risk"><i class="fas fa-ban"></i> <b>白名单拦截：</b>' +
+                v.whitelist.issues.map(esc).join('、') + '</div>';
+        }
+        if (v.evidenceIssues && v.evidenceIssues.length) {
+            html += v.evidenceIssues.map(x => '<div class="ai-warn"><i class="fas fa-info-circle"></i> ' + esc(x) + '</div>').join('');
+        }
+        if (v.risks && v.risks.length) {
+            html += '<div class="ai-info"><b>Verifier 审查：发现 ' + v.risks.length + ' 条风险提示</b></div>';
+            html += v.risks.map(r => '<div class="ai-risk"><b>[' + esc(r.severity || '提示') + ']</b> ' + esc(r.drug || '') + '：' + esc(r.issue) +
+                ' <span style="color:#aaa;">（依据：' + esc(r.source || '-') + '）</span></div>').join('');
+        } else {
+            html += '<div class="ai-info"><b>Verifier 审查：</b>未发现明确风险</div>';
+        }
+
+        const s = d.suggestion;
+        if (s && s.suggestions && s.suggestions.length) {
+            window.__aiSuggestions = s.suggestions;
+            if (s.rationale) html += '<div class="ai-info"><b>开方思路：</b>' + esc(s.rationale) + '</div>';
+            if (s.warnings && s.warnings.length) {
+                html += s.warnings.map(w => '<div class="ai-warn"><i class="fas fa-exclamation-triangle"></i> ' + esc(w) + '</div>').join('');
+            }
+            html += '<div style="margin:6px 0;"><b>建议处方（' + s.suggestions.length + ' 种）：</b> ' +
+                '<button class="op-btn" onclick="applyAllAiSuggestions()">全部应用</button></div>';
+            html += s.suggestions.map((x, i) =>
+                '<div class="ai-suggest-row">' +
+                    '<div class="rx-suggest-item"><div><span class="rx-name drug-name" data-drug-name="' + esc(x.name) + '">' + esc(x.name) + '</span>' +
+                    '<span style="color:#666;"> × ' + x.qty + ' ｜ ¥' + (x.price || 0).toFixed(2) + ' = ¥' + (x.subtotal || 0).toFixed(2) + '</span></div>' +
+                    '<button class="op-btn" onclick="applyAiSuggestion(' + i + ')">应用</button></div>' +
+                    '<div style="margin-top:4px; font-size:12px; color:#666;">' + esc([x.dose, x.frequency, x.days].filter(Boolean).join('，') || '用法用量：知识库未收录，请医生判断') + '</div>' +
+                    (x.note ? '<div style="margin-top:3px; font-size:12px; color:#888;">' + esc(x.note) + '</div>' : '') +
+                '</div>').join('');
+        } else {
+            window.__aiSuggestions = [];
+            html += '<div class="ai-risk">Agent 未给出可应用的处方建议，请根据证据与审查结论线下评估。</div>';
+        }
+
+        html += '<div style="margin-top:10px; padding:8px; border:1px dashed #c9a95c; border-radius:8px; background:#fffaf0; color:#8a5b00; font-size:12px;">' +
+            '<i class="fas fa-user-check"></i> <b>Human Review：</b>以上仅为辅助建议，尚未写入正式处方；请医生核对后手动应用并保存接诊。</div>';
+
+        openAiModal(html);
     }
 
     function renderAiSuggestions(d) {
@@ -3588,7 +3673,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
                 statsSidebar.querySelectorAll('.stats-menu-item').forEach(m=>m.classList.remove('active'));
                 item.classList.add('active');
                 const menu = item.dataset.smenu;
-                
+
                 // 隐藏所有面板
                 document.querySelectorAll('.stab-panel').forEach(p => p.style.display = 'none');
                 // 营收选项卡仅在“营收统计”菜单下显示，避免与库存/运营/处方分析混淆
@@ -3844,7 +3929,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         const pad = { top: 20, right: 20, bottom: 30, left: 40 };
         const cw = w - pad.left - pad.right, ch = h - pad.top - pad.bottom;
         const maxVal = Math.max(...trend.visits, ...trend.finished, 1);
-        
+
         const pointsVisit = trend.labels.map((l, i) => ({ x: pad.left + (cw / (trend.labels.length - 1 || 1)) * i, y: pad.top + ch - (trend.visits[i] / maxVal) * ch, val: trend.visits[i] }));
         const pointsFinish = trend.labels.map((l, i) => ({ x: pad.left + (cw / (trend.labels.length - 1 || 1)) * i, y: pad.top + ch - (trend.finished[i] / maxVal) * ch, val: trend.finished[i] }));
 
@@ -3888,7 +3973,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
 
         drawLine(pointsVisit, '#5cb79f');
         drawLine(pointsFinish, '#3498db');
-        
+
         cvs._data = { pointsVisit, pointsFinish, labels: trend.labels, color1: '#00A388', color2: '#2F80ED' };
         if(!cvs._opBound) {
             cvs._opBound = true;

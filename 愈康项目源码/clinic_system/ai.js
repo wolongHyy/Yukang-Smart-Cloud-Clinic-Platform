@@ -1,10 +1,16 @@
 // ============================================================
-//  愈康项目 v3.5 - AI 辅助诊断模块
+//  愈康项目 v4.0 - AI 辅助诊断模块
 //  - 支持智谱 GLM（免费）/ DeepSeek / 硅基流动 / 自定义 OpenAI 兼容接口
 //  - RAG：从知识库检索相关单药/方剂/相互作用后注入 prompt
 //  - 输出严格 JSON，服务端逐条校验药品必须在本诊所库存内（白名单）
 // ============================================================
+const path = require('path');
 const knowledge = require('./knowledge');
+const { searchHybrid, indexStatus } = require('./src/services/hybridKnowledgeService');
+const { LocalRagClient } = require('./src/services/localRagClient');
+const { logWarn } = require('./src/utils/logger');
+
+const HYBRID_INDEX_PATH = path.join(__dirname, 'data', 'knowledge_index.db');
 
 const PROVIDERS = {
     zhipu: { label: '智谱 GLM（免费）', baseUrl: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4-flash' },
@@ -59,7 +65,7 @@ async function chat(cfg, messages, opts) {
             try {
                 const d = await resp.json();
                 msg = (d && (d.error && (d.error.message || d.error)) || d.message) || msg;
-            } catch (e) { /* ignore */ }
+            } catch (e) { logWarn('AI 服务商错误响应不是 JSON:', e); }
             if (resp.status === 401) msg = 'API Key 无效或未授权，请到【设置 → AI 配置】检查';
             if (resp.status === 429) msg = 'AI 免费额度已用完或请求过于频繁，请稍后再试或更换服务商';
             if (resp.status >= 500) msg = 'AI 服务商暂时不可用，请稍后再试';
@@ -79,24 +85,50 @@ async function chat(cfg, messages, opts) {
 
 function extractJson(text) {
     const t = String(text || '').trim();
-    try { return JSON.parse(t); } catch (e) { /* fallthrough */ }
+    try { return JSON.parse(t); } catch (e) { logWarn('AI 响应不是合法 JSON，尝试备用提取:', e); }
     const fence = t.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (fence) { try { return JSON.parse(fence[1].trim()); } catch (e) { /* fallthrough */ } }
+    if (fence) {
+        try { return JSON.parse(fence[1].trim()); }
+        catch (e) { logWarn('AI Markdown 代码块不是合法 JSON，尝试括号提取:', e); }
+    }
     const start = t.indexOf('{');
     const end = t.lastIndexOf('}');
     if (start !== -1 && end > start) {
-        try { return JSON.parse(t.slice(start, end + 1)); } catch (e) { /* fallthrough */ }
+        try { return JSON.parse(t.slice(start, end + 1)); }
+        catch (e) { logWarn('AI 响应括号提取失败:', e); }
     }
     return null;
 }
 
 // ==================== 上下文构建（RAG） ====================
-function buildContext({ query, draftDrugs, inventoryNames, userEntries }) {
+async function searchPdfContext(query, limit) {
+    try {
+        const status = await indexStatus(HYBRID_INDEX_PATH);
+        if (!status.ready) return knowledge.searchTextChunks(query, limit);
+        const ragClient = new LocalRagClient({ timeoutMs: 10000 });
+        try {
+            await ragClient.health();
+        } catch (_) {
+            return knowledge.searchTextChunks(query, limit);
+        }
+        const results = await searchHybrid(query, {
+            dbPath: HYBRID_INDEX_PATH,
+            ragClient,
+            topK: limit,
+            candidateK: 20,
+        });
+        return results.length ? results : knowledge.searchTextChunks(query, limit);
+    } catch (err) {
+        logWarn('本地混合检索失败，已回退关键词检索:', err);
+        return knowledge.searchTextChunks(query, limit);
+    }
+}
+async function buildContext({ query, draftDrugs, inventoryNames, userEntries }) {
     const expanded = knowledge.expandQuery(query);
     const drugs = knowledge.retrieveDrugs(expanded, userEntries, inventoryNames, 6);
     const formulas = knowledge.retrieveFormulas(expanded, 4);
     const clinicalMatches = knowledge.suggestConditions({ chief: query }, 6);
-    const pdfMatches = knowledge.searchTextChunks(expanded, 4);
+    const pdfMatches = await searchPdfContext(expanded, 4);
     // 已选药品的专论必须完整带入
     for (const name of (draftDrugs || [])) {
         if (!drugs.find(d => d.name === name)) {
@@ -192,7 +224,7 @@ async function generatePrescription(settings, { patient, prescriptions, inventor
     const draftDrugs = (prescriptions || []).map(d => d.name).filter(Boolean);
     const query = [patient.chief, patient.diagnosis, patient.syndrome, patient.history,
         patient.past, patient.allergy, patient.exam, patient.tcm].filter(Boolean).join(' ');
-    const ctx = buildContext({ query, draftDrugs, inventoryNames: inventory.map(d => d.name), userEntries });
+    const ctx = await buildContext({ query, draftDrugs, inventoryNames: inventory.map(d => d.name), userEntries });
     const messages = [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: buildUserPrompt(ctx, { ...patient, draftDrugs }, inventory) }
@@ -295,7 +327,7 @@ async function reviewPrescription(settings, { patient, prescriptions, userEntrie
     const cfg = normalizeConfig(settings && settings.aiConfig);
     if (cfg.enabled && cfg.apiKey && rx.length) {
         try {
-            const ctx = buildContext({ query: (patient.chief || '') + ' ' + (patient.diagnosis || ''), draftDrugs: rx, inventoryNames: rx, userEntries });
+            const ctx = await buildContext({ query: (patient.chief || '') + ' ' + (patient.diagnosis || ''), draftDrugs: rx, inventoryNames: rx, userEntries });
             const context = [
                 '【处方】' + rx.join('、'),
                 '【患者】' + (patient.gender || '') + ' ' + (patient.age || '') + '岁 过敏史：' + (patient.allergy || '无'),
@@ -314,7 +346,7 @@ async function reviewPrescription(settings, { patient, prescriptions, userEntrie
                 }
                 llmUsed = true;
             }
-        } catch (e) { /* AI 审方失败不影响规则检查 */ }
+        } catch (e) { logWarn('AI 审方请求失败，已保留规则检查结果:', e); }
     }
     return { risks, llmUsed, ruleCount: risks.length };
 }
@@ -330,7 +362,175 @@ async function testConnection(settings) {
     return { ok: true, reply: String(raw).slice(0, 100), model: cfg.model, provider: providerLabel(cfg.provider) };
 }
 
+// ==================== 辅助诊疗 Agent ====================
+// 目标：把"单次 LLM 开方"升级为可观测、可审查的辅助诊疗流程。
+// 安全设计：Agent 不直接写处方，只产出建议 + 证据 + 审查结论，最终落库仍由医生确认后触发。
+const AGENT_TOOLS = [
+    {
+        name: 'search_drug_knowledge',
+        description: '根据症状或药品名检索药典知识，只返回知识库内容。',
+        parameters: {
+            type: 'object',
+            properties: {
+                query: { type: 'string' },
+                topK: { type: 'integer', default: 5 }
+            },
+            required: ['query']
+        }
+    },
+    {
+        name: 'get_patient_allergy',
+        description: '查询患者过敏史，用于后续禁忌核查。',
+        parameters: { type: 'object', properties: {}, required: [] }
+    },
+    {
+        name: 'get_clinic_inventory',
+        description: '查询本诊所当前库存药品目录（白名单来源）。',
+        parameters: { type: 'object', properties: {}, required: [] }
+    },
+    {
+        name: 'suggest_prescription',
+        description: '调用 LLM 生成处方建议，并严格限制在本诊所库存范围内。',
+        parameters: {
+            type: 'object',
+            properties: {
+                patient: { type: 'object' },
+                draftDrugs: { type: 'array' }
+            },
+            required: ['patient']
+        }
+    }
+];
+
+function patientText(patient) {
+    const p = patient || {};
+    return [p.chief, p.diagnosis, p.syndrome, p.history, p.past, p.allergy, p.exam, p.tcm]
+        .filter(Boolean).join(' ');
+}
+
+function defaultChecklist(patient) {
+    const q = patientText(patient);
+    return [
+        { tool: 'get_patient_allergy', reason: '核查患者过敏史，作为禁忌判断前置条件' },
+        { tool: 'get_clinic_inventory', reason: '确认本诊所可用药品目录（白名单）' },
+        { tool: 'search_drug_knowledge', query: q, reason: '检索相关药典、方剂与相互作用原文' },
+        { tool: 'suggest_prescription', reason: '基于证据生成处方建议，供医生确认' }
+    ];
+}
+
+async function planAgentChecks(settings, patient) {
+    const cfg = normalizeConfig(settings && settings.aiConfig);
+    if (!cfg.enabled || !cfg.apiKey) {
+        return { checks: defaultChecklist(patient), plannerUsed: false, note: '未启用 AI，采用默认检查清单。' };
+    }
+    try {
+        const toolList = AGENT_TOOLS.map(t => '- ' + t.name + ': ' + t.description).join('\n');
+        const messages = [
+            {
+                role: 'system',
+                content: '你是辅助诊疗 Planner。根据患者信息，从下方固定工具列表中选出检查清单。只输出严格 JSON，不要输出其他文字。' +
+                    '\n工具列表：\n' + toolList +
+                    '\nJSON 结构：{"checks":[{"tool":"工具名","query":"可选检索词","reason":"为什么要检查"}]}'
+            },
+            { role: 'user', content: '患者信息：' + (patientText(patient) || '未提供') }
+        ];
+        const raw = await chat(cfg, messages, { maxTokens: 700, temperature: 0.1 });
+        const parsed = extractJson(raw);
+        if (!parsed || !Array.isArray(parsed.checks) || !parsed.checks.length) {
+            return { checks: defaultChecklist(patient), plannerUsed: false, note: 'Planner 返回格式异常，已回退到默认检查清单。' };
+        }
+        const allowed = new Set(AGENT_TOOLS.map(t => t.name));
+        const checks = parsed.checks
+            .filter(c => allowed.has(c && c.tool))
+            .map(c => ({ tool: c.tool, query: c.query ? String(c.query) : undefined, reason: c.reason ? String(c.reason) : '' }))
+            .slice(0, 8);
+        if (!checks.length) return { checks: defaultChecklist(patient), plannerUsed: false, note: 'Planner 未给出有效工具，已回退到默认检查清单。' };
+        return { checks, plannerUsed: true };
+    } catch (err) {
+        logWarn('Planner 调用失败，已回退到默认检查清单:', err);
+        return { checks: defaultChecklist(patient), plannerUsed: false, note: 'Planner 调用失败，采用默认检查清单。' };
+    }
+}
+
+async function runAssistAgent(settings, { patient, prescriptions, inventory, userEntries }) {
+    const cfg = normalizeConfig(settings && settings.aiConfig);
+    const plan = await planAgentChecks(settings, patient);
+    const evidence = { allergy: String((patient && patient.allergy) || '').trim(), inventory: [], knowledge: [] };
+
+    // 工具执行采用固定顺序，避免让模型自由驱动副作用。
+    evidence.inventory = (inventory || []).map(d => ({
+        name: d.name, stock: Number(d.stock || 0), unit: d.unit || '', price: Number(d.price) || 0
+    }));
+
+    const query = patientText(patient);
+    const draftDrugs = (prescriptions || []).map(d => d.name).filter(Boolean);
+    const ctx = await buildContext({ query, draftDrugs, inventoryNames: (inventory || []).map(d => d.name), userEntries });
+    evidence.knowledge = {
+        drugs: (ctx.drugs || []).map(e => ({ name: e.name, functions: e.functions || '', contraindications: e.contraindications || '' })),
+        formulas: (ctx.formulas || []).map(f => ({ name: f.name, indications: f.indications || '' })),
+        interactions: (ctx.interactions || []).map(it => ({ herbs: it.herbs, drugClassZh: it.drugClassZh, severity: it.severity })),
+        textChunks: (ctx.pdfMatches || []).map(c => ({ book: c.book, page: c.page, text: (c.text || '').slice(0, 160) }))
+    };
+
+    // 建议：复用已有"LLM + 白名单过滤"；若不可用，交给 Verifier 明确提示证据不足。
+    let suggestion = null;
+    let suggestionError = null;
+    if (cfg.enabled && cfg.apiKey) {
+        try {
+            suggestion = await generatePrescription(settings, { patient, prescriptions, inventory, userEntries });
+        } catch (err) {
+            suggestionError = err.message;
+            logWarn('辅助诊疗 Agent 开方建议失败:', err);
+        }
+    }
+
+    // Verifier：规则审方 + 白名单/证据不足核查。审方不依赖 LLM 成功。
+    let review = null;
+    try {
+        review = await reviewPrescription(settings, { patient, prescriptions: suggestion ? suggestion.suggestions : prescriptions, userEntries });
+    } catch (err) {
+        review = { risks: [], llmUsed: false, ruleCount: 0, note: '审方过程异常：' + err.message };
+    }
+
+    const whitelistIssues = [];
+    const evidenceIssues = [];
+    const invNames = new Set((inventory || []).map(d => d.name));
+    for (const name of draftDrugs) {
+        if (!invNames.has(name)) whitelistIssues.push(name);
+    }
+    if (suggestion && suggestion.suggestions) {
+        for (const s of suggestion.suggestions) {
+            if (!invNames.has(s.name)) whitelistIssues.push(s.name);
+        }
+    }
+    if (!evidence.knowledge.drugs.length && !evidence.knowledge.formulas.length && !evidence.knowledge.textChunks.length) {
+        evidenceIssues.push('知识库未检索到明确证据，建议线下进一步评估。');
+    }
+    if (suggestionError) evidenceIssues.push('LLM 建议生成失败：' + suggestionError);
+
+    const verification = {
+        whitelist: { passed: whitelistIssues.length === 0, issues: [...new Set(whitelistIssues)] },
+        risks: review.risks,
+        llmUsed: review.llmUsed,
+        ruleCount: review.ruleCount,
+        evidenceIssues,
+        blocked: !!(whitelistIssues.length || review.risks.some(r => r.severity === '严重'))
+    };
+
+    return {
+        status: 'pending_human_review',
+        requiresHumanReview: true,
+        plan: { checks: plan.checks, plannerUsed: plan.plannerUsed, note: plan.note || '' },
+        tools: AGENT_TOOLS,
+        evidence,
+        suggestion,
+        verification,
+        model: cfg.model
+    };
+}
+
 module.exports = {
     PROVIDERS, normalizeConfig, providerLabel, chat, extractJson,
-    generatePrescription, reviewPrescription, testConnection, _setFetch
+    generatePrescription, reviewPrescription, testConnection, _setFetch,
+    AGENT_TOOLS, runAssistAgent
 };

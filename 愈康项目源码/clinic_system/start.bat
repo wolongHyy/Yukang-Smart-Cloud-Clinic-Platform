@@ -3,7 +3,7 @@ title YuKang Cloud Clinic System
 cd /d "%~dp0"
 
 :: ================================================
-::  ç«¯å£é…ç½®ï¼šä»¥åæ”¹ç«¯å£åªæ”¹è¿™é‡Œä¸€ä¸ªåœ°æ–¹
+::  ¶Ë¿ÚÅäÖÃ£ºÒÔºó¸Ä¶Ë¿ÚÖ»¸ÄÕâÀïÒ»¸öµØ·½
 :: ================================================
 set PORT=3002
 :: ================================================
@@ -62,18 +62,23 @@ echo.
 echo [4/4] Starting server...
 echo.
 echo ========================================
-echo   ç”µè„‘æœ¬æœºè®¿é—®: http://localhost:%PORT%
-echo   æ‰‹æœºæ‰«ç è®¿é—®: ç™»å½•ååœ¨ç³»ç»Ÿè®¾ç½®é‡ŒæŸ¥çœ‹
+echo   µçÄÔ±¾»ú·ÃÎÊ: http://localhost:%PORT%
+echo   ÊÖ»úÉ¨Âë·ÃÎÊ: µÇÂ¼ºóÔÚÏµÍ³ÉèÖÃÀï²é¿´
 echo ========================================
 echo.
-echo   æµè§ˆå™¨å°†è‡ªåŠ¨æ‰“å¼€ï¼ˆé˜²ç¼“å­˜æ¨¡å¼ï¼‰
-echo   æŒ‰ Ctrl+C åœæ­¢æœåŠ¡å™¨
+echo   ä¯ÀÀÆ÷½«×Ô¶¯´ò¿ª£¨·À»º´æÄ£Ê½£©
+echo   °´ Ctrl+C Í£Ö¹·şÎñÆ÷
 echo.
 
-:: è‡ªåŠ¨æ‰“å¼€æµè§ˆå™¨ï¼ˆåŠ éšæœºæ•°é˜²ç¼“å­˜ï¼Œé¿å…è·³åˆ°æ—§é¡µé¢ï¼‰
+:: Optional local RAG worker. Node falls back to keyword retrieval if unavailable.
+if exist "D:\CodexEnvs\yukang-rag\Scripts\python.exe" (
+    start "YuKang Local RAG" /min cmd /c "%~dp0start_rag.bat"
+)
+
+:: ×Ô¶¯´ò¿ªä¯ÀÀÆ÷£¨¼ÓËæ»úÊı·À»º´æ£¬±ÜÃâÌøµ½¾ÉÒ³Ãæ£©
 start "" "http://localhost:%PORT%/login.html?t=%random%"
 
-"%NODE_EXE%" server.js
+"%NODE_EXE%" --disable-warning=ExperimentalWarning server.js
 
 echo.
 echo Server stopped.

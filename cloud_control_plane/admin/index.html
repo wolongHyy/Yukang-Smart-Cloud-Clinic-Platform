@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>愈康连锁运营中心</title>
+  <link rel="stylesheet" href="/admin/styles.css">
+</head>
+<body>
+  <div class="login-shell" id="loginView">
+    <div class="login-panel">
+      <div class="brand-lockup">
+        <div class="brand-mark">愈</div>
+        <div>
+          <div class="brand-name">愈康运营中心</div>
+          <div class="brand-subtitle">Clinic Network Console</div>
+        </div>
+      </div>
+      <h1>管理连锁诊所，不触碰患者明细</h1>
+      <p class="login-copy">统一管理组织、门店、设备、版本、经营汇总与授权查询。患者主数据始终保留在门店本地。</p>
+      <form id="loginForm" class="login-form">
+        <label>平台管理密钥</label>
+        <input id="platformKey" type="password" autocomplete="off" placeholder="输入 X-Platform-Key">
+        <label>设备注册密钥 <span>(可选)</span></label>
+        <input id="provisioningKey" type="password" autocomplete="off" placeholder="输入 X-Provisioning-Key">
+        <button type="submit" class="primary-button">进入控制台</button>
+        <div class="form-error" id="loginError"></div>
+      </form>
+      <div class="login-footnote">密钥仅保存在当前浏览器会话中，关闭标签页后清除。</div>
+    </div>
+    <div class="login-visual">
+      <div class="visual-grid"></div>
+      <div class="visual-card">
+        <div class="visual-kicker">Local-first network</div>
+        <div class="visual-title">门店留数，总部看全局</div>
+        <div class="visual-metrics">
+          <div><strong>0</strong><span>患者明细上云</span></div>
+          <div><strong>mTLS</strong><span>出站长连接</span></div>
+          <div><strong>Signed</strong><span>版本与知识包</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-shell" id="appView" hidden>
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark small">愈</div>
+        <div><strong>愈康运营中心</strong><span>连锁管理控制面</span></div>
+      </div>
+      <nav id="nav" class="nav"></nav>
+      <div class="sidebar-footer">
+        <span class="online-dot"></span>
+        <span id="connectionLabel">控制面在线</span>
+        <button id="settingsButton" class="icon-button" title="连接设置">⚙</button>
+      </div>
+    </aside>
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <h1 id="pageTitle">运营总览</h1>
+          <p id="pageSubtitle">连锁门店、设备和经营指标统一视图</p>
+        </div>
+        <div class="topbar-actions">
+          <button id="refreshButton" class="secondary-button">刷新数据</button>
+          <button id="logoutButton" class="ghost-button">退出</button>
+        </div>
+      </header>
+      <section id="content" class="content"></section>
+    </main>
+  </div>
+
+  <dialog id="modal" class="modal">
+    <form method="dialog" id="modalForm">
+      <div class="modal-head">
+        <h2 id="modalTitle">新建</h2>
+        <button type="button" class="icon-button" id="modalClose">×</button>
+      </div>
+      <div id="modalBody" class="modal-body"></div>
+      <div class="modal-actions">
+        <button type="button" class="ghost-button" id="modalCancel">取消</button>
+        <button type="submit" class="primary-button">保存</button>
+      </div>
+      <div class="form-error" id="modalError"></div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" hidden></div>
+  <script src="/admin/app.js"></script>
+</body>
+</html>

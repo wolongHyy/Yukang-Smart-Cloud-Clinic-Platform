@@ -13,8 +13,11 @@ node_modules/
 # ---- 旧备份目录 ----
 愈康项目源码/clinic_system/_backup_*/
 
-# ---- 运行时数据（含用户账号、病人记录等敏感信息；server.js 会自动重建）----
+# ---- 运行时数据：SQLite 主库、WAL、备份、迁移报告和旧版 JSON（含患者敏感信息）----
 愈康项目源码/clinic_system/clinic_database/
+愈康项目源码/clinic_system/clinic_database/clinic.db*
+愈康项目源码/clinic_system/clinic_database/backups/
+愈康项目源码/clinic_system/clinic_database/migrations/
 
 # ---- 药典2025原始整理数据（21MB 素材，仅用于重新生成知识库，不入库）----
 药典2025原始数据/
@@ -25,6 +28,24 @@ npm-debug.log*
 Thumbs.db
 .DS_Store
 
+# ---- Cloud control plane secrets, caches and local runtime data ----
+cloud_control_plane/.env
+cloud_control_plane/**/__pycache__/
+cloud_control_plane/.pytest_cache/
+cloud_control_plane/**/*.pyc
+cloud_control_plane/nginx/certs/
+cloud_control_plane/data/
+local_rag_worker/.pytest_cache/
+local_rag_worker/**/__pycache__/
+local_rag_worker/**/*.pyc
+local_rag_worker/.env
+local_rag_worker/models/
+愈康项目源码/clinic_system/data/knowledge_index.db*
+愈康项目源码/clinic_system/clinic_database/updates/
+愈康项目源码/clinic_system/data/_hybrid_input_*.jsonl
+
+# ---- Personal career material: never publish ----
+docs/resume_copy_v5.md
+
 # Local scratch dir
 _work/
-

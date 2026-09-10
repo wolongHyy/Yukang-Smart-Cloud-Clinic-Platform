@@ -1,0 +1,11 @@
+﻿fastapi>=0.116,<1
+uvicorn[standard]>=0.35,<1
+sqlalchemy>=2.0,<3
+psycopg[binary]>=3.2,<4
+alembic>=1.16,<2
+pydantic-settings>=2.10,<3
+cryptography>=45,<47
+redis>=6,<7
+python-multipart>=0.0.20,<1
+pytest>=8,<9
+httpx>=0.28,<1

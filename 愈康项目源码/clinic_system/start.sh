@@ -42,4 +42,4 @@ echo "  地址: http://localhost:3002"
 echo "  按 Ctrl+C 停止"
 echo
 
-node server.js
+node --disable-warning=ExperimentalWarning server.js

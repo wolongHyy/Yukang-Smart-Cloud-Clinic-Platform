@@ -1,0 +1,101 @@
+﻿name: Build YuKang Desktop Installers
+
+on:
+  push:
+    branches:
+      - codex/packaging-installers
+    paths:
+      - ".github/workflows/build-desktop-installers.yml"
+      - "desktop/**"
+  workflow_dispatch:
+    inputs:
+      knowledge_release:
+        description: GitHub release tag containing knowledge-package.zip
+        required: true
+        default: packaging-assets-20260910
+
+permissions:
+  contents: read
+
+env:
+  KNOWLEDGE_RELEASE: ${{ github.event_name == 'workflow_dispatch' && inputs.knowledge_release || 'packaging-assets-20260910' }}
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - name: Download full knowledge package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          mkdir -p knowledge/full
+          gh release download "$KNOWLEDGE_RELEASE" --repo "$GITHUB_REPOSITORY" --pattern knowledge-package.zip --dir knowledge --clobber
+          tar -xf knowledge/knowledge-package.zip -C knowledge/full
+      - name: Install build dependencies
+        working-directory: desktop
+        run: npm ci --no-audit --no-fund
+      - name: Install host Electron runtime
+        working-directory: desktop
+        run: npm run install:electron
+      - name: Build Linux packages
+        working-directory: desktop
+        env:
+          YUKANG_KNOWLEDGE_DB: ${{ github.workspace }}/knowledge/full/knowledge_index.db
+          ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/
+        run: npx electron-builder --linux AppImage deb --x64 --arm64
+      - name: Upload Linux packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: YuKangClinic-Linux
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            desktop/artifacts/*.AppImage
+            desktop/artifacts/*.deb
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - name: Download full knowledge package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          mkdir -p knowledge/full
+          gh release download "$KNOWLEDGE_RELEASE" --repo "$GITHUB_REPOSITORY" --pattern knowledge-package.zip --dir knowledge --clobber
+          tar -xf knowledge/knowledge-package.zip -C knowledge/full
+      - name: Install build dependencies
+        working-directory: desktop
+        run: npm ci --no-audit --no-fund
+      - name: Install host Electron runtime
+        working-directory: desktop
+        run: npm run install:electron
+      - name: Build macOS packages
+        working-directory: desktop
+        env:
+          YUKANG_KNOWLEDGE_DB: ${{ github.workspace }}/knowledge/full/knowledge_index.db
+          ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npm run dist:mac
+      - name: Upload macOS packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: YuKangClinic-macOS
+          if-no-files-found: error
+          retention-days: 7
+          path: |
+            desktop/artifacts/*.dmg
+            desktop/artifacts/*.zip

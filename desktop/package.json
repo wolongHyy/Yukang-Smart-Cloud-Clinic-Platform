@@ -1,0 +1,116 @@
+{
+  "name": "yukang-desktop-packager",
+  "version": "5.0.0-preview.1",
+  "private": true,
+  "description": "YuKang Smart Cloud Clinic cross-platform desktop installer build",
+  "main": "main.js",
+  "author": "YuKang Clinic",
+  "license": "MIT",
+  "scripts": {
+    "prepare:runtime": "node scripts/prepare-runtime.js",
+    "dist:win": "npm run prepare:runtime && electron-builder --win nsis",
+    "dist:linux": "npm run prepare:runtime && electron-builder --linux AppImage deb",
+    "dist:mac": "npm run prepare:runtime && electron-builder --mac dmg zip --x64 --arm64",
+    "install:electron": "node scripts/ensure-electron.js"
+  },
+  "devDependencies": {
+    "electron": "^44.3.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "cn.yukang.clinic",
+    "productName": "YuKangClinic",
+    "copyright": "Copyright © 2026 YuKang Clinic",
+    "asar": true,
+    "compression": "normal",
+    "npmRebuild": false,
+    "directories": {
+      "output": "artifacts",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "runtime/clinic_system",
+        "to": "clinic_system"
+      }
+    ],
+    "artifactName": "YuKangClinic-${version}-${os}-${arch}.${ext}",
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "YuKang Clinic",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "installerLanguages": [
+        "zh_CN",
+        "en_US"
+      ],
+      "language": "2052"
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "category": "Office",
+      "synopsis": "YuKang Smart Cloud Clinic",
+      "description": "Local-first clinic management system for independent clinics.",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    },
+    "mac": {
+      "icon": "build/icon.png",
+      "category": "public.app-category.medical",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "identity": null
+    },
+    "dmg": {
+      "title": "YuKangClinic ${version}",
+      "window": {
+        "width": 640,
+        "height": 420
+      },
+      "contents": [
+        {
+          "x": 180,
+          "y": 210
+        },
+        {
+          "x": 460,
+          "y": 210,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "electronDownload": {
+      "mirror": "https://npmmirror.com/mirrors/electron/"
+    }
+  },
+  "allowScripts": {
+    "electron@44.3.0": true
+  }
+}

@@ -49,9 +49,7 @@ jobs:
         env:
           YUKANG_KNOWLEDGE_DB: ${{ github.workspace }}/knowledge/full/knowledge_index.db
           ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/
-        run: |
-          npm run prepare:runtime
-          npx electron-builder --linux AppImage deb --x64 --arm64 --publish never
+        run: npm run dist:linux
       - name: Smoke test Linux package
         working-directory: desktop
         run: |

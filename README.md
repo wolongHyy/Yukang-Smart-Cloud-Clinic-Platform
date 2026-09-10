@@ -156,6 +156,9 @@ cd 愈康项目源码/clinic_system
 - 新增出站 WebSocket 边缘代理，支持心跳、每日聚合上报、发布包下载、Ed25519 签名和 SHA-256 校验；
 - 新增本地 `bge-small-zh-v1.5` RAG Worker、SQLite FTS5/向量混合检索和 RRF；无完整知识包时自动回退关键词检索；
 - 管理控制面板、成员令牌与 RBAC 已可用，Edge 更新器已支持健康检查和失败回滚；全量知识包已构建为 35,993 块 / 512 维 CPU 包，GPU 构建脚本已提供；正式投产前仍需部署正式 mTLS 证书并完成真实诊所试点验收。
+- 当前验证：Node 单测 20/20、业务回归 92/92、控制面与 mTLS 17/17、RAG 1/1、浏览器 E2E 44/44、后端并发/事务 20/20、控制面-Edge 18/18、Edge 升级/回滚 9/9、管理控制台 8/8。
+- 全量知识包：`D:\YukangKnowledge\v5-full\knowledge-package.zip`，SHA-256 `6ad4fa879797dbfda77ac04b9edca1bac2952e17147cad3ade2907a983cfe606`。
+- Edge 更新包格式见 `docs/edge-update-package.md`。
 
 ### v4.0（正式版本）
 

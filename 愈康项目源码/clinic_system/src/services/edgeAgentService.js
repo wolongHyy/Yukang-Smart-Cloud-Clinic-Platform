@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const { applyRelease, extractZipArchive } = require('./updateService');
 
 function stable(value) {
     if (Array.isArray(value)) return '[' + value.map(stable).join(',') + ']';
@@ -54,6 +55,7 @@ function loadEdgeAgentConfig(env = process.env) {
         certPath: env.YUKONG_EDGE_CERT_PATH || '',
         keyPath: env.YUKONG_EDGE_KEY_PATH || '',
         caPath: env.YUKONG_EDGE_CA_PATH || '',
+        appDir: env.YUKONG_APP_DIR || '',
     };
 }
 
@@ -63,6 +65,7 @@ class EdgeAgent {
         this.dataDir = options.dataDir || path.join(process.cwd(), 'clinic_database');
         this.fetchImpl = options.fetchImpl || fetch;
         this.aggregateProvider = options.aggregateProvider || null;
+        this.updateApplier = options.updateApplier || null;
         this.createSocket = options.createSocket || ((url, socketOptions) => new WebSocket(url, socketOptions));
         this.socket = null;
         this.heartbeatTimer = null;
@@ -191,6 +194,45 @@ class EdgeAgent {
                 status: 'verified',
                 package_path: packagePath,
                 sha256: verified.sha256,
+            });
+
+            if (!this.config.appDir) return;
+            this.send({
+                type: 'job_result',
+                edge_id: this.config.edgeId,
+                job_id: job.id,
+                status: 'applying',
+                package_path: packagePath,
+            });
+
+            let result;
+            if (this.updateApplier) {
+                result = await this.updateApplier({
+                    zipPath: packagePath,
+                    appDir: this.config.appDir,
+                    job,
+                    release,
+                });
+            } else {
+                const stagingDir = path.join(updatesDir, `staged-${String(job.id || release.version).replace(/[^A-Za-z0-9._-]/g, '_')}`);
+                extractZipArchive(packagePath, stagingDir);
+                this.send({
+                    type: 'job_result',
+                    edge_id: this.config.edgeId,
+                    job_id: job.id,
+                    status: 'staged',
+                    package_path: packagePath,
+                });
+                result = await applyRelease({ stagingDir, appDir: this.config.appDir });
+            }
+            this.send({
+                type: 'job_result',
+                edge_id: this.config.edgeId,
+                job_id: job.id,
+                status: result.status,
+                package_path: packagePath,
+                backup_path: result.backupPath || '',
+                failure_reason: result.error || '',
             });
         } catch (err) {
             this.send({

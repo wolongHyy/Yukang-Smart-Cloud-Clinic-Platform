@@ -1,6 +1,7 @@
 #!/bin/bash
 # 智慧云诊所 - Linux/Mac 一键启动脚本
 cd "$(dirname "$0")"
+export YUKONG_APP_DIR="$(pwd)"
 
 echo "╔══════════════════════════════════════╗"
 echo "║     智慧云诊所管理系统 - 一键启动     ║"

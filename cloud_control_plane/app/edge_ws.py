@@ -119,7 +119,8 @@ async def edge_connect(websocket: WebSocket, edge_id: str, token: str) -> None:
                     if job:
                         job.status = str(message.get("status") or job.status)
                         job.failure_reason = str(message.get("failure_reason") or "")
-                        job.attempts += 1
+                        if job.status in {"verified", "healthy", "rolled_back", "failed"}:
+                            job.attempts += 1
                 await websocket.send_json({"type": "job_result_ack", "job_id": job_id})
             elif message_type == "policy_sync":
                 await websocket.send_json({"type": "policy_sync_ack", "accepted": True})

@@ -16,7 +16,22 @@ The control plane mounts the management console at `/admin`. It requires the pla
 - Users and role metadata
 - Audit events
 
-The console and APIs are available as a preview. Production rollout still requires formal mTLS certificates, enforced RBAC, update execution, a full GPU-built knowledge package, and pilot acceptance.
+The console and APIs are available as a preview. RBAC enforcement and member tokens are implemented; production rollout still requires formal mTLS certificates, signed update execution in the target environment, a full GPU-built knowledge package, and pilot acceptance.
+
+## Member tokens and RBAC
+
+Create a member in `/admin`, then use **生成令牌** to issue a one-time visible `X-User-Token`. The platform key remains a super-admin compatibility path. Roles are enforced server-side and scoped by organization and clinic.
+
+## mTLS certificates
+
+Generate a private CA outside the repository:
+
+```powershell
+D:\CodexEnvs\yukang-control\Scripts\python.exe scripts\generate_mtls_ca.py --output D:\YukangCerts --host control.example.com
+D:\CodexEnvs\yukang-control\Scripts\python.exe scripts\verify_mtls_certificates.py --directory D:\YukangCerts --host control.example.com
+```
+
+Copy `server.crt`, `server.key`, and `ca.crt` into `nginx/certs/` on the deployment host. Never commit these files.
 
 ## Local tests
 

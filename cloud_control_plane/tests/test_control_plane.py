@@ -51,6 +51,41 @@ def create_org_clinic(client: TestClient) -> tuple[str, str]:
     return org_id, clinic.json()["id"]
 
 
+def create_user(
+    client: TestClient,
+    org_id: str,
+    username: str,
+    role: str,
+    clinic_id: str | None = None,
+) -> str:
+    response = client.post(
+        "/api/v1/users",
+        headers=platform_headers(),
+        json={
+            "org_id": org_id,
+            "clinic_id": clinic_id,
+            "username": username,
+            "display_name": username,
+            "role": role,
+        },
+    )
+    assert response.status_code == 201, response.text
+    return response.json()["id"]
+
+
+def issue_user_token(client: TestClient, user_id: str) -> str:
+    response = client.post(
+        f"/api/v1/users/{user_id}/token",
+        headers=platform_headers(),
+    )
+    assert response.status_code == 200, response.text
+    return response.json()["access_token"]
+
+
+def user_headers(token: str) -> dict[str, str]:
+    return {"X-User-Token": token}
+
+
 def register_edge(client: TestClient, clinic_id: str) -> dict:
     response = client.post(
         "/api/v1/edge/register",
@@ -64,6 +99,67 @@ def register_edge(client: TestClient, clinic_id: str) -> dict:
     )
     assert response.status_code == 201, response.text
     return response.json()
+
+
+def test_rbac_requires_member_token_for_scoped_access(client: TestClient) -> None:
+    org_id, clinic_id = create_org_clinic(client)
+    assert client.get("/api/v1/clinics").status_code == 401
+    user_id = create_user(client, org_id, "owner-1", "org_owner", clinic_id)
+    token = issue_user_token(client, user_id)
+    response = client.get("/api/v1/clinics", headers=user_headers(token))
+    assert response.status_code == 200, response.text
+
+
+def test_rbac_denies_cross_org_and_cross_clinic_access(client: TestClient) -> None:
+    org_a, clinic_a = create_org_clinic(client)
+    org_b = client.post(
+        "/api/v1/orgs",
+        headers=platform_headers(),
+        json={"name": "第二连锁", "code": "second-chain"},
+    ).json()["id"]
+    clinic_b = client.post(
+        "/api/v1/clinics",
+        headers=platform_headers(),
+        json={"org_id": org_b, "name": "二店", "code": "store-2"},
+    ).json()["id"]
+
+    owner_id = create_user(client, org_a, "owner-a", "org_owner", clinic_a)
+    owner_token = issue_user_token(client, owner_id)
+    denied = client.get(f"/api/v1/clinics?org_id={org_b}", headers=user_headers(owner_token))
+    assert denied.status_code == 403
+
+    manager_id = create_user(client, org_a, "manager-a", "store_manager", clinic_a)
+    manager_token = issue_user_token(client, manager_id)
+    denied = client.get(
+        f"/api/v1/edge/nodes?clinic_id={clinic_b}",
+        headers=user_headers(manager_token),
+    )
+    assert denied.status_code == 403
+    own = client.get("/api/v1/edge/nodes", headers=user_headers(manager_token))
+    assert own.status_code == 200
+    assert all(node["clinic_id"] == clinic_a for node in own.json())
+
+
+def test_rbac_role_permissions_are_enforced(client: TestClient) -> None:
+    org_id, clinic_id = create_org_clinic(client)
+    auditor_id = create_user(client, org_id, "auditor-1", "auditor")
+    auditor_token = issue_user_token(client, auditor_id)
+    denied = client.post(
+        "/api/v1/releases",
+        headers=user_headers(auditor_token),
+        json={
+            "version": "5.0.1",
+            "artifact_url": "https://example.com/a.zip",
+            "sha256": "a" * 64,
+            "min_version": "4.0.0",
+        },
+    )
+    assert denied.status_code == 403
+    assert client.get("/api/v1/audit", headers=user_headers(auditor_token)).status_code == 200
+
+    doctor_id = create_user(client, org_id, "doctor-1", "doctor", clinic_id)
+    doctor_token = issue_user_token(client, doctor_id)
+    assert client.get("/api/v1/users", headers=user_headers(doctor_token)).status_code == 403
 
 
 def test_mtls_required_when_enabled(tmp_path: Path) -> None:
@@ -275,6 +371,24 @@ def test_websocket_receives_pending_update_job(client: TestClient) -> None:
         offer = websocket.receive_json()
         assert offer["type"] == "job_offer"
         assert offer["release"]["version"] == "4.2.0"
+        websocket.send_json({
+            "type": "job_result",
+            "edge_id": edge["edge_id"],
+            "job_id": offer["job"]["id"],
+            "status": "applying",
+        })
+        assert websocket.receive_json()["type"] == "job_result_ack"
+        websocket.send_json({
+            "type": "job_result",
+            "edge_id": edge["edge_id"],
+            "job_id": offer["job"]["id"],
+            "status": "healthy",
+        })
+        assert websocket.receive_json()["type"] == "job_result_ack"
+        updates = client.get(f"/api/v1/updates?edge_id={edge['edge_id']}", headers=platform_headers())
+        assert updates.status_code == 200, updates.text
+        assert updates.json()[0]["status"] == "healthy"
+        assert updates.json()[0]["attempts"] == 1
 def test_websocket_accepts_idempotent_aggregate_push(client: TestClient) -> None:
     _, clinic_id = create_org_clinic(client)
     edge = register_edge(client, clinic_id)

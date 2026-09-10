@@ -22,7 +22,7 @@ function rrf(rank, k = 60) {
     return rank ? 1 / (k + rank) : 0;
 }
 
-async function buildIndex({ sourcePath, dbPath, ragClient, batchSize = 32, onProgress = null }) {
+async function buildIndex({ sourcePath, dbPath, ragClient, batchSize = 32, concurrency = 1, onProgress = null }) {
     if (!ragClient) throw new Error('缺少本地 RAG 客户端');
     const rows = fs.readFileSync(sourcePath, 'utf8').trim().split(/\r?\n/).filter(Boolean).map(JSON.parse);
     fs.mkdirSync(path.dirname(dbPath), { recursive: true });
@@ -56,16 +56,26 @@ async function buildIndex({ sourcePath, dbPath, ragClient, batchSize = 32, onPro
     db.exec('BEGIN IMMEDIATE');
     try {
         let dimension = 0;
+        const effectiveConcurrency = Math.max(1, Number(concurrency) || 1);
+        const batches = [];
         for (let start = 0; start < rows.length; start += batchSize) {
-            const batch = rows.slice(start, start + batchSize);
-            const vectors = await ragClient.embed(batch.map(row => String(row.text || '')));
-            for (let index = 0; index < batch.length; index++) {
-                const row = batch[index];
-                dimension = vectors[index].length;
-                const result = insertChunk.run(String(row.book || ''), Number(row.page) || 0, String(row.text || ''), vectorToBuffer(vectors[index]));
-                insertFts.run(result.lastInsertRowid, String(row.text || ''), String(row.book || ''), Number(row.page) || 0);
+            batches.push({ start, batch: rows.slice(start, start + batchSize) });
+        }
+        for (let cursor = 0; cursor < batches.length; cursor += effectiveConcurrency) {
+            const group = batches.slice(cursor, cursor + effectiveConcurrency);
+            const embedded = await Promise.all(group.map(async item => ({
+                ...item,
+                vectors: await ragClient.embed(item.batch.map(row => String(row.text || ''))),
+            })));
+            for (const item of embedded) {
+                for (let index = 0; index < item.batch.length; index++) {
+                    const row = item.batch[index];
+                    dimension = item.vectors[index].length;
+                    const result = insertChunk.run(String(row.book || ''), Number(row.page) || 0, String(row.text || ''), vectorToBuffer(item.vectors[index]));
+                    insertFts.run(result.lastInsertRowid, String(row.text || ''), String(row.book || ''), Number(row.page) || 0);
+                }
+                if (onProgress) onProgress(Math.min(item.start + item.batch.length, rows.length), rows.length);
             }
-            if (onProgress) onProgress(Math.min(start + batch.length, rows.length), rows.length);
         }
         db.prepare("INSERT INTO meta (key, value) VALUES ('dimension', ?)").run(String(dimension));
         db.prepare("INSERT INTO meta (key, value) VALUES ('chunk_count', ?)").run(String(rows.length));

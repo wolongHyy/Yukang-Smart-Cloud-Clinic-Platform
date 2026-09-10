@@ -26,6 +26,17 @@ $args = @($source, $packageDir, "/E", "/R:1", "/W:1", "/XD") + $excludeDirs + @(
 if ($LASTEXITCODE -ge 8) { throw "robocopy failed with exit code $LASTEXITCODE" }
 
 Set-Content -LiteralPath (Join-Path $packageDir "RELEASE_VERSION.txt") -Value $Version -Encoding ASCII
+$updateManifest = @{
+    version = $Version
+    app_dir = "clinic_system"
+    restart_command = @("cmd.exe", "/c", "start", "YuKangClinic", "/min", "cmd.exe", "/c", "start.bat")
+    healthcheck = @{
+        url = "http://127.0.0.1:3002/api/server-info"
+        timeout_ms = 60000
+        interval_ms = 2000
+    }
+} | ConvertTo-Json -Depth 6
+Set-Content -LiteralPath (Join-Path $stagingRoot "update-manifest.json") -Value $updateManifest -Encoding UTF8
 $zipPath = Join-Path $OutputRoot "$releaseName.zip"
 Compress-Archive -Path (Join-Path $stagingRoot "*") -DestinationPath $zipPath -Force
 Write-Output $zipPath

@@ -5,7 +5,9 @@
     "main": "server.js",
     "scripts": {
         "start": "node --disable-warning=ExperimentalWarning server.js",
-        "test": "node --disable-warning=ExperimentalWarning --test tests/*.test.js"
+        "test": "node --disable-warning=ExperimentalWarning --test tests/*.test.js",
+        "build:index": "node tools/build_hybrid_index.js",
+        "build:knowledge": "node tools/build_knowledge_package.js"
     },
     "engines": {
         "node": ">=22.5.0"

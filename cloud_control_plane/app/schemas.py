@@ -72,6 +72,12 @@ class UserRead(StrictModel):
     created_at: datetime
 
 
+class UserTokenRead(StrictModel):
+    user_id: str
+    access_token: str
+    issued_at: datetime
+
+
 class EdgeRegisterRequest(StrictModel):
     clinic_id: str
     device_fingerprint: str = Field(min_length=4, max_length=128)

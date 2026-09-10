@@ -55,6 +55,8 @@ class User(Base):
     display_name: Mapped[str] = mapped_column(String(120), default="", nullable=False)
     role: Mapped[str] = mapped_column(String(32), nullable=False)
     status: Mapped[str] = mapped_column(String(24), default="active", nullable=False)
+    token_hash: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True, index=True)
+    token_issued_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
 
     organization: Mapped[Organization] = relationship(back_populates="users")

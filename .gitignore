@@ -38,6 +38,8 @@ cloud_control_plane/data/
 local_rag_worker/.pytest_cache/
 local_rag_worker/**/__pycache__/
 local_rag_worker/**/*.pyc
+愈康项目源码/clinic_system/**/__pycache__/
+愈康项目源码/clinic_system/**/*.pyc
 local_rag_worker/.env
 local_rag_worker/models/
 愈康项目源码/clinic_system/data/knowledge_index.db*
@@ -49,3 +51,9 @@ docs/resume_copy_v5.md
 
 # Local scratch dir
 _work/
+
+# ---- Certificates and private keys must remain outside the repository ----
+**/*.pem
+**/*.key
+**/*.crt
+**/*.csr

@@ -30,7 +30,7 @@ test('构建本地混合索引并返回向量相关结果', async () => {
         fs.writeFileSync(source, rows.map(row => JSON.stringify(row)).join('\n'), 'utf8');
         const client = new FakeRagClient();
 
-        const built = await buildIndex({ sourcePath: source, dbPath, ragClient: client, batchSize: 2 });
+        const built = await buildIndex({ sourcePath: source, dbPath, ragClient: client, batchSize: 2, concurrency: 3 });
         assert.equal(built.chunks, 3);
 
         const status = await indexStatus(dbPath);

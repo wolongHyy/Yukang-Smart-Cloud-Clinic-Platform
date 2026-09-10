@@ -1,0 +1,2 @@
+﻿date,clinic,visits,prescriptions,revenue,dispensed,ai_suggestions_used,ai_suggestions_rejected,minutes_per_visit,backup_ok,incident_level,incident_summary,owner,status
+2026-01-01,示例诊所,0,0,0,0,0,0,0,false,none,待真实试点填写,,pending

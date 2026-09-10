@@ -40,12 +40,18 @@ from .schemas import (
     UpdateCreate,
     UserCreate,
     UserRead,
+    UserTokenRead,
 )
 from .security import (
+    Principal,
+    ensure_clinic_access,
+    ensure_org_access,
     get_session,
     get_settings,
     issue_edge_token,
+    issue_user_token,
     require_edge,
+    require_permission,
     require_platform_key,
     require_provisioning_key,
     token_hash,
@@ -79,7 +85,7 @@ def health(request: Request) -> dict:
 def create_org(
     body: OrganizationCreate,
     session: Session = Depends(get_session),
-    _: None = Depends(require_platform_key),
+    principal: Principal = Depends(require_permission("orgs:write")),
 ):
     organization = Organization(id=new_id(), name=body.name, code=body.code, status="active")
     session.add(organization)
@@ -103,20 +109,24 @@ def create_org(
 @router.get("/api/v1/orgs", response_model=list[OrganizationRead])
 def list_orgs(
     session: Session = Depends(get_session),
-    _: None = Depends(require_platform_key),
+    principal: Principal = Depends(require_permission("orgs:read")),
 ):
-    return session.scalars(select(Organization).order_by(Organization.created_at)).all()
+    query = select(Organization)
+    if not principal.is_platform_admin:
+        query = query.where(Organization.id == principal.org_id)
+    return session.scalars(query.order_by(Organization.created_at)).all()
 
 
 @router.get("/api/v1/orgs/{org_id}", response_model=OrganizationRead)
 def get_org(
     org_id: str,
     session: Session = Depends(get_session),
-    _: None = Depends(require_platform_key),
+    principal: Principal = Depends(require_permission("orgs:read")),
 ):
     organization = session.get(Organization, org_id)
     if not organization:
         raise HTTPException(status_code=404, detail="organization not found")
+    ensure_org_access(principal, organization.id)
     return organization
 
 
@@ -124,10 +134,11 @@ def get_org(
 def create_clinic(
     body: ClinicCreate,
     session: Session = Depends(get_session),
-    _: None = Depends(require_platform_key),
+    principal: Principal = Depends(require_permission("clinics:write")),
 ):
     if not session.get(Organization, body.org_id):
         raise HTTPException(status_code=404, detail="organization not found")
+    ensure_org_access(principal, body.org_id)
     clinic = Clinic(
         id=new_id(),
         org_id=body.org_id,
@@ -159,11 +170,16 @@ def create_clinic(
 def list_clinics(
     org_id: str | None = None,
     session: Session = Depends(get_session),
-    _: None = Depends(require_platform_key),
+    principal: Principal = Depends(require_permission("clinics:read")),
 ):
     query = select(Clinic)
     if org_id:
+        ensure_org_access(principal, org_id)
         query = query.where(Clinic.org_id == org_id)
+    if not principal.is_platform_admin:
+        query = query.where(Clinic.org_id == principal.org_id)
+        if principal.clinic_id:
+            query = query.where(Clinic.id == principal.clinic_id)
     return session.scalars(query.order_by(Clinic.created_at)).all()
 
 
@@ -171,12 +187,18 @@ def list_clinics(
 def create_user(
     body: UserCreate,
     session: Session = Depends(get_session),
-    _: None = Depends(require_platform_key),
+    principal: Principal = Depends(require_permission("users:write")),
 ):
     if not session.get(Organization, body.org_id):
         raise HTTPException(status_code=404, detail="organization not found")
-    if body.clinic_id and not session.get(Clinic, body.clinic_id):
-        raise HTTPException(status_code=404, detail="clinic not found")
+    ensure_org_access(principal, body.org_id)
+    if body.clinic_id:
+        clinic = session.get(Clinic, body.clinic_id)
+        if not clinic or clinic.org_id != body.org_id:
+            raise HTTPException(status_code=404, detail="clinic not found")
+        ensure_clinic_access(principal, body.clinic_id)
+    if not principal.is_platform_admin and body.role == "platform_admin":
+        raise HTTPException(status_code=403, detail="platform administrator role requires platform access")
     user = User(
         id=new_id(),
         org_id=body.org_id,
@@ -203,6 +225,38 @@ def create_user(
     except IntegrityError as exc:
         raise HTTPException(status_code=409, detail="username already exists in organization") from exc
     return user
+
+
+@router.post("/api/v1/users/{user_id}/token", response_model=UserTokenRead)
+def rotate_user_token(
+    user_id: str,
+    session: Session = Depends(get_session),
+    principal: Principal = Depends(require_permission("users:write")),
+):
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="user not found")
+    ensure_org_access(principal, user.org_id)
+    if user.clinic_id:
+        ensure_clinic_access(principal, user.clinic_id)
+    if not principal.is_platform_admin and user.role == "platform_admin":
+        raise HTTPException(status_code=403, detail="cannot rotate platform administrator token")
+    token = issue_user_token()
+    user.token_hash = token_hash(token)
+    user.token_issued_at = utcnow()
+    record_audit(
+        session,
+        action="user.token_rotated",
+        actor_type="platform_admin" if principal.is_platform_admin else "user",
+        actor_id=principal.user_id or "platform",
+        resource_type="user",
+        resource_id=user.id,
+        org_id=user.org_id,
+        clinic_id=user.clinic_id,
+        details={"role": user.role},
+    )
+    session.flush()
+    return UserTokenRead(user_id=user.id, access_token=token, issued_at=user.token_issued_at)
 
 
 @router.post("/api/v1/edge/register", response_model=EdgeRegisterResponse)
@@ -265,7 +319,7 @@ def create_release(
     body: ReleaseCreate,
     request: Request,
     session: Session = Depends(get_session),
-    _: None = Depends(require_platform_key),
+    principal: Principal = Depends(require_permission("releases:write")),
 ):
     manifest = {
         "version": body.version,
@@ -304,7 +358,7 @@ def create_release(
 @router.get("/api/v1/releases", response_model=list[ReleaseRead])
 def list_releases(
     session: Session = Depends(get_session),
-    _: None = Depends(require_platform_key),
+    principal: Principal = Depends(require_permission("releases:read")),
 ):
     return session.scalars(select(Release).order_by(desc(Release.created_at))).all()
 
@@ -315,7 +369,7 @@ async def create_updates(
     response: Response,
     request: Request,
     session: Session = Depends(get_session),
-    _: None = Depends(require_platform_key),
+    principal: Principal = Depends(require_permission("updates:write")),
 ):
     release = session.get(Release, body.release_id)
     if not release:
@@ -380,11 +434,20 @@ async def create_updates(
 def list_updates(
     edge_id: str | None = None,
     session: Session = Depends(get_session),
-    _: None = Depends(require_platform_key),
+    principal: Principal = Depends(require_permission("updates:read")),
 ):
-    query = select(UpdateJob, Release).join(Release, UpdateJob.release_id == Release.id)
+    query = (
+        select(UpdateJob, Release)
+        .join(Release, UpdateJob.release_id == Release.id)
+        .join(EdgeNode, EdgeNode.id == UpdateJob.edge_id)
+        .join(Clinic, Clinic.id == EdgeNode.clinic_id)
+    )
     if edge_id:
         query = query.where(UpdateJob.edge_id == edge_id)
+    if not principal.is_platform_admin:
+        query = query.where(Clinic.org_id == principal.org_id)
+        if principal.clinic_id:
+            query = query.where(EdgeNode.clinic_id == principal.clinic_id)
     rows = session.execute(query.order_by(desc(UpdateJob.created_at))).all()
     return [
         {
@@ -459,15 +522,19 @@ def aggregate_summary(
     start: datetime | None = None,
     end: datetime | None = None,
     session: Session = Depends(get_session),
-    _: None = Depends(require_platform_key),
+    principal: Principal = Depends(require_permission("aggregates:read")),
 ):
+    ensure_org_access(principal, org_id)
+    effective_clinic_id = clinic_id or principal.clinic_id
+    if effective_clinic_id:
+        ensure_clinic_access(principal, effective_clinic_id)
     query = (
         select(AggregateSnapshot, Clinic)
         .join(Clinic, AggregateSnapshot.clinic_id == Clinic.id)
         .where(Clinic.org_id == org_id)
     )
-    if clinic_id:
-        query = query.where(AggregateSnapshot.clinic_id == clinic_id)
+    if effective_clinic_id:
+        query = query.where(AggregateSnapshot.clinic_id == effective_clinic_id)
     if start:
         query = query.where(AggregateSnapshot.period_end >= start)
     if end:
@@ -488,8 +555,9 @@ def aggregate_summary(
 def create_lookup_request(
     body: LookupRequestCreate,
     session: Session = Depends(get_session),
-    _: None = Depends(require_platform_key),
+    principal: Principal = Depends(require_permission("lookups:create")),
 ):
+    ensure_org_access(principal, body.requester_org_id)
     source = session.get(Clinic, body.source_clinic_id)
     if not source:
         raise HTTPException(status_code=404, detail="source clinic not found")
@@ -528,11 +596,20 @@ def create_lookup_request(
 def list_lookup_requests(
     source_clinic_id: str | None = None,
     session: Session = Depends(get_session),
-    _: None = Depends(require_platform_key),
+    principal: Principal = Depends(require_permission("lookups:read")),
 ):
-    query = select(LookupRequest)
+    query = select(LookupRequest).join(Clinic, Clinic.id == LookupRequest.source_clinic_id)
     if source_clinic_id:
+        ensure_clinic_access(principal, source_clinic_id)
         query = query.where(LookupRequest.source_clinic_id == source_clinic_id)
+    if not principal.is_platform_admin:
+        query = query.where(
+            (LookupRequest.requester_org_id == principal.org_id) | (Clinic.org_id == principal.org_id)
+        )
+        if principal.clinic_id:
+            query = query.where(
+                (LookupRequest.requester_org_id == principal.org_id) | (LookupRequest.source_clinic_id == principal.clinic_id)
+            )
     return session.scalars(query.order_by(desc(LookupRequest.created_at))).all()
 
 
@@ -541,11 +618,21 @@ def approve_lookup_request(
     request_id: str,
     body: LookupApprove,
     session: Session = Depends(get_session),
-    _: None = Depends(require_platform_key),
+    principal: Principal = Depends(require_permission("lookups:approve")),
 ):
     lookup = session.get(LookupRequest, request_id)
     if not lookup:
         raise HTTPException(status_code=404, detail="lookup request not found")
+    source_clinic = session.get(Clinic, lookup.source_clinic_id)
+    if not source_clinic:
+        raise HTTPException(status_code=404, detail="source clinic not found")
+    ensure_org_access(principal, source_clinic.org_id)
+    ensure_clinic_access(principal, lookup.source_clinic_id)
+    source_clinic = session.get(Clinic, lookup.source_clinic_id)
+    if not source_clinic:
+        raise HTTPException(status_code=404, detail="source clinic not found")
+    ensure_org_access(principal, source_clinic.org_id)
+    ensure_clinic_access(principal, lookup.source_clinic_id)
     if lookup.status != "pending":
         raise HTTPException(status_code=409, detail="lookup request is not pending")
     lookup.status = "approved"
@@ -571,7 +658,7 @@ def deny_lookup_request(
     request_id: str,
     body: LookupDeny,
     session: Session = Depends(get_session),
-    _: None = Depends(require_platform_key),
+    principal: Principal = Depends(require_permission("lookups:approve")),
 ):
     lookup = session.get(LookupRequest, request_id)
     if not lookup:
@@ -601,26 +688,40 @@ def list_audit(
     clinic_id: str | None = None,
     limit: int = 100,
     session: Session = Depends(get_session),
-    _: None = Depends(require_platform_key),
+    principal: Principal = Depends(require_permission("audit:read")),
 ):
     query = select(AuditEvent)
     if org_id:
+        ensure_org_access(principal, org_id)
         query = query.where(AuditEvent.org_id == org_id)
     if clinic_id:
+        ensure_clinic_access(principal, clinic_id)
         query = query.where(AuditEvent.clinic_id == clinic_id)
+    if not principal.is_platform_admin:
+        query = query.where(AuditEvent.org_id == principal.org_id)
+        if principal.clinic_id:
+            query = query.where(AuditEvent.clinic_id == principal.clinic_id)
     return session.scalars(query.order_by(desc(AuditEvent.created_at)).limit(min(max(limit, 1), 500))).all()
+
+
 @router.get("/api/v1/users", response_model=list[UserRead])
 def list_users(
     org_id: str | None = None,
     clinic_id: str | None = None,
     session: Session = Depends(get_session),
-    _: None = Depends(require_platform_key),
+    principal: Principal = Depends(require_permission("users:read")),
 ):
     query = select(User)
     if org_id:
+        ensure_org_access(principal, org_id)
         query = query.where(User.org_id == org_id)
     if clinic_id:
+        ensure_clinic_access(principal, clinic_id)
         query = query.where(User.clinic_id == clinic_id)
+    if not principal.is_platform_admin:
+        query = query.where(User.org_id == principal.org_id)
+        if principal.clinic_id:
+            query = query.where(User.clinic_id == principal.clinic_id)
     return session.scalars(query.order_by(User.created_at)).all()
 
 
@@ -629,13 +730,19 @@ def list_edge_nodes(
     org_id: str | None = None,
     clinic_id: str | None = None,
     session: Session = Depends(get_session),
-    _: None = Depends(require_platform_key),
+    principal: Principal = Depends(require_permission("edges:read")),
 ):
     query = select(EdgeNode, Clinic).join(Clinic, EdgeNode.clinic_id == Clinic.id)
     if org_id:
+        ensure_org_access(principal, org_id)
         query = query.where(Clinic.org_id == org_id)
     if clinic_id:
+        ensure_clinic_access(principal, clinic_id)
         query = query.where(EdgeNode.clinic_id == clinic_id)
+    if not principal.is_platform_admin:
+        query = query.where(Clinic.org_id == principal.org_id)
+        if principal.clinic_id:
+            query = query.where(EdgeNode.clinic_id == principal.clinic_id)
     rows = session.execute(query.order_by(EdgeNode.created_at)).all()
     return [
         {
@@ -656,24 +763,38 @@ def list_edge_nodes(
 def dashboard_summary(
     org_id: str | None = None,
     session: Session = Depends(get_session),
-    _: None = Depends(require_platform_key),
+    principal: Principal = Depends(require_permission("dashboard:read")),
 ):
+    effective_org_id = org_id or principal.org_id
+    if effective_org_id:
+        ensure_org_access(principal, effective_org_id)
     clinic_query = select(Clinic)
     edge_query = select(EdgeNode, Clinic).join(Clinic, EdgeNode.clinic_id == Clinic.id)
     lookup_query = select(LookupRequest)
-    if org_id:
-        clinic_query = clinic_query.where(Clinic.org_id == org_id)
-        edge_query = edge_query.where(Clinic.org_id == org_id)
-        lookup_query = lookup_query.where(LookupRequest.requester_org_id == org_id)
+    if effective_org_id:
+        clinic_query = clinic_query.where(Clinic.org_id == effective_org_id)
+        edge_query = edge_query.where(Clinic.org_id == effective_org_id)
+        lookup_query = lookup_query.where(LookupRequest.requester_org_id == effective_org_id)
+    if principal.clinic_id:
+        clinic_query = clinic_query.where(Clinic.id == principal.clinic_id)
+        edge_query = edge_query.where(EdgeNode.clinic_id == principal.clinic_id)
+        lookup_query = lookup_query.where(LookupRequest.source_clinic_id == principal.clinic_id)
     clinics = session.scalars(clinic_query).all()
     edges = session.execute(edge_query).all()
     pending_lookups = session.scalars(lookup_query.where(LookupRequest.status == "pending")).all()
+    scoped_edge_ids = [edge.id for edge, _clinic in edges]
+    pending_updates = 0
+    if scoped_edge_ids:
+        pending_updates = session.query(UpdateJob).filter(
+            UpdateJob.status == "pending",
+            UpdateJob.edge_id.in_(scoped_edge_ids),
+        ).count()
     return {
-        "organizations": session.query(Organization).count() if not org_id else 1,
+        "organizations": 1 if effective_org_id else session.query(Organization).count(),
         "clinics": len(clinics),
         "active_edges": sum(1 for edge, _clinic in edges if edge.status == "active"),
         "online_edges": sum(1 for edge, _clinic in edges if edge.last_seen_at is not None),
-        "releases": session.query(Release).count(),
-        "pending_updates": session.query(UpdateJob).filter(UpdateJob.status == "pending").count(),
+        "releases": session.query(Release).count() if principal.is_platform_admin else 0,
+        "pending_updates": pending_updates,
         "pending_lookups": len(pending_lookups),
     }

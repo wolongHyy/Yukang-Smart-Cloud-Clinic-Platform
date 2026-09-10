@@ -102,6 +102,9 @@ cd 愈康项目源码/clinic_system
 #### 商业能力验证
 
 - 测试：`npm test`、`node regression-test.js`
+- 成员 RBAC：管理控制台创建成员后生成 `X-User-Token`，接口按角色和组织/门店范围校验
+- Edge 更新：`YUKONG_APP_DIR` 指向门店应用目录，更新包需包含 `update-manifest.json`；健康检查失败自动回滚
+- 知识包：`npm run build:knowledge -- --output D:\YukangKnowledge\v5-full --url http://127.0.0.1:8765`
 - 控制面：`../../cloud_control_plane/README.md`
 - RAG Worker：`../../local_rag_worker/README.md`
 
@@ -152,7 +155,7 @@ cd 愈康项目源码/clinic_system
 - 门店端新增 DPAPI 密钥、AES-GCM 业务数据加密、防篡改审计链、备份恢复和 JSON/CSV/HTML 导入导出；
 - 新增出站 WebSocket 边缘代理，支持心跳、每日聚合上报、发布包下载、Ed25519 签名和 SHA-256 校验；
 - 新增本地 `bge-small-zh-v1.5` RAG Worker、SQLite FTS5/向量混合检索和 RRF；无完整知识包时自动回退关键词检索；
-- 管理控制面板现已可用；正式投产前仍需完成升级执行、正式 mTLS 证书、GPU 全量知识包、RBAC 强制执行和真实试点验收。
+- 管理控制面板、成员令牌与 RBAC 已可用，Edge 更新器已支持健康检查和失败回滚；全量知识包已构建为 35,993 块 / 512 维 CPU 包，GPU 构建脚本已提供；正式投产前仍需部署正式 mTLS 证书并完成真实诊所试点验收。
 
 ### v4.0（正式版本）
 

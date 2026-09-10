@@ -1,4 +1,4 @@
-const test = require('node:test');
+﻿const test = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('crypto');
 
@@ -70,4 +70,47 @@ test('WebSocket 代理发送 hello 和心跳消息', async () => {
     assert.ok(sent.some(message => message.type === 'heartbeat'));
     assert.ok(sent.some(message => message.type === 'aggregate_push'));
     agent.stop();
+});
+test('Edge 更新任务执行升级并回报终态', async () => {
+    const { privateKey, publicKey } = crypto.generateKeyPairSync('ed25519');
+    const body = Buffer.from('upgrade-package');
+    const manifest = {
+        version: '4.2.0',
+        artifact_url: 'https://example.com/yukang-4.2.0.zip',
+        sha256: crypto.createHash('sha256').update(body).digest('hex'),
+        min_version: '4.0.0',
+    };
+    const signature = crypto.sign(null, Buffer.from(canonicalManifest(manifest)), privateKey).toString('base64');
+    const publicPem = publicKey.export({ type: 'spki', format: 'pem' });
+    const sent = [];
+    let received = null;
+    const agent = new EdgeAgent({
+        config: {
+            enabled: true,
+            controlUrl: 'wss://control.example.com',
+            edgeId: 'edge-update',
+            edgeToken: 'token-update',
+            clinicId: 'clinic-update',
+            version: '4.0.0',
+            heartbeatSeconds: 300,
+            appDir: 'D:\\CodexTemp\\yukong-update-app',
+        },
+        createSocket: () => new (require('node:events').EventTarget)(),
+        fetchImpl: async () => new Response(body, { status: 200 }),
+        dataDir: 'D:\\CodexTemp\\yukong-edge-update',
+        updateApplier: async options => {
+            received = options;
+            return { status: 'healthy', backupPath: 'D:\\CodexTemp\\backup' };
+        },
+    });
+    agent.socket = { send: value => sent.push(JSON.parse(value)), close() {} };
+
+    await agent.handleJobOffer({
+        job: { id: 'job-update-1', status: 'pending', attempts: 0 },
+        release: { ...manifest, signature, signing_public_key: publicPem },
+    });
+
+    assert.equal(received.appDir, 'D:\\CodexTemp\\yukong-update-app');
+    assert.match(received.zipPath, /yukang-4\.2\.0\.zip$/);
+    assert.deepEqual(sent.map(item => item.status), ['verified', 'applying', 'healthy']);
 });

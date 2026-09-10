@@ -11,6 +11,7 @@ const sourceDir = path.resolve(process.env.YUKANG_SOURCE_DIR || defaultSource);
 const runtimeDir = path.resolve(process.env.YUKANG_RUNTIME_DIR || path.join(desktopRoot, 'runtime'));
 const targetDir = path.join(runtimeDir, 'clinic_system');
 const knowledgeDb = process.env.YUKANG_KNOWLEDGE_DB ? path.resolve(process.env.YUKANG_KNOWLEDGE_DB) : '';
+const allowLiteIndex = process.env.YUKANG_ALLOW_LITE_INDEX === '1';
 const version = require('../package.json').version;
 
 function assertInside(parent, child, label) {
@@ -51,8 +52,9 @@ async function main() {
     if (!fs.existsSync(path.join(sourceDir, 'server.js'))) {
         throw new Error(`未找到愈康运行源码: ${sourceDir}`);
     }
-    if (!knowledgeDb || !fs.existsSync(knowledgeDb)) {
-        throw new Error(`缺少完整知识库索引。请设置 YUKANG_KNOWLEDGE_DB，当前值: ${knowledgeDb || '(empty)'}`);
+    const hasKnowledgeDb = Boolean(knowledgeDb && fs.existsSync(knowledgeDb));
+    if (!hasKnowledgeDb && !allowLiteIndex) {
+        throw new Error(`缺少完整知识库索引。请设置 YUKANG_KNOWLEDGE_DB，或设置 YUKANG_ALLOW_LITE_INDEX=1 构建精简版。当前值: ${knowledgeDb || '(empty)'}`);
     }
 
     assertInside(desktopRoot, runtimeDir, 'runtime');
@@ -63,8 +65,10 @@ async function main() {
     fs.cpSync(sourceDir, targetDir, { recursive: true, filter: shouldCopy });
 
     const targetIndex = path.join(targetDir, 'data', 'knowledge_index.db');
-    fs.mkdirSync(path.dirname(targetIndex), { recursive: true });
-    fs.copyFileSync(knowledgeDb, targetIndex);
+    if (hasKnowledgeDb) {
+        fs.mkdirSync(path.dirname(targetIndex), { recursive: true });
+        fs.copyFileSync(knowledgeDb, targetIndex);
+    }
 
     const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
     const install = spawnSync(npmCommand, [
@@ -94,15 +98,15 @@ async function main() {
     const info = {
         version,
         sourceDir,
-        knowledgeDb,
-        knowledgeSha256: await sha256(targetIndex),
-        knowledgeBytes: fs.statSync(targetIndex).size,
+        knowledgeDb: hasKnowledgeDb ? knowledgeDb : null,
+        knowledgeSha256: hasKnowledgeDb ? await sha256(targetIndex) : null,
+        knowledgeBytes: hasKnowledgeDb ? fs.statSync(targetIndex).size : 0,
         builtAt: new Date().toISOString()
     };
     fs.writeFileSync(path.join(targetDir, 'RELEASE_VERSION.txt'), `${version}\n`, 'utf8');
     fs.writeFileSync(path.join(targetDir, 'build-info.json'), `${JSON.stringify(info, null, 2)}\n`, 'utf8');
     console.log(`Runtime prepared: ${targetDir}`);
-    console.log(`Knowledge SHA-256: ${info.knowledgeSha256}`);
+    console.log(hasKnowledgeDb ? `Knowledge SHA-256: ${info.knowledgeSha256}` : 'Knowledge index: lite fallback (full RAG index not bundled)');
 }
 
 main().catch((error) => {

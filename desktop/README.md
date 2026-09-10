@@ -1,27 +1,16 @@
-﻿# YuKang Clinic Desktop Installers
+# YuKang Clinic Desktop Installers
 
-This directory contains the packaging-only Electron shell for the existing `clinic_system` application. It does not change the web application's routes, database format, or business logic.
-
-## Download
-
-Prebuilt installers are published at:
-
-https://github.com/wolongHyy/Yukang-Smart-Cloud-Clinic-Platform/releases/tag/v5.0.0-preview.1
+This directory contains packaging source for the existing `clinic_system` application. Installer binaries and the full 209 MB knowledge index are not committed to Git.
 
 ## Default Logo
-
-The installer uses the inner rounded YuKang logo without its outer border:
 
 - Windows: `build/icon.ico`
 - macOS: `build/icon.icns`
 - Linux: `build/icon.png`
-- Window title bar: the same `build/icon.png`
 
 The source is copied from `愈康基本盘/圆角Logo-内层无边框-20260910`.
 
-## Build
-
-Set `YUKANG_KNOWLEDGE_DB` to the full `knowledge_index.db` before building.
+## Build on Windows
 
 ```powershell
 npm ci
@@ -30,12 +19,30 @@ $env:YUKANG_KNOWLEDGE_DB = 'D:\YukangKnowledge\v5-full\knowledge_index.db'
 npm run dist:win
 ```
 
-Linux and macOS are built through `.github/workflows/build-desktop-installers.yml` on their native GitHub runners.
+## Build on Linux
 
-## Outputs
+On a Linux x86_64 machine:
 
-- Windows: NSIS `.exe`
-- Linux: `.AppImage` and `.deb`
-- macOS: `.dmg` and `.zip`
+```bash
+npm ci
+npm run install:electron
+YUKANG_KNOWLEDGE_DB=/path/to/knowledge_index.db npm run dist:linux
+```
 
-Generated output is written to `artifacts/`, which is intentionally ignored by Git.
+For a smaller build without the full vector index:
+
+```bash
+YUKANG_ALLOW_LITE_INDEX=1 npm run dist:linux
+```
+
+The lite build still starts normally through the desktop shell and can use the existing keyword knowledge-base fallback. The full RAG index can be supplied at build time with `YUKANG_KNOWLEDGE_DB`.
+
+## Build on macOS
+
+macOS packaging is deferred for now. When needed:
+
+```bash
+YUKANG_KNOWLEDGE_DB=/path/to/knowledge_index.db npm run dist:mac
+```
+
+Generated output is written to `artifacts/`, which is ignored by Git. No installer binaries are uploaded automatically.

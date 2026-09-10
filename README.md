@@ -73,6 +73,16 @@ cd 愈康项目源码/clinic_system
 
 ---
 
+## 桌面安装包（源码构建）
+
+Windows/Linux 桌面安装包的构建源码位于 `desktop/`，仓库不提交大体积安装包和完整 RAG 知识库。
+
+- Windows：在 Windows 构建机设置 `YUKANG_KNOWLEDGE_DB` 后运行 `npm run dist:win`，生成 NSIS 安装程序。
+- Linux：在 Linux x86_64 构建机运行 `YUKANG_KNOWLEDGE_DB=/path/to/knowledge_index.db npm run dist:linux`，生成 AppImage 和 deb；无完整知识库时可设置 `YUKANG_ALLOW_LITE_INDEX=1` 构建精简版。
+- macOS：暂缓，源码保留在 `desktop/`。
+- 详细说明见 `desktop/README.md`。
+
+
 ## 技术架构
 
 - **后端**：Node.js + Express

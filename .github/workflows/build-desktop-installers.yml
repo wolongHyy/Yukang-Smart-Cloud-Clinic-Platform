@@ -1,24 +1,20 @@
-﻿name: Build YuKang Desktop Installers
+name: Build YuKang Desktop Installers
 
 on:
-  push:
-    branches:
-      - codex/packaging-installers
-    paths:
-      - ".github/workflows/build-desktop-installers.yml"
-      - "desktop/**"
   workflow_dispatch:
     inputs:
-      knowledge_release:
-        description: GitHub release tag containing knowledge-package.zip
-        required: true
-        default: packaging-assets-20260910
+      knowledge_download_url:
+        description: Optional direct URL to knowledge-package.zip for a full RAG build
+        required: false
+        default: ""
+      build_macos:
+        description: Build macOS packages too
+        required: false
+        type: boolean
+        default: false
 
 permissions:
-  contents: write
-
-env:
-  KNOWLEDGE_RELEASE: ${{ github.event_name == 'workflow_dispatch' && inputs.knowledge_release || 'packaging-assets-20260910' }}
+  contents: read
 
 jobs:
   linux:
@@ -30,14 +26,6 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: desktop/package-lock.json
-      - name: Download full knowledge package
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          mkdir -p knowledge/full
-          gh release download "$KNOWLEDGE_RELEASE" --repo "$GITHUB_REPOSITORY" --pattern knowledge-package.zip --dir knowledge --clobber
-          unzip -q knowledge/knowledge-package.zip -d knowledge/full
       - name: Install build dependencies
         working-directory: desktop
         run: npm ci --no-audit --no-fund
@@ -47,22 +35,25 @@ jobs:
       - name: Build Linux packages
         working-directory: desktop
         env:
-          YUKANG_KNOWLEDGE_DB: ${{ github.workspace }}/knowledge/full/knowledge_index.db
+          KNOWLEDGE_DOWNLOAD_URL: ${{ inputs.knowledge_download_url }}
           ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/
-        run: npm run dist:linux
+        run: |
+          if [ -n "$KNOWLEDGE_DOWNLOAD_URL" ]; then
+            mkdir -p knowledge/full
+            curl -L --fail --retry 3 "$KNOWLEDGE_DOWNLOAD_URL" -o knowledge/knowledge-package.zip
+            unzip -q knowledge/knowledge-package.zip -d knowledge/full
+            echo "YUKANG_KNOWLEDGE_DB=$GITHUB_WORKSPACE/desktop/knowledge/full/knowledge_index.db" >> "$GITHUB_ENV"
+          else
+            echo "YUKANG_ALLOW_LITE_INDEX=1" >> "$GITHUB_ENV"
+          fi
+          npm run dist:linux
       - name: Smoke test Linux package
         working-directory: desktop
         run: |
           xvfb-run -a env YUKANG_DESKTOP_SMOKE=1 YUKANG_DESKTOP_PORT=32121 YUKANG_DESKTOP_DATA_DIR="$RUNNER_TEMP/yukang-linux-smoke" ./artifacts/linux-unpacked/YuKangClinic --no-sandbox
-      - name: Upload Linux packages to release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          gh release upload v5.0.0-preview.1 desktop/artifacts/*.AppImage desktop/artifacts/*.deb --repo "$GITHUB_REPOSITORY" --clobber
 
   macos:
-    if: github.event_name == 'workflow_dispatch'
+    if: ${{ inputs.build_macos }}
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -71,14 +62,6 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: desktop/package-lock.json
-      - name: Download full knowledge package
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          mkdir -p knowledge/full
-          gh release download "$KNOWLEDGE_RELEASE" --repo "$GITHUB_REPOSITORY" --pattern knowledge-package.zip --dir knowledge --clobber
-          unzip -q knowledge/knowledge-package.zip -d knowledge/full
       - name: Install build dependencies
         working-directory: desktop
         run: npm ci --no-audit --no-fund
@@ -88,22 +71,16 @@ jobs:
       - name: Build macOS packages
         working-directory: desktop
         env:
-          YUKANG_KNOWLEDGE_DB: ${{ github.workspace }}/knowledge/full/knowledge_index.db
+          KNOWLEDGE_DOWNLOAD_URL: ${{ inputs.knowledge_download_url }}
           ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
-        run: npm run dist:mac
-      - name: Smoke test macOS package
-        working-directory: desktop
         run: |
-          if [ "$(uname -m)" = "arm64" ]; then APP_DIR=artifacts/mac-arm64; else APP_DIR=artifacts/mac; fi
-          YUKANG_DESKTOP_SMOKE=1 YUKANG_DESKTOP_PORT=32122 YUKANG_DESKTOP_DATA_DIR="$RUNNER_TEMP/yukang-macos-smoke" "$APP_DIR/YuKangClinic.app/Contents/MacOS/YuKangClinic"
-      - name: Upload macOS packages
-        uses: actions/upload-artifact@v4
-        with:
-          name: YuKangClinic-macOS
-          if-no-files-found: error
-          retention-days: 7
-          path: |
-            desktop/artifacts/*.dmg
-            desktop/artifacts/*.zip
-
+          if [ -n "$KNOWLEDGE_DOWNLOAD_URL" ]; then
+            mkdir -p knowledge/full
+            curl -L --fail --retry 3 "$KNOWLEDGE_DOWNLOAD_URL" -o knowledge/knowledge-package.zip
+            unzip -q knowledge/knowledge-package.zip -d knowledge/full
+            echo "YUKANG_KNOWLEDGE_DB=$GITHUB_WORKSPACE/desktop/knowledge/full/knowledge_index.db" >> "$GITHUB_ENV"
+          else
+            echo "YUKANG_ALLOW_LITE_INDEX=1" >> "$GITHUB_ENV"
+          fi
+          npm run dist:mac

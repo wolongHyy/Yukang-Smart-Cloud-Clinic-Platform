@@ -83,6 +83,7 @@ function createMainWindow() {
         autoHideMenuBar: true,
         backgroundColor: '#f3f7f6',
         title: 'YuKang Clinic',
+        icon: path.join(__dirname, 'build', 'icon.png'),
         webPreferences: {
             contextIsolation: true,
             nodeIntegration: false,

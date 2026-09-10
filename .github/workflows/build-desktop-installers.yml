@@ -50,6 +50,10 @@ jobs:
           YUKANG_KNOWLEDGE_DB: ${{ github.workspace }}/knowledge/full/knowledge_index.db
           ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/
         run: npx electron-builder --linux AppImage deb --x64 --arm64
+      - name: Smoke test Linux package
+        working-directory: desktop
+        run: |
+          xvfb-run -a env YUKANG_DESKTOP_SMOKE=1 YUKANG_DESKTOP_PORT=32121 YUKANG_DESKTOP_DATA_DIR="$RUNNER_TEMP/yukang-linux-smoke" ./artifacts/linux-unpacked/YuKangClinic
       - name: Upload Linux packages
         uses: actions/upload-artifact@v4
         with:
@@ -90,6 +94,11 @@ jobs:
           ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
         run: npm run dist:mac
+      - name: Smoke test macOS package
+        working-directory: desktop
+        run: |
+          if [ "$(uname -m)" = "arm64" ]; then APP_DIR=artifacts/mac-arm64; else APP_DIR=artifacts/mac; fi
+          YUKANG_DESKTOP_SMOKE=1 YUKANG_DESKTOP_PORT=32122 YUKANG_DESKTOP_DATA_DIR="$RUNNER_TEMP/yukang-macos-smoke" "$APP_DIR/YuKangClinic.app/Contents/MacOS/YuKangClinic"
       - name: Upload macOS packages
         uses: actions/upload-artifact@v4
         with:

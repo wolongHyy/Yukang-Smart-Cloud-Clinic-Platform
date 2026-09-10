@@ -37,7 +37,7 @@ jobs:
         run: |
           mkdir -p knowledge/full
           gh release download "$KNOWLEDGE_RELEASE" --repo "$GITHUB_REPOSITORY" --pattern knowledge-package.zip --dir knowledge --clobber
-          tar -xf knowledge/knowledge-package.zip -C knowledge/full
+          unzip -q knowledge/knowledge-package.zip -d knowledge/full
       - name: Install build dependencies
         working-directory: desktop
         run: npm ci --no-audit --no-fund
@@ -76,7 +76,7 @@ jobs:
         run: |
           mkdir -p knowledge/full
           gh release download "$KNOWLEDGE_RELEASE" --repo "$GITHUB_REPOSITORY" --pattern knowledge-package.zip --dir knowledge --clobber
-          tar -xf knowledge/knowledge-package.zip -C knowledge/full
+          unzip -q knowledge/knowledge-package.zip -d knowledge/full
       - name: Install build dependencies
         working-directory: desktop
         run: npm ci --no-audit --no-fund
@@ -99,3 +99,4 @@ jobs:
           path: |
             desktop/artifacts/*.dmg
             desktop/artifacts/*.zip
+

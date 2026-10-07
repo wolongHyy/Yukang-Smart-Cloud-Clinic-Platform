@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 
 from contextlib import asynccontextmanager
-from threading import Lock
+from threading import BoundedSemaphore, Lock
 from typing import Callable
 
 from fastapi import FastAPI, HTTPException
@@ -131,6 +131,9 @@ def create_app(
     app.state.settings = settings
     app.state.models = registry
 
+    # Cap concurrent heavy inference calls to prevent resource exhaustion (CWE-770).
+    inference_slots = BoundedSemaphore(value=4)
+
     @app.get("/health")
     def health() -> dict:
         return {
@@ -144,19 +147,27 @@ def create_app(
 
     @app.post("/api/v1/embed", response_model=EmbedResponse)
     def embed(body: EmbedRequest) -> EmbedResponse:
+        if not inference_slots.acquire(blocking=False):
+            raise HTTPException(status_code=429, detail="too many concurrent embedding requests")
         try:
             vectors = [list(map(float, vector)) for vector in registry.embedding().embed(body.texts)]
         except Exception as exc:
             raise HTTPException(status_code=503, detail=f"embedding unavailable: {exc}") from exc
+        finally:
+            inference_slots.release()
         dimension = len(vectors[0]) if vectors else 0
         return EmbedResponse(model=settings.model_name, dimension=dimension, vectors=vectors)
 
     @app.post("/api/v1/rerank", response_model=RerankResponse)
     def rerank(body: RerankRequest) -> RerankResponse:
+        if not inference_slots.acquire(blocking=False):
+            raise HTTPException(status_code=429, detail="too many concurrent rerank requests")
         try:
             scores = list(registry.reranker().rerank(body.query, body.documents))
         except Exception as exc:
             raise HTTPException(status_code=503, detail=f"reranker unavailable: {exc}") from exc
+        finally:
+            inference_slots.release()
         ranked = sorted(enumerate(scores), key=lambda item: item[1], reverse=True)[: body.top_k]
         return RerankResponse(
             model=settings.reranker_model,

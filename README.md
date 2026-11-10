@@ -223,6 +223,32 @@ macOS 安装包当前暂缓，构建源码保留。生成文件写入 `desktop/a
 
 ---
 
+## 官网
+
+公开产品官网位于 [`website/`](website/)，采用独立的静态 HTML/CSS/JavaScript 实现，展示愈康的产品定位、业务流程、核心能力、数据安全边界和部署方式。
+
+```powershell
+python -m http.server 4173 --directory website
+```
+
+启动后访问 <http://127.0.0.1:4173/>。官网不连接诊所数据库，不提供业务登录入口，也不会上传患者数据。诊所业务系统仍应只部署在本机或可信局域网，不能通过公网反向代理直接暴露。
+
+阿里云 ECS、DNS、安全组、HTTPS 和 ICP 备案的完整上线步骤见 [`deploy/README.md`](deploy/README.md)。准备服务器公网 IP、SSH 私钥、域名和证书邮箱后，可在项目根目录执行：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\deploy\deploy.ps1 `
+  -ServerHost 'ECS 公网 IPv4' `
+  -User 'root' `
+  -KeyPath 'D:\Keys\aliyun.pem' `
+  -Domain 'example.com' `
+  -Email 'admin@example.com' `
+  -IncludeWww
+```
+
+部署脚本只上传 `website/`，使用独立 Nginx 站点和 `/var/www/yukang-site/current` 发布目录，不覆盖服务器上已有站点。
+
+---
+
 ## 技术架构
 
 - **后端**：Node.js 22.5+、Express

@@ -1,0 +1,57 @@
+# 由 deploy/install-site.sh 生成。请修改源模板，不要直接编辑服务器上的副本。
+server {
+    listen 80;
+    listen [::]:80;
+    server_name __SERVER_NAMES__;
+
+    server_tokens off;
+    root __SITE_ROOT__;
+    index index.html;
+    charset utf-8;
+    client_max_body_size 2m;
+
+    access_log /var/log/nginx/yukang-site.access.log;
+    error_log  /var/log/nginx/yukang-site.error.log warn;
+
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()" always;
+    add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; upgrade-insecure-requests" always;
+    add_header Strict-Transport-Security "max-age=31536000" always; # __HSTS_MARKER__
+
+    gzip on;
+    gzip_comp_level 5;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css application/javascript application/json image/svg+xml;
+
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    location = / {
+        try_files /index.html =404;
+        expires -1;
+    }
+
+    location ~* \.html$ {
+        try_files $uri =404;
+        expires -1;
+    }
+
+    location ~* \.(?:css|js|svg|png|jpe?g|webp|ico|woff2?)$ {
+        try_files $uri =404;
+        expires 1d;
+        access_log off;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}

@@ -90,3 +90,9 @@ release-secrets/
 cloud_control_plane/**/mTLS/
 cloud_control_plane/**/mtls/
 cloud_control_plane/**/certs/
+
+# ---- Website deployment local output and secrets ----
+deploy/.env
+deploy/.deploy-*
+deploy/tmp/
+website/.well-known/acme-challenge/

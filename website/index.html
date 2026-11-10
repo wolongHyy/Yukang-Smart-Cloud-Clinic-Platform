@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173d34">
+  <meta name="description" content="愈康云诊所是一套本地优先的诊所数字化工作台，覆盖接诊、电子病历、处方、药房、收费、经营统计与数据恢复。">
+  <meta name="keywords" content="愈康云诊所,诊所管理系统,电子病历,电子处方,药房管理,诊所收费,AI辅助诊疗,本地部署">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="愈康云诊所｜让每一次接诊，都有据可循">
+  <meta property="og:description" content="本地优先、数据自主可控的诊所数字化工作台。断网也能完成接诊、开方、发药、收费与统计。">
+  <title>愈康云诊所｜本地优先的诊所数字化工作台</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+
+  <header class="site-header" data-header>
+    <div class="nav-shell">
+      <a class="brand" href="#top" aria-label="愈康云诊所首页">
+        <svg class="brand-mark" viewBox="0 0 42 42" aria-hidden="true">
+          <rect x="1" y="1" width="40" height="40" rx="12" fill="currentColor"/>
+          <path d="M12 25c4.8-1 7.7-4.1 9-9.4 1.1 4.7 3.7 7.6 8 8.7" fill="none" stroke="#f6f1e6" stroke-width="2.1" stroke-linecap="round"/>
+          <path d="M21 14.5v13.2M17.2 23.2h7.6" fill="none" stroke="#f6f1e6" stroke-width="2.1" stroke-linecap="round"/>
+        </svg>
+        <span class="brand-copy"><strong>愈康</strong><small>YU KANG CLINIC</small></span>
+      </a>
+
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-menu-toggle>
+        <span></span><span></span><span></span>
+        <span class="sr-only">打开导航</span>
+      </button>
+
+      <nav class="site-nav" id="site-nav" data-nav aria-label="主要导航">
+        <a href="#workflow">工作流</a>
+        <a href="#capabilities">产品能力</a>
+        <a href="#security">数据安全</a>
+        <a href="#deployment">部署方式</a>
+        <a class="nav-github" href="https://github.com/wolongHyy/Yukang-Smart-Cloud-Clinic-Platform" target="_blank" rel="noopener">
+          GitHub
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12 12 4M6 4h6v6"/></svg>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-landscape" aria-hidden="true">
+        <svg viewBox="0 0 1440 760" preserveAspectRatio="xMidYMax slice">
+          <defs>
+            <linearGradient id="mountainFade" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#4f7d68" stop-opacity=".05"/>
+              <stop offset="1" stop-color="#4f7d68" stop-opacity=".22"/>
+            </linearGradient>
+            <linearGradient id="sunGlow" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#d5b36c" stop-opacity=".5"/>
+              <stop offset="1" stop-color="#d5b36c" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <circle cx="1150" cy="172" r="210" fill="url(#sunGlow)"/>
+          <path d="M0 640c159-91 302-60 423-143 90-62 126-153 220-157 111-5 154 130 270 137 143 9 222-158 527-210v493H0Z" fill="url(#mountainFade)"/>
+          <path d="M0 681c183-64 304-28 453-85 146-55 212-135 302-123 102 14 167 124 296 110 122-13 223-91 389-101v277H0Z" fill="#dce4d9" opacity=".58"/>
+          <path d="M0 715c194-49 375-16 548-47 198-35 282-86 443-56 172 32 261 18 449-34v182H0Z" fill="#f4f0e6"/>
+        </svg>
+      </div>
+
+      <div class="hero-grid page-shell">
+        <div class="hero-copy">
+          <h1>让每一次接诊，<br><em>都有据可循。</em></h1>
+          <p class="hero-lead">愈康云诊所把接诊、病历、处方、药房、收费与经营统计收进一张安静的工作台。本地优先，断网也能完成核心业务；AI 只做辅助，最终决定始终在医生手里。</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#capabilities">
+              了解产品能力
+              <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M3 9h12M10 4l5 5-5 5"/></svg>
+            </a>
+            <a class="button button-ghost" href="https://github.com/wolongHyy/Yukang-Smart-Cloud-Clinic-Platform" target="_blank" rel="noopener">
+              查看开源项目
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12 12 4M6 4h6v6"/></svg>
+            </a>
+          </div>
+          <ul class="hero-proof" aria-label="产品特点">
+            <li><span></span>本地数据</li>
+            <li><span></span>门店隔离</li>
+            <li><span></span>离线可用</li>
+            <li><span></span>医生确认</li>
+          </ul>
+        </div>
+
+        <div class="hero-visual" aria-label="愈康诊疗工作台界面示意">
+          <div class="visual-orbit orbit-one" aria-hidden="true"></div>
+          <div class="visual-orbit orbit-two" aria-hidden="true"></div>
+          <div class="workspace-card">
+            <div class="workspace-top">
+              <div>
+                <span class="workspace-kicker">今日工作台</span>
+                <h2>上午好，林医生</h2>
+              </div>
+              <div class="avatar" aria-hidden="true">林</div>
+            </div>
+            <div class="workspace-metrics">
+              <div><strong>18</strong><span>今日门诊</span></div>
+              <div><strong>04</strong><span>待发药</span></div>
+              <div><strong>02</strong><span>待收费</span></div>
+            </div>
+            <div class="workspace-body">
+              <div class="queue-card">
+                <div class="queue-title"><span>候诊队列</span><small>按挂号顺序</small></div>
+                <div class="patient-row active">
+                  <span class="patient-number">01</span>
+                  <div><strong>林女士</strong><small>复诊 · 咳嗽</small></div>
+                  <span class="status-tag">接诊中</span>
+                </div>
+                <div class="patient-row">
+                  <span class="patient-number">02</span>
+                  <div><strong>周先生</strong><small>初诊 · 头晕</small></div>
+                  <span class="status-tag muted">候诊</span>
+                </div>
+                <div class="patient-row">
+                  <span class="patient-number">03</span>
+                  <div><strong>陈女士</strong><small>复诊 · 调理</small></div>
+                  <span class="status-tag muted">候诊</span>
+                </div>
+              </div>
+              <div class="record-card">
+                <div class="record-head"><span>本次病历</span><span class="record-live">记录中</span></div>
+                <div class="record-line"><small>主诉</small><p>反复咳嗽 5 天，夜间加重</p></div>
+                <div class="record-line"><small>诊断</small><p>风寒咳嗽</p></div>
+                <div class="record-line"><small>处置</small><p>中药 3 剂 · 每日 1 剂</p></div>
+                <div class="ai-hint">
+                  <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m10 2 1.8 5.2L17 9l-5.2 1.8L10 16l-1.8-5.2L3 9l5.2-1.8L10 2Z"/></svg>
+                  <span>已完成过敏与配伍检查</span>
+                </div>
+              </div>
+            </div>
+            <div class="workspace-bottom">
+              <span>接诊完成后进入待收费</span>
+              <button type="button" data-scroll-to="workflow">查看完整流程 <span aria-hidden="true">→</span></button>
+            </div>
+          </div>
+          <div class="floating-note note-one"><span>数据留在门店</span><strong>本地 SQLite</strong></div>
+          <div class="floating-note note-two"><span>AI 辅助检查</span><strong>医生确认后生效</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="principle-strip" aria-label="愈康产品原则">
+      <div class="page-shell principle-grid">
+        <p>一套诊所工作台，<strong>不是一堆彼此割裂的表格。</strong></p>
+        <div class="principle-tags">
+          <span>接诊</span><i></i><span>处方</span><i></i><span>药房</span><i></i><span>收费</span><i></i><span>统计</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section workflow-section" id="workflow">
+      <div class="page-shell">
+        <div class="section-heading reveal">
+          <span class="section-number">01 / 工作流</span>
+          <h2>从患者坐下，到经营报表落定。</h2>
+          <p>业务不是一个孤立的按钮，而是一条完整、可追溯的链路。每一步都有明确状态，每一次变更都留下记录。</p>
+        </div>
+
+        <div class="workflow-layout reveal">
+          <div class="workflow-steps" role="tablist" aria-label="愈康工作流程">
+            <button class="workflow-step active" type="button" role="tab" aria-selected="true" aria-controls="workflow-panel" data-step="0">
+              <span class="step-index">01</span>
+              <span class="step-copy"><strong>接诊建档</strong><small>主诉、病史、诊断与处方在一处完成</small></span>
+              <span class="step-arrow" aria-hidden="true">↗</span>
+            </button>
+            <button class="workflow-step" type="button" role="tab" aria-selected="false" aria-controls="workflow-panel" data-step="1" tabindex="-1">
+              <span class="step-index">02</span>
+              <span class="step-copy"><strong>处方审核</strong><small>结合库存、过敏史与药典知识辅助检查</small></span>
+              <span class="step-arrow" aria-hidden="true">↗</span>
+            </button>
+            <button class="workflow-step" type="button" role="tab" aria-selected="false" aria-controls="workflow-panel" data-step="2" tabindex="-1">
+              <span class="step-index">03</span>
+              <span class="step-copy"><strong>药房发药</strong><small>推送待发药，自动扣减库存并留存出库记录</small></span>
+              <span class="step-arrow" aria-hidden="true">↗</span>
+            </button>
+            <button class="workflow-step" type="button" role="tab" aria-selected="false" aria-controls="workflow-panel" data-step="3" tabindex="-1">
+              <span class="step-index">04</span>
+              <span class="step-copy"><strong>收费入账</strong><small>确认实收后计入营收，支持 A4 与小票打印</small></span>
+              <span class="step-arrow" aria-hidden="true">↗</span>
+            </button>
+            <button class="workflow-step" type="button" role="tab" aria-selected="false" aria-controls="workflow-panel" data-step="4" tabindex="-1">
+              <span class="step-index">05</span>
+              <span class="step-copy"><strong>经营复盘</strong><small>门诊、营收、库存和毛利形成清晰日报</small></span>
+              <span class="step-arrow" aria-hidden="true">↗</span>
+            </button>
+          </div>
+
+          <div class="workflow-panel" id="workflow-panel" role="tabpanel" aria-live="polite" data-active-step="0">
+            <div class="panel-stamp">流程示意 · 诊所内部数据处理</div>
+            <div class="panel-topline">
+              <span data-panel-index>01</span>
+              <div class="panel-progress"><i data-progress></i></div>
+              <span>05</span>
+            </div>
+            <div class="panel-content">
+              <div class="panel-icon" data-panel-icon>
+                <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M16 8h16a4 4 0 0 1 4 4v28l-12-7-12 7V12a4 4 0 0 1 4-4Z"/><path d="M20 18h8M20 24h8"/></svg>
+              </div>
+              <div class="panel-copy">
+                <h3 data-panel-title>完整记录一次诊疗</h3>
+                <p data-panel-desc>患者档案、主诉、现病史、既往史、过敏史、体格检查与诊断在同一条业务链中流转，不重复录入。</p>
+              </div>
+            </div>
+            <div class="panel-foot">
+              <span data-panel-note>状态：接诊中</span>
+              <span class="panel-dots" aria-hidden="true"><i class="active"></i><i></i><i></i><i></i><i></i></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section capabilities-section" id="capabilities">
+      <div class="page-shell">
+        <div class="section-heading section-heading-row reveal">
+          <div>
+            <span class="section-number">02 / 产品能力</span>
+            <h2>诊所每天要用的，<br>都在同一处。</h2>
+          </div>
+          <p>减少窗口切换与重复录入。围绕诊所真实业务设计，让医生专注判断，让前台与药房清楚协作。</p>
+        </div>
+
+        <div class="capability-grid">
+          <article class="capability-card card-emr reveal">
+            <div class="card-top">
+              <span class="card-icon">
+                <svg viewBox="0 0 26 26" aria-hidden="true"><path d="M8 4h10a3 3 0 0 1 3 3v15l-8-4-8 4V7a3 3 0 0 1 3-3Z"/><path d="M10 9h6M10 13h6"/></svg>
+              </span>
+              <span class="card-label">01</span>
+            </div>
+            <h3>电子病历</h3>
+            <p>主诉、现病史、既往史、过敏史、四诊与体格检查结构化记录。查看历史，也能快速复制上次处方。</p>
+            <ul>
+              <li>初诊 / 复诊 / 医保 / 自费标识</li>
+              <li>症状点选与诊断推荐</li>
+              <li>中西成药、输注、中药等处方类型</li>
+            </ul>
+            <div class="mini-record" aria-hidden="true">
+              <span>患者档案</span>
+              <div><i></i><i></i><i></i></div>
+              <small>历次就诊 · 过敏史 · 处方记录</small>
+            </div>
+          </article>
+
+          <article class="capability-card card-pharmacy reveal">
+            <div class="card-top">
+              <span class="card-icon">
+                <svg viewBox="0 0 26 26" aria-hidden="true"><path d="M9 4h8v5l4 8v4a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-4l4-8V4Z"/><path d="M8 17h10M10 8h6"/></svg>
+              </span>
+              <span class="card-label">02</span>
+            </div>
+            <h3>药房与库存</h3>
+            <p>药品、批次、效期、供应商和库存联动管理。发药自动出库，盘点差异自动计算，库存风险提前提醒。</p>
+            <div class="stock-bars" aria-hidden="true">
+              <div><span>常用饮片</span><i class="bar-86"></i><small>充足</small></div>
+              <div><span>低库存药品</span><i class="warn bar-28"></i><small>需补货</small></div>
+              <div><span>近效期批次</span><i class="danger bar-14"></i><small>4 项</small></div>
+            </div>
+          </article>
+
+          <article class="capability-card card-billing reveal">
+            <div class="card-top">
+              <span class="card-icon">
+                <svg viewBox="0 0 26 26" aria-hidden="true"><path d="M5 4h16v18H5z"/><path d="M9 9h8M9 13h5M9 17h8"/></svg>
+              </span>
+              <span class="card-label">03</span>
+            </div>
+            <h3>门诊收费</h3>
+            <p>接诊不等同于收费。只有收费员确认支付方式和实收金额后，收入才正式入账，避免统计口径混乱。</p>
+            <div class="billing-row" aria-hidden="true">
+              <div><small>本次应收</small><strong>¥ 186.00</strong></div>
+              <span>已收款</span>
+            </div>
+            <ul class="compact-list">
+              <li>现金、微信、支付宝、银行卡与医保记录</li>
+              <li>A4 收费单与 80mm 小票</li>
+              <li>补打留痕，不重复计入营收</li>
+            </ul>
+          </article>
+
+          <article class="capability-card card-ai reveal">
+            <div class="ai-orb" aria-hidden="true"></div>
+            <div class="card-top">
+              <span class="card-icon">
+                <svg viewBox="0 0 26 26" aria-hidden="true"><path d="m13 2 2.4 6.6L22 11l-6.6 2.4L13 20l-2.4-6.6L4 11l6.6-2.4L13 2Z"/><path d="m21 18 .8 2.2L24 21l-2.2.8L21 24l-.8-2.2L18 21l2.2-.8L21 18Z"/></svg>
+              </span>
+              <span class="card-label">04</span>
+            </div>
+            <h3>AI 辅助诊疗</h3>
+            <p>不是替你开方，而是把该看的风险先看一遍。AI 建议结合本店库存与药典知识，输出必须由医生确认。</p>
+            <div class="ai-checks" aria-hidden="true">
+              <span><i>✓</i> 过敏史检查</span>
+              <span><i>✓</i> 配伍禁忌</span>
+              <span><i>✓</i> 药物相互作用</span>
+            </div>
+            <small class="ai-disclaimer">AI 不可用时，不影响正常接诊与开方。</small>
+          </article>
+
+          <article class="capability-card card-chain reveal">
+            <div class="card-top">
+              <span class="card-icon">
+                <svg viewBox="0 0 26 26" aria-hidden="true"><circle cx="7" cy="7" r="3"/><circle cx="19" cy="7" r="3"/><circle cx="13" cy="19" r="3"/><path d="m9.5 8.5 2.3 7.3M16.5 8.5l-2.3 7.3M10 7h6"/></svg>
+              </span>
+              <span class="card-label">05</span>
+            </div>
+            <h3>连锁门店协作</h3>
+            <p>总店查看组织经营聚合指标，分店使用独立数据空间。权限边界清晰，不复制患者明细。</p>
+            <div class="chain-map" aria-hidden="true">
+              <span class="chain-center">总部</span>
+              <span>城西店</span><span>城南店</span><span>城北店</span>
+            </div>
+          </article>
+
+          <article class="capability-card card-backup reveal">
+            <div class="card-top">
+              <span class="card-icon">
+                <svg viewBox="0 0 26 26" aria-hidden="true"><path d="M5 7c0-2 3.6-4 8-4s8 2 8 4-3.6 4-8 4-8-2-8-4Z"/><path d="M5 7v6c0 2 3.6 4 8 4s8-2 8-4V7M5 13v6c0 2 3.6 4 8 4s8-2 8-4v-6"/></svg>
+              </span>
+              <span class="card-label">06</span>
+            </div>
+            <h3>备份与一键恢复</h3>
+            <p>每个门店每天生成独立 SQLite 快照，默认保留最近 60 份。恢复前自动备份当前数据，恢复后做完整性检查。</p>
+            <div class="backup-row" aria-hidden="true">
+              <span><i></i>今日 08:30 自动备份</span><strong>已完成</strong>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="knowledge-section" aria-label="药典知识库">
+      <div class="page-shell knowledge-layout">
+        <div class="knowledge-copy reveal">
+          <span class="section-number light">03 / 药典知识</span>
+          <h2>把厚重的药典，<br>放在处方手边。</h2>
+          <p>药品详情可查看药典条目与原文摘录；AI 检索基于本地知识库，在需要时给出有出处的参考。</p>
+          <p class="knowledge-source">知识库整理自《中华人民共和国药典（2025年版）》相关公开资料，正式使用请购买正版出版物。</p>
+        </div>
+        <div class="knowledge-stats reveal">
+          <div><strong>2,305</strong><span>种单药</span></div>
+          <div><strong>112</strong><span>首方剂</span></div>
+          <div><strong>56</strong><span>条相互作用</span></div>
+          <div><strong>14,638</strong><span>条药典知识块</span></div>
+        </div>
+        <div class="knowledge-seal" aria-hidden="true">
+          <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="55"/><circle cx="60" cy="60" r="48"/><path d="M37 61c12 0 18-7 23-22 4 13 11 20 23 24M60 38v42M48 62h24"/></svg>
+          <span>药典<br>随方</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section security-section" id="security">
+      <div class="page-shell">
+        <div class="section-heading reveal">
+          <span class="section-number">04 / 数据安全</span>
+          <h2>数据自主，<br>不是一句口号。</h2>
+          <p>愈康采用本地优先架构。门店业务数据按门店隔离，敏感字段加密，关键操作进入审计链。是否启用第三方 AI，也由机构自己决定。</p>
+        </div>
+
+        <div class="security-layout">
+          <div class="security-list reveal">
+            <article>
+              <span>01</span>
+              <div><h3>门店数据独立保存</h3><p>各门店使用独立 SQLite 数据空间，跨店权限在接口层拦截，不靠前端隐藏菜单。</p></div>
+            </article>
+            <article>
+              <span>02</span>
+              <div><h3>敏感信息加密与脱敏</h3><p>身份证号使用 AES-256-GCM 加密保存，界面与日志仅展示必要信息。</p></div>
+            </article>
+            <article>
+              <span>03</span>
+              <div><h3>AI 数据边界透明</h3><p>第三方 AI 只接收处方建议所需的诊疗片段，不发送患者姓名与手机号；硬性要求数据不出域的机构可使用本地模型或关闭 AI。</p></div>
+            </article>
+            <article>
+              <span>04</span>
+              <div><h3>备份可验证，恢复有回退</h3><p>恢复前创建当前快照，恢复后执行完整性检查，并要求重新登录确认。</p></div>
+            </article>
+          </div>
+
+          <aside class="security-note reveal">
+            <div class="note-symbol" aria-hidden="true">
+              <svg viewBox="0 0 48 48"><path d="M24 4 40 10v11c0 10-6.8 18.3-16 23-9.2-4.7-16-13-16-23V10L24 4Z"/><path d="m16 24 5 5 11-11"/></svg>
+            </div>
+            <span class="note-label">部署安全提示</span>
+            <h3>官网公开，<br>患者业务不公开。</h3>
+            <p>诊所系统用于内部诊疗，不应直接通过公网 IP 暴露。对外官网与内部工作台需要分开部署、分别设置访问边界。</p>
+            <small>本官网为静态展示站，不连接诊所数据库。</small>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="section deployment-section" id="deployment">
+      <div class="page-shell">
+        <div class="section-heading section-heading-row reveal">
+          <div>
+            <span class="section-number">05 / 部署方式</span>
+            <h2>从一张诊桌，<br>到一组门店。</h2>
+          </div>
+          <p>根据机构规模选择部署方式。核心原则不变：业务数据靠近门店，控制面只处理必要的组织与聚合信息。</p>
+        </div>
+
+        <div class="deployment-grid reveal">
+          <article class="deployment-card featured">
+            <div class="deployment-badge">推荐起步</div>
+            <span class="deployment-index">A</span>
+            <h3>单机诊所</h3>
+            <p>一台 Windows 电脑运行完整工作台，适合个人医生与单体诊所，安装后即可开始接诊。</p>
+            <ul>
+              <li>桌面安装包，向导式安装</li>
+              <li>本地数据库与每日自动备份</li>
+              <li>同一可信局域网内手机、平板访问</li>
+            </ul>
+            <a href="https://github.com/wolongHyy/Yukang-Smart-Cloud-Clinic-Platform/releases" target="_blank" rel="noopener">查看发布版本 <span>↗</span></a>
+          </article>
+
+          <article class="deployment-card">
+            <span class="deployment-index">B</span>
+            <h3>局域网协作</h3>
+            <p>医生、收费与药房在同一诊所网络内协同工作，数据仍保存在门店本机。</p>
+            <ul>
+              <li>多岗位并行处理门诊与收费</li>
+              <li>不依赖公网即可完成核心业务</li>
+              <li>适合单店日常运营</li>
+            </ul>
+          </article>
+
+          <article class="deployment-card">
+            <span class="deployment-index">C</span>
+            <h3>连锁与私有化</h3>
+            <p>总部通过独立控制面管理门店账号、邀请与聚合指标，各分店保留自己的业务数据空间。</p>
+            <ul>
+              <li>总部 / 分店权限分离</li>
+              <li>聚合经营指标，不复制患者明细</li>
+              <li>可配合私有服务器与本地 AI</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="deployment-cta reveal">
+          <div>
+            <span>正在评估诊所数字化？</span>
+            <h2>先把真实工作流跑通，<br>再决定买什么。</h2>
+          </div>
+          <div class="cta-actions">
+            <a class="button button-light" href="https://github.com/wolongHyy/Yukang-Smart-Cloud-Clinic-Platform/issues/new" target="_blank" rel="noopener">提交需求 / 预约沟通 <span>↗</span></a>
+            <a class="text-link" href="https://github.com/wolongHyy/Yukang-Smart-Cloud-Clinic-Platform" target="_blank" rel="noopener">阅读项目文档</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section faq-section" aria-labelledby="faq-title">
+      <div class="page-shell faq-layout">
+        <div class="faq-heading reveal">
+          <span class="section-number">06 / 常见问题</span>
+          <h2 id="faq-title">上线前，<br>先把边界说清楚。</h2>
+          <p>如果你准备在诊所里落地，以下问题比“功能有多少”更值得先确认。</p>
+        </div>
+        <div class="faq-list reveal">
+          <details open>
+            <summary>愈康是云诊所，为什么强调本地优先？<span></span></summary>
+            <p>“云”指整套产品与服务形态，但核心业务数据默认留在门店本机。这样即使网络波动、云端 AI 不可用，接诊、处方、发药和收费这些关键流程仍能继续。</p>
+          </details>
+          <details>
+            <summary>AI 会直接生成并保存处方吗？<span></span></summary>
+            <p>不会。AI 只提供建议与风险检查，医生确认后才写入正式处方。系统同时明确提示不能以 AI 输出替代医生诊断和用药决策。</p>
+          </details>
+          <details>
+            <summary>连锁总部能看到分店的患者资料吗？<span></span></summary>
+            <p>默认不能。总部控制台读取门店数量、门诊量、收费额、患者数和库存预警等聚合指标，不复制各店患者明细。</p>
+          </details>
+          <details>
+            <summary>官网为什么没有医生端登录入口？<span></span></summary>
+            <p>诊所业务系统面向内部使用，当前版本尚不具备完整的公网安全防护条件。公开官网与内部工作台分开部署，是对患者数据更负责任的做法。</p>
+          </details>
+          <details>
+            <summary>部署到自己的服务器需要准备什么？<span></span></summary>
+            <p>需要可用的域名、阿里云 ECS、已备案的主域名，以及服务器的 SSH 登录方式。官网可以独立部署为静态站；诊所业务端仍建议只开放给可信网络。</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="page-shell">
+      <div class="footer-main">
+        <div class="footer-brand">
+          <a class="brand brand-footer" href="#top" aria-label="返回顶部">
+            <svg class="brand-mark" viewBox="0 0 42 42" aria-hidden="true">
+              <rect x="1" y="1" width="40" height="40" rx="12" fill="currentColor"/>
+              <path d="M12 25c4.8-1 7.7-4.1 9-9.4 1.1 4.7 3.7 7.6 8 8.7" fill="none" stroke="#f6f1e6" stroke-width="2.1" stroke-linecap="round"/>
+              <path d="M21 14.5v13.2M17.2 23.2h7.6" fill="none" stroke="#f6f1e6" stroke-width="2.1" stroke-linecap="round"/>
+            </svg>
+            <span class="brand-copy"><strong>愈康</strong><small>YU KANG CLINIC</small></span>
+          </a>
+          <p>让诊所的日常业务<br>更清楚，也更从容。</p>
+        </div>
+        <div class="footer-links">
+          <div><strong>产品</strong><a href="#workflow">业务流程</a><a href="#capabilities">核心能力</a><a href="#security">数据安全</a></div>
+          <div><strong>资源</strong><a href="https://github.com/wolongHyy/Yukang-Smart-Cloud-Clinic-Platform" target="_blank" rel="noopener">GitHub 仓库</a><a href="https://github.com/wolongHyy/Yukang-Smart-Cloud-Clinic-Platform/releases" target="_blank" rel="noopener">发布版本</a><a href="https://github.com/wolongHyy/Yukang-Smart-Cloud-Clinic-Platform/issues/new" target="_blank" rel="noopener">问题与建议</a></div>
+          <div><strong>边界</strong><a href="#deployment">部署方式</a><span>数据不出域可关闭 AI</span><span>AI 不替代医生判断</span></div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span data-year>2026</span> 愈康云诊所 · YuKang Cloud Clinic</span>
+        <span>医疗软件须在真实业务与合规评估后上线</span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

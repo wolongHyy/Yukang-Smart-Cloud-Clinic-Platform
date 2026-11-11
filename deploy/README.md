@@ -12,8 +12,8 @@
 | --- | --- | --- |
 | 阿里云 ECS | 运行中 | 实例 `i-bp196vs9fbel20xdzi7p`，华东1（杭州），Alibaba Cloud Linux 3，2 vCPU / 2 GiB，到期日 2027-11-12 |
 | Nginx | 已安装并开机启动 | 监听 HTTP 80；配置测试通过 |
-| 发布目录 | 已按发布结构部署 | `/var/www/yukang-site/current` 指向 `/var/www/yukang-site/releases/20261111T085932Z` |
-| HTTP 临时验证 | 已实测返回 200 | <http://120.55.116.160/>；页面标题和静态资源已验证 |
+| 发布目录 | 已发布 GitHub `c780285` 展示页 | `/var/www/yukang-site/current` 指向 `/var/www/yukang-site/releases/20261111T101710Z`；旧版本保留用于回滚 |
+| HTTP 临时验证 | 已实测返回 200 | <http://120.55.116.160/>；首页、新 Logo、采药背景及 `showcase.css/js` 已验证 |
 | 安全组 | 已放行 80、443 | 443/TCP 入方向已复查；22、3389 的现有规则未改动 |
 | ICP 备案 | 阿里云初审中 | 订单 `2031878284929` 已于 2026-11-11 16:44 提交；审核通过前不添加 A 记录、不宣称备案完成 |
 | DNS A 记录 | 尚未添加 | 等待 ICP 备案审核通过后再执行第 4 节 |
@@ -39,7 +39,10 @@
   │                              ├─ index.html
   │                              ├─ styles.css
   │                              ├─ script.js
-  │                              └─ favicon.svg
+  │                              ├─ showcase.css
+  │                              ├─ showcase.js
+  │                              ├─ favicon.svg
+  │                              └─ assets/
   │
   └─ 诊所业务系统：继续留在本机 / 可信局域网，不在此次公网部署范围内
 ```

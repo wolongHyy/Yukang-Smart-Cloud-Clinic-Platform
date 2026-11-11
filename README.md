@@ -235,7 +235,7 @@ python -m http.server 4173 --directory website
 
 启动后访问 <http://127.0.0.1:4173/>。官网不连接诊所数据库，不提供业务登录入口，也不会上传患者数据。诊所业务系统仍应只部署在本机或可信局域网，不能通过公网反向代理直接暴露。
 
-阿里云 ECS、DNS、安全组、HTTPS 和 ICP 备案的完整上线步骤见 [`deploy/README.md`](deploy/README.md)。当前官网已预部署到阿里云 ECS，临时验证地址为 <http://120.55.116.160/>；`yukangclinic.cn` 的 ICP 备案仍在审核，DNS 和 HTTPS 尚未切换，审核通过前不要把这个临时地址当作正式官网对外发布。
+阿里云 ECS、DNS、安全组、HTTPS 和 ICP 备案的完整上线步骤见 [`deploy/README.md`](deploy/README.md)。当前线上静态站发布在 `/var/www/yukang-site/releases/20261111T101710Z`（源码提交 `c780285`），`current` 已完成原子切换；首页、新 Logo、采药背景和 3D 互动脚本均已通过公网 HTTP 200 与资源哈希校验。临时验证地址为 <http://120.55.116.160/>；`yukangclinic.cn` 的 ICP 备案仍在审核，DNS 和 HTTPS 尚未切换，审核通过前不要把这个临时地址当作正式官网对外发布。
 
 准备服务器公网 IP、SSH 私钥、域名和证书邮箱后，可在项目根目录执行：
 

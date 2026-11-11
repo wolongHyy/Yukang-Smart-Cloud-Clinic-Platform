@@ -227,6 +227,8 @@ macOS 安装包当前暂缓，构建源码保留。生成文件写入 `desktop/a
 
 公开产品官网位于 [`website/`](website/)，采用独立的静态 HTML/CSS/JavaScript 实现，展示愈康的产品定位、业务流程、核心能力、数据安全边界和部署方式。
 
+当前展示页采用愈康 App 最初的透明切角“愈”Logo，并将登录页的采药背景延展为官网首屏。桌面端提供首屏背景视差、卡片 3D 倾斜与高光、滚动进度和工作流自动轮播；移动端提供简化动效，并遵循系统的“减少动态效果”设置。
+
 ```powershell
 python -m http.server 4173 --directory website
 ```

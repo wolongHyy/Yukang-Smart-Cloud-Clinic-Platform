@@ -10,21 +10,20 @@
   <meta property="og:title" content="愈康云诊所｜让每一次接诊，都有据可循">
   <meta property="og:description" content="本地优先、数据自主可控的诊所数字化工作台。断网也能完成接诊、开方、发药、收费与统计。">
   <title>愈康云诊所｜本地优先的诊所数字化工作台</title>
-  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/yukang-app-logo.png" type="image/png">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="showcase.css">
   <script src="script.js" defer></script>
+  <script src="showcase.js" defer></script>
 </head>
-<body>
+<body class="showcase-page">
   <a class="skip-link" href="#main">跳到主要内容</a>
 
   <header class="site-header" data-header>
+    <div class="scroll-progress" aria-hidden="true"><i data-scroll-progress></i></div>
     <div class="nav-shell">
       <a class="brand" href="#top" aria-label="愈康云诊所首页">
-        <svg class="brand-mark" viewBox="0 0 42 42" aria-hidden="true">
-          <rect x="1" y="1" width="40" height="40" rx="12" fill="currentColor"/>
-          <path d="M12 25c4.8-1 7.7-4.1 9-9.4 1.1 4.7 3.7 7.6 8 8.7" fill="none" stroke="#f6f1e6" stroke-width="2.1" stroke-linecap="round"/>
-          <path d="M21 14.5v13.2M17.2 23.2h7.6" fill="none" stroke="#f6f1e6" stroke-width="2.1" stroke-linecap="round"/>
-        </svg>
+        <img class="brand-mark" src="assets/yukang-app-logo.png" alt="" width="44" height="44">
         <span class="brand-copy"><strong>愈康</strong><small>YU KANG CLINIC</small></span>
       </a>
 
@@ -47,26 +46,7 @@
   </header>
 
   <main id="main">
-    <section class="hero" id="top">
-      <div class="hero-landscape" aria-hidden="true">
-        <svg viewBox="0 0 1440 760" preserveAspectRatio="xMidYMax slice">
-          <defs>
-            <linearGradient id="mountainFade" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#4f7d68" stop-opacity=".05"/>
-              <stop offset="1" stop-color="#4f7d68" stop-opacity=".22"/>
-            </linearGradient>
-            <linearGradient id="sunGlow" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stop-color="#d5b36c" stop-opacity=".5"/>
-              <stop offset="1" stop-color="#d5b36c" stop-opacity="0"/>
-            </linearGradient>
-          </defs>
-          <circle cx="1150" cy="172" r="210" fill="url(#sunGlow)"/>
-          <path d="M0 640c159-91 302-60 423-143 90-62 126-153 220-157 111-5 154 130 270 137 143 9 222-158 527-210v493H0Z" fill="url(#mountainFade)"/>
-          <path d="M0 681c183-64 304-28 453-85 146-55 212-135 302-123 102 14 167 124 296 110 122-13 223-91 389-101v277H0Z" fill="#dce4d9" opacity=".58"/>
-          <path d="M0 715c194-49 375-16 548-47 198-35 282-86 443-56 172 32 261 18 449-34v182H0Z" fill="#f4f0e6"/>
-        </svg>
-      </div>
-
+    <section class="hero" id="top" data-hero>
       <div class="hero-grid page-shell">
         <div class="hero-copy">
           <h1>让每一次接诊，<br><em>都有据可循。</em></h1>
@@ -495,11 +475,7 @@
       <div class="footer-main">
         <div class="footer-brand">
           <a class="brand brand-footer" href="#top" aria-label="返回顶部">
-            <svg class="brand-mark" viewBox="0 0 42 42" aria-hidden="true">
-              <rect x="1" y="1" width="40" height="40" rx="12" fill="currentColor"/>
-              <path d="M12 25c4.8-1 7.7-4.1 9-9.4 1.1 4.7 3.7 7.6 8 8.7" fill="none" stroke="#f6f1e6" stroke-width="2.1" stroke-linecap="round"/>
-              <path d="M21 14.5v13.2M17.2 23.2h7.6" fill="none" stroke="#f6f1e6" stroke-width="2.1" stroke-linecap="round"/>
-            </svg>
+            <img class="brand-mark" src="assets/yukang-app-logo.png" alt="" width="44" height="44">
             <span class="brand-copy"><strong>愈康</strong><small>YU KANG CLINIC</small></span>
           </a>
           <p>让诊所的日常业务<br>更清楚，也更从容。</p>

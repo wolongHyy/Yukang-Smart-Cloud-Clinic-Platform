@@ -96,3 +96,6 @@ deploy/.env
 deploy/.deploy-*
 deploy/tmp/
 website/.well-known/acme-challenge/
+# ---- Website local preview artifacts ----
+website/.preview/
+website/*.preview.*

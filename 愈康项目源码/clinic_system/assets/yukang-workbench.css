@@ -1,0 +1,591 @@
+/* =========================================================
+   愈康 · 青绿画卷 3D 工作台
+   在既有业务样式之后加载，只覆盖视觉层，不改变业务布局。
+   ========================================================= */
+:root {
+    --yk-pine: #173d34;
+    --yk-pine-deep: #0f2e26;
+    --yk-jade: #3f7d68;
+    --yk-jade-light: #dcebe4;
+    --yk-paper: #f5f1e8;
+    --yk-paper-raised: rgba(255, 253, 248, .94);
+    --yk-gold: #c7aa70;
+    --yk-line: rgba(36, 92, 74, .17);
+    --yk-ink: #18372f;
+    --yk-muted: #5e7068;
+    --yk-shadow: 0 18px 45px rgba(10, 35, 27, .16), 0 2px 7px rgba(10, 35, 27, .08);
+    --yk-shadow-raised: 0 28px 70px rgba(8, 30, 23, .24), 0 5px 14px rgba(8, 30, 23, .10);
+    --yk-bg-x: 0px;
+    --yk-bg-y: 0px;
+}
+
+html { background: var(--yk-pine-deep); }
+
+body {
+    background: transparent;
+    position: relative;
+    isolation: isolate;
+    color: var(--yk-ink);
+    font-family: "Source Han Sans SC", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+body::before,
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+}
+
+body::before {
+    z-index: -2;
+    background: #17352e url("login-photo-background.png") center 34% / cover no-repeat;
+    transform: scale(1.055) translate3d(var(--yk-bg-x), var(--yk-bg-y), 0);
+    filter: saturate(.82) contrast(.94) brightness(.92);
+    transition: transform 1.1s cubic-bezier(.16, 1, .3, 1);
+}
+
+body::after {
+    z-index: -1;
+    background:
+        radial-gradient(circle at 78% 22%, rgba(219, 195, 139, .16), transparent 31%),
+        linear-gradient(112deg, rgba(8, 32, 26, .86) 0%, rgba(13, 45, 36, .67) 42%, rgba(17, 52, 42, .48) 100%),
+        linear-gradient(180deg, rgba(7, 28, 22, .24), rgba(20, 48, 39, .2));
+}
+
+::selection { color: #fffdf7; background: rgba(63, 125, 104, .84); }
+
+/* ---------- 顶部导航：像一枚悬在画卷上方的青玉横梁 ---------- */
+header {
+    position: relative;
+    z-index: 30;
+    height: 64px;
+    padding: 0 clamp(12px, 1.7vw, 24px);
+    gap: clamp(10px, 2vw, 26px);
+    color: #fffaf0;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, .07), transparent 46%),
+        linear-gradient(105deg, rgba(16, 52, 42, .96), rgba(25, 70, 56, .88));
+    border-bottom: 1px solid rgba(235, 221, 190, .24);
+    box-shadow: 0 12px 36px rgba(5, 27, 20, .28), inset 0 1px 0 rgba(255, 255, 255, .09);
+    backdrop-filter: blur(18px) saturate(118%);
+    -webkit-backdrop-filter: blur(18px) saturate(118%);
+}
+
+header::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(201, 172, 111, .62) 28%, rgba(255, 247, 225, .28) 55%, transparent);
+    pointer-events: none;
+}
+
+.brand {
+    gap: 11px;
+    padding: 5px 10px 5px 5px;
+    border-radius: 14px;
+    cursor: pointer;
+    outline: none;
+    transition: background .2s ease, transform .2s ease;
+}
+
+.brand:hover { background: rgba(255, 255, 255, .07); }
+.brand:focus-visible { outline: 3px solid rgba(242, 215, 155, .92); outline-offset: 3px; }
+
+.brand .brand-icon {
+    width: 42px;
+    height: 42px;
+    padding: 4px;
+    border: 1px solid rgba(255, 249, 235, .52);
+    border-radius: 12px;
+    color: inherit;
+    background: linear-gradient(145deg, #fffaf0, #dcd2be);
+    box-shadow: 0 9px 20px rgba(5, 27, 20, .35), inset 0 1px 0 #fff;
+    transform-style: preserve-3d;
+    transition: transform .32s cubic-bezier(.16, 1, .3, 1), box-shadow .25s ease;
+}
+
+.brand .brand-icon img {
+    width: 100%;
+    height: 100%;
+    border-radius: 9px;
+    transform: translateZ(8px);
+    filter: drop-shadow(0 2px 2px rgba(7, 30, 23, .18));
+}
+
+.brand:hover .brand-icon {
+    transform: translateY(-2px) rotateX(-7deg) rotateY(10deg);
+    box-shadow: 0 13px 26px rgba(5, 27, 20, .43), inset 0 1px 0 #fff;
+}
+
+.brand .brand-text { line-height: 1.08; }
+.brand .brand-name {
+    color: #fffaf0;
+    font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: .09em;
+}
+.brand .brand-sub {
+    margin-top: 4px;
+    color: rgba(249, 242, 227, .66);
+    font-size: 9px;
+    letter-spacing: .15em;
+}
+
+.header-nav { scrollbar-width: none; }
+.header-nav::-webkit-scrollbar { display: none; }
+.header-nav span {
+    position: relative;
+    padding: 8px 14px;
+    border-radius: 9px;
+    color: rgba(250, 245, 233, .78);
+    font-weight: 550;
+    transition: color .18s ease, background .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.header-nav span:hover {
+    color: #fffdf7;
+    background: rgba(255, 255, 255, .10);
+    transform: translateY(-1px);
+}
+.header-nav span.active {
+    color: #173d34;
+    background: linear-gradient(155deg, #f8f2e4, #dfd5bf);
+    box-shadow: 0 5px 14px rgba(4, 26, 19, .26), inset 0 1px 0 #fff;
+    font-weight: 700;
+}
+
+.header-nav span:focus-visible,
+.user-info .logout-btn:focus-visible {
+    outline: 3px solid rgba(242, 215, 155, .94);
+    outline-offset: 2px;
+}
+
+.user-info { color: rgba(250, 245, 233, .82); }
+.user-info .logout-btn {
+    color: #ffece6;
+    background: rgba(182, 72, 50, .30);
+    border: 1px solid rgba(255, 224, 216, .16);
+}
+.user-info .logout-btn:hover { background: rgba(182, 72, 50, .46); }
+
+/* ---------- 主工作区 ---------- */
+.main-wrapper {
+    position: relative;
+    z-index: 2;
+    padding: clamp(16px, 2vw, 28px) clamp(12px, 2.3vw, 32px) 40px;
+    scrollbar-color: rgba(224, 207, 172, .55) rgba(12, 42, 33, .2);
+    scrollbar-width: thin;
+}
+.main-wrapper::-webkit-scrollbar { width: 10px; }
+.main-wrapper::-webkit-scrollbar-track { background: rgba(10, 37, 29, .18); }
+.main-wrapper::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: rgba(226, 210, 177, .58);
+    background-clip: padding-box;
+}
+
+.page-content {
+    width: 100%;
+    max-width: 1680px;
+    margin-inline: auto;
+}
+.page-content.active { animation: yk-page-enter .34s cubic-bezier(.16, 1, .3, 1) both; }
+
+/* ---------- 首页迎宾画卷 ---------- */
+.clinic-hero {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 190px;
+    align-items: center;
+    gap: clamp(18px, 3vw, 44px);
+    min-height: 190px;
+    margin-bottom: 18px;
+    padding: 26px clamp(22px, 3.2vw, 42px);
+    overflow: hidden;
+    color: #fffaf0;
+    border: 1px solid rgba(240, 226, 196, .30);
+    border-radius: 22px;
+    background:
+        linear-gradient(108deg, rgba(14, 45, 36, .94) 0%, rgba(20, 61, 48, .72) 56%, rgba(23, 61, 49, .40) 100%),
+        url("login-photo-background.png") 72% 38% / cover no-repeat;
+    box-shadow: var(--yk-shadow-raised), inset 0 1px 0 rgba(255, 255, 255, .14);
+    transform-style: preserve-3d;
+}
+
+.clinic-hero::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background:
+        radial-gradient(circle at 78% 22%, rgba(215, 183, 112, .27), transparent 28%),
+        linear-gradient(90deg, rgba(9, 34, 26, .20), transparent 56%);
+    pointer-events: none;
+}
+
+.clinic-hero-copy { position: relative; z-index: 2; max-width: 720px; }
+
+.hero-date {
+    margin: 0 0 9px;
+    color: #d9c495;
+    font-size: 12px;
+    font-weight: 650;
+    letter-spacing: .12em;
+}
+
+.clinic-hero h1 {
+    margin: 0;
+    font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+    font-size: clamp(27px, 3vw, 40px);
+    font-weight: 650;
+    line-height: 1.22;
+    letter-spacing: .015em;
+    text-wrap: balance;
+}
+.clinic-hero h1 span { color: #e5d09f; }
+
+.hero-desc {
+    max-width: 660px;
+    margin: 10px 0 0;
+    color: rgba(250, 246, 236, .76);
+    font-size: 13px;
+    line-height: 1.75;
+}
+
+.hero-status {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+}
+.hero-status span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 29px;
+    padding: 4px 10px;
+    border: 1px solid rgba(243, 230, 201, .19);
+    border-radius: 999px;
+    color: rgba(255, 251, 241, .84);
+    background: rgba(9, 38, 29, .26);
+    font-size: 11px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+.hero-status i { color: #d9c495; font-size: 11px; }
+
+.hero-emblem {
+    position: relative;
+    z-index: 2;
+    width: 166px;
+    height: 166px;
+    margin-inline: auto;
+    perspective: 720px;
+    transform-style: preserve-3d;
+}
+
+.emblem-orbit {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 156px;
+    height: 156px;
+    margin: -78px 0 0 -78px;
+    border: 1px solid rgba(224, 200, 146, .38);
+    border-radius: 50%;
+    transform: rotateX(66deg) rotateZ(-16deg);
+    animation: yk-orbit-spin 18s linear infinite;
+}
+.emblem-orbit::before,
+.emblem-orbit::after {
+    content: "";
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #dcc287;
+    box-shadow: 0 0 18px rgba(222, 196, 137, .72);
+}
+.emblem-orbit::before { top: 11px; left: 31px; }
+.emblem-orbit::after { right: 7px; bottom: 42px; width: 4px; height: 4px; opacity: .75; }
+
+.emblem-orbit.orbit-second {
+    width: 126px;
+    height: 126px;
+    margin: -63px 0 0 -63px;
+    border-color: rgba(255, 250, 237, .18);
+    transform: rotateX(72deg) rotateZ(28deg);
+    animation-direction: reverse;
+    animation-duration: 24s;
+}
+
+.emblem-core {
+    position: absolute;
+    inset: 23px;
+    display: grid;
+    place-items: center;
+    transform-style: preserve-3d;
+    animation: yk-emblem-float 6.4s ease-in-out infinite;
+}
+
+.emblem-face {
+    width: 112px;
+    height: 112px;
+    padding: 11px;
+    border: 1px solid rgba(255, 252, 242, .76);
+    border-radius: 28px;
+    background: linear-gradient(145deg, #fffdf5, #d8cdb8);
+    box-shadow:
+        20px 24px 42px rgba(3, 23, 17, .40),
+        -5px -5px 16px rgba(255, 255, 255, .16),
+        inset 0 1px 0 #fff;
+    transform: rotateX(calc(var(--hero-rx, 0) * 1deg)) rotateY(calc(var(--hero-ry, 0) * 1deg)) translateZ(22px);
+    transform-style: preserve-3d;
+    transition: transform .32s cubic-bezier(.16, 1, .3, 1);
+}
+.emblem-face img {
+    width: 100%;
+    height: 100%;
+    border-radius: 19px;
+    transform: translateZ(12px);
+    filter: drop-shadow(0 7px 8px rgba(8, 31, 23, .22));
+}
+
+/* ---------- 纸张卡片：不做厚重玻璃，只保留含蓄的透光 ---------- */
+.main-wrapper .card,
+.main-wrapper .left-panel,
+.main-wrapper .right-panel,
+.main-wrapper .clinic-left,
+.main-wrapper .clinic-center,
+.main-wrapper .clinic-right,
+.main-wrapper .chart-card,
+.main-wrapper .stat-card,
+.main-wrapper .op-card,
+.main-wrapper .kpi-card,
+.main-wrapper .rev-card,
+.main-wrapper .pharma-main,
+.main-wrapper .pharma-sidebar {
+    background: var(--yk-paper-raised);
+    border-color: var(--yk-line);
+    box-shadow: var(--yk-shadow);
+    backdrop-filter: blur(10px) saturate(108%);
+    -webkit-backdrop-filter: blur(10px) saturate(108%);
+}
+
+.main-wrapper .card,
+.main-wrapper .left-panel,
+.main-wrapper .right-panel,
+.main-wrapper .clinic-left,
+.main-wrapper .clinic-center,
+.main-wrapper .clinic-right,
+.main-wrapper .chart-card,
+.main-wrapper .pharma-main,
+.main-wrapper .pharma-sidebar { border-radius: 14px; }
+
+#page-home > .section-title,
+#page-home .revenue-section > .section-title {
+    margin: 20px 4px 10px;
+    color: #fffaf0;
+    font-family: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", serif;
+    font-size: 17px;
+    letter-spacing: .04em;
+    text-shadow: 0 2px 12px rgba(5, 27, 20, .36);
+}
+
+/* ---------- 3D 卡片交互 ---------- */
+.quick-action,
+.kpi-card,
+.rev-card,
+.chart-card {
+    --rx: 0deg;
+    --ry: 0deg;
+    --lift: 0px;
+    position: relative;
+    transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(var(--lift));
+    transform-style: preserve-3d;
+    transition: transform .18s cubic-bezier(.16, 1, .3, 1), border-color .2s ease, box-shadow .22s ease, background .2s ease;
+    will-change: transform;
+}
+
+.quick-action {
+    overflow: hidden;
+    background: rgba(255, 253, 248, .94);
+    border-color: rgba(36, 92, 74, .16);
+    box-shadow: var(--yk-shadow);
+}
+.quick-action::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    opacity: 0;
+    background: radial-gradient(circle at var(--mx, 50%) var(--my, 50%), rgba(248, 228, 183, .38), transparent 48%);
+    transition: opacity .2s ease;
+    pointer-events: none;
+}
+.quick-action:hover::before { opacity: 1; }
+.quick-action .qa-icon,
+.quick-action .qa-text { position: relative; z-index: 1; }
+.quick-action .qa-icon {
+    transform: translateZ(22px);
+    box-shadow: 0 8px 14px rgba(16, 50, 40, .18), inset 0 1px 0 rgba(255, 255, 255, .34);
+    transition: transform .22s cubic-bezier(.16, 1, .3, 1), box-shadow .22s ease;
+}
+.quick-action:hover .qa-icon {
+    transform: translateZ(30px) translateY(-2px) rotateX(-8deg) rotateY(8deg);
+    box-shadow: 0 13px 20px rgba(16, 50, 40, .24), inset 0 1px 0 rgba(255, 255, 255, .4);
+}
+.quick-action:hover,
+.kpi-card:hover,
+.kpi-card.clickable:hover,
+.rev-card:hover,
+.chart-card:hover {
+    --lift: -3px;
+    transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(var(--lift));
+    border-color: rgba(73, 132, 111, .42);
+    box-shadow: 0 23px 48px rgba(9, 34, 26, .22), 0 4px 10px rgba(9, 34, 26, .10);
+}
+.quick-action:active,
+.kpi-card.clickable:active {
+    --lift: 0px;
+    transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(var(--lift));
+    box-shadow: 0 9px 22px rgba(9, 34, 26, .16);
+}
+
+.kpi-card .kpi-icon,
+.rev-card .icon { transform: translateZ(16px); }
+.kpi-card .num { font-variant-numeric: tabular-nums; }
+
+.quick-action:focus-visible,
+.kpi-card.clickable:focus-visible {
+    outline: 3px solid #f0d79f;
+    outline-offset: 3px;
+}
+
+/* ---------- 按钮与表单的共用触感 ---------- */
+.btn-primary,
+.op-btn,
+.copy-btn,
+.btn-small,
+.btn-save-modal {
+    transition: transform .16s ease, box-shadow .18s ease, filter .18s ease, background .18s ease;
+}
+.btn-primary:hover,
+.btn-save-modal:hover { transform: translateY(-1px); filter: brightness(1.04); }
+.btn-primary:active,
+.op-btn:active,
+.copy-btn:active,
+.btn-small:active { transform: translateY(1px) scale(.985); }
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+button:focus-visible { outline: none; }
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    border-color: #3e806a !important;
+    box-shadow: 0 0 0 3px rgba(62, 128, 106, .17) !important;
+}
+
+/* ---------- 关键帧 ---------- */
+@keyframes yk-page-enter {
+    from { opacity: 0; transform: translateY(9px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes yk-emblem-float {
+    0%, 100% { transform: translateY(0) rotateZ(-1deg); }
+    50% { transform: translateY(-7px) rotateZ(1deg); }
+}
+@keyframes yk-orbit-spin {
+    from { transform: rotateX(66deg) rotateZ(-16deg); }
+    to { transform: rotateX(66deg) rotateZ(344deg); }
+}
+
+/* ---------- 小屏：保留画卷，不挤占业务操作空间 ---------- */
+@media (max-width: 860px) {
+    .clinic-hero { grid-template-columns: minmax(0, 1fr) 132px; min-height: 176px; }
+    .hero-emblem { width: 126px; height: 126px; }
+    .emblem-core { inset: 14px; }
+    .emblem-face { width: 92px; height: 92px; border-radius: 24px; }
+    .emblem-orbit { width: 124px; height: 124px; margin: -62px 0 0 -62px; }
+    .emblem-orbit.orbit-second { width: 102px; height: 102px; margin: -51px 0 0 -51px; }
+}
+
+@media (max-width: 600px) {
+    header { height: 58px; padding-inline: 8px; gap: 7px; }
+    .brand { padding-right: 4px; }
+    .brand .brand-icon { width: 36px; height: 36px; border-radius: 10px; }
+    .brand .brand-name { font-size: 15px; letter-spacing: .05em; }
+    .brand .brand-sub { display: none; }
+    .header-nav { flex: 1 1 auto; min-width: 0; justify-content: flex-start; gap: 3px; overscroll-behavior-inline: contain; }
+    .header-nav span { padding: 7px 9px; }
+    .user-info { flex: 0 0 auto; }
+    /* v5 账号上下文是首个 div，必须单独隐藏用户名 span，避免挤占导航。 */
+    .user-info > span:not(.logout-btn) { display: none; }
+    .user-info .logout-btn { white-space: nowrap; padding: 6px 9px; }
+    .main-wrapper { padding: 12px 10px 28px; }
+    .clinic-hero {
+        grid-template-columns: minmax(0, 1fr);
+        min-height: 0;
+        padding: 22px 18px;
+        border-radius: 18px;
+    }
+    .hero-emblem { display: none; }
+    .clinic-hero h1 { font-size: 26px; }
+    .hero-desc { font-size: 12px; }
+    .hero-status { margin-top: 13px; }
+    #page-home > .section-title,
+    #page-home .revenue-section > .section-title { margin-top: 17px; }
+}
+
+@media (max-width: 360px) {
+    header { padding-inline: 6px; gap: 5px; }
+    .brand { padding: 4px; gap: 0; }
+    .brand .brand-text { display: none; }
+    .header-nav { gap: 1px; }
+    .header-nav span { padding-inline: 8px; }
+    .user-info .logout-btn { padding-inline: 8px; }
+}
+@media (hover: none) {
+    .quick-action,
+    .kpi-card,
+    .rev-card,
+    .chart-card { transform: none; }
+    .quick-action:hover,
+    .kpi-card:hover,
+    .rev-card:hover,
+    .chart-card:hover { --lift: 0px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body::before,
+    .page-content.active,
+    .emblem-core,
+    .emblem-orbit,
+    .quick-action,
+    .kpi-card,
+    .rev-card,
+    .chart-card,
+    .brand .brand-icon {
+        animation: none !important;
+        transition-duration: .01ms !important;
+    }
+    .emblem-face { transform: none !important; }
+}
+
+@media print {
+    body::before,
+    body::after,
+    .clinic-hero { display: none !important; }
+    header { position: static; color: #000; background: #fff; box-shadow: none; }
+    .main-wrapper .card,
+    .main-wrapper .left-panel,
+    .main-wrapper .right-panel { box-shadow: none; background: #fff; }
+}

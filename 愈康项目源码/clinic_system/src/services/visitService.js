@@ -43,15 +43,61 @@ function prescriptionSignature(items) {
     })).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b), 'zh-CN')));
 }
 
+function inventoryStock(item) {
+    if (!item) return 0;
+    if (item.stock !== undefined && item.stock !== null && item.stock !== '') return toNum(item.stock);
+    return toNum(item.quantity);
+}
+
 async function assertInventoryAvailable(username, cleanRx) {
     if (!cleanRx.length) return;
     const inventory = await repo.readCollection(username, 'drugInventory');
     for (const d of cleanRx) {
-        const inv = inventory.find(i => i.name === d.name);
-        if (inv && toNum(inv.stock || inv.quantity) < d.qty) {
-            throw new HttpError(400, `【库存不足】药品${d.name}当前库存仅 ${toNum(inv.stock || inv.quantity)} ${inv.unit || '盒'}，处方需要 ${d.qty}，请先入库或调整处方`, 'INSUFFICIENT_STOCK');
+        const inv = inventory.find(i => String(i.name || '').trim() === String(d.name || '').trim());
+        if (inv && inventoryStock(inv) < d.qty) {
+            throw new HttpError(400, `【库存不足】药品${d.name}当前库存仅 ${inventoryStock(inv)} ${inv.unit || '盒'}，处方需要 ${d.qty}，请先入库或调整处方`, 'INSUFFICIENT_STOCK');
         }
     }
+}
+
+async function reverseDispensedInventoryUnsafe(username, dispensedItems) {
+    const totals = new Map();
+    for (const item of dispensedItems || []) {
+        const name = String(item.drug || item.name || '').trim();
+        const qty = toNum(item.qty);
+        if (!name || qty <= 0) continue;
+        const current = totals.get(name) || { qty: 0, unit: item.qtyUnit || '', price: Number(item.price) || 0 };
+        current.qty += qty;
+        current.unit = current.unit || item.qtyUnit || '';
+        current.price = Number(current.price) || Number(item.price) || 0;
+        totals.set(name, current);
+    }
+    if (!totals.size) return 0;
+
+    const inventory = await repo.readCollection(username, 'drugInventory');
+    const nowISO = new Date().toISOString();
+    for (const [name, info] of totals) {
+        const existing = inventory.find(item => String(item.name || '').trim() === name);
+        if (existing) {
+            const nextStock = +(inventoryStock(existing) + info.qty).toFixed(4);
+            if (existing.stock === undefined && existing.quantity !== undefined) existing.quantity = nextStock;
+            else existing.stock = nextStock;
+            existing.updatedAt = nowISO;
+        } else {
+            inventory.push({
+                id: newId(),
+                name,
+                stock: +info.qty.toFixed(4),
+                unit: info.unit || '盒',
+                price: Number(info.price) || 0,
+                category: '未归类',
+                updatedAt: nowISO,
+                categorySource: '发药回冲恢复库存，未据名称猜测分类'
+            });
+        }
+    }
+    await repo.writeCollection(username, 'drugInventory', inventory);
+    return totals.size;
 }
 
 function pharmacyItemBelongsToOutpatient(item, outpatient) {
@@ -76,7 +122,8 @@ function buildVisitFields(patient, cleanRx) {
         syndrome: String(patient.syndrome || '').trim(),
         advice: String(patient.advice || '').trim(),
         visitType: patient.visitType || '初诊',
-        feeType: '自费',
+        doctor: patient.doctor !== undefined ? String(patient.doctor || '').trim() : '',
+        feeType: patient.feeType !== undefined ? (String(patient.feeType || '').trim() || '自费') : '自费',
         clinicData: patient.clinicData && typeof patient.clinicData === 'object' ? patient.clinicData : {},
         prescriptions: cleanRx
     };
@@ -208,23 +255,42 @@ async function updateSavedVisitUnsafe(username, id, body) {
     if (!name) throw new HttpError(400, '患者姓名不能为空', 'VALIDATION_ERROR');
     const previousRx = normalizePrescriptionItems(previous.prescriptions);
     const rxChanged = prescriptionSignature(previousRx) !== prescriptionSignature(cleanRx);
-    const drugTotal = cleanRx.reduce((sum, item) => sum + item.subtotal, 0);
+    const drugTotal = +cleanRx.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2);
 
     const bills = await repo.readCollection(username, 'billing');
     const linkedBillIndexes = bills
         .map((item, idx) => ({ item, idx }))
         .filter(entry => String(entry.item.outpatientId || '') === String(id));
-    const linkedBills = linkedBillIndexes.map(entry => entry.item);
-    const paidBill = linkedBills.find(item => item.status === 'paid');
-    if (rxChanged && paidBill) {
-        throw new HttpError(409, '该病历已收费，不能修改处方、数量或金额；如需更正请先处理收费记录', 'BILL_ALREADY_PAID');
-    }
+    const pendingEntries = linkedBillIndexes.filter(entry => entry.item.status === 'pending');
+    const paidEntries = linkedBillIndexes.filter(entry => entry.item.status === 'paid');
 
     const pharmacy = await repo.readCollection(username, 'pharmacy');
     const linkedPharmacy = pharmacy.filter(item => pharmacyItemBelongsToOutpatient(item, previous));
     const dispensedItems = linkedPharmacy.filter(item => item.status === '已发药');
+
+    // 已发药病历修改时先回冲旧库存，再按新处方校验。旧发药记录保留为审计记录。
+    let inventoryReversed = 0;
     if (rxChanged && dispensedItems.length) {
-        throw new HttpError(409, '该病历药品已经发药，不能修改处方内容；请先核对发药和库存记录', 'MEDICATION_ALREADY_DISPENSED');
+        inventoryReversed = await reverseDispensedInventoryUnsafe(username, dispensedItems);
+        const outRecords = await repo.readCollection(username, 'drugOutRecords');
+        const reversedAt = new Date().toISOString();
+        for (const item of dispensedItems) {
+            const qty = toNum(item.qty);
+            if (qty <= 0) continue;
+            outRecords.push({
+                id: newId(),
+                drugName: item.drug,
+                qty,
+                patient: item.patient || previous.name || '',
+                type: '发药回冲',
+                reason: '门诊病历处方修改回冲',
+                date: new Date().toLocaleString(),
+                operator: username,
+                reversedAt,
+                pharmacyId: item.id || ''
+            });
+        }
+        await repo.writeCollection(username, 'drugOutRecords', outRecords);
     }
     if (rxChanged) await assertInventoryAvailable(username, cleanRx);
 
@@ -235,7 +301,8 @@ async function updateSavedVisitUnsafe(username, id, body) {
         gender: patient.gender !== undefined ? patient.gender : (previous.gender || ''),
         age: patient.age !== undefined && patient.age !== '' ? patient.age : (previous.age || ''),
         phone: patient.phone !== undefined ? patient.phone : (previous.phone || ''),
-        feeType: '自费',
+        doctor: patient.doctor !== undefined ? String(patient.doctor || '').trim() : (previous.doctor || ''),
+        feeType: patient.feeType !== undefined ? (String(patient.feeType || '').trim() || '自费') : (previous.feeType || '自费'),
         status: '已就诊',
         updatedAt: nowISO,
         clinicData: patient.clinicData && typeof patient.clinicData === 'object' ? patient.clinicData : (previous.clinicData || {}),
@@ -246,7 +313,7 @@ async function updateSavedVisitUnsafe(username, id, body) {
     await patientService.updatePatientVisitUnsafe(username, previous, savedOutpatient);
 
     let pendingBill = null;
-    const pendingEntries = linkedBillIndexes.filter(entry => entry.item.status === 'pending');
+    let paidBill = null;
     const removeBillIndexes = new Set();
     let billsChanged = false;
     for (let i = 1; i < pendingEntries.length; i += 1) removeBillIndexes.add(pendingEntries[i].idx);
@@ -257,7 +324,7 @@ async function updateSavedVisitUnsafe(username, id, body) {
             pendingBill = {
                 ...bills[firstIndex],
                 patientName: savedOutpatient.name,
-                amount: +drugTotal.toFixed(2),
+                amount: drugTotal,
                 items: cleanRx,
                 updatedAt: nowISO,
             };
@@ -265,6 +332,26 @@ async function updateSavedVisitUnsafe(username, id, body) {
         } else {
             removeBillIndexes.add(firstIndex);
         }
+        billsChanged = true;
+    }
+
+    // 已收费病历允许更正处方。收费记录保持同一个 billId，并保留原支付方式、实收、收款人和打印历史。
+    for (const entry of paidEntries) {
+        const current = bills[entry.idx];
+        const actualAmount = toNum(current.actualAmount !== undefined ? current.actualAmount : current.amount);
+        const originalAmount = drugTotal;
+        const updatedPaidBill = {
+            ...current,
+            patientName: savedOutpatient.name,
+            amount: originalAmount,
+            items: cleanRx,
+            originalAmount,
+            discountAmount: +Math.max(0, originalAmount - actualAmount).toFixed(2),
+            adjustmentAmount: +(actualAmount - originalAmount).toFixed(2),
+            updatedAt: nowISO,
+        };
+        bills[entry.idx] = updatedPaidBill;
+        if (!paidBill) paidBill = updatedPaidBill;
         billsChanged = true;
     }
 
@@ -281,24 +368,86 @@ async function updateSavedVisitUnsafe(username, id, body) {
     }
     if (billsChanged) await repo.writeCollection(username, 'billing', bills);
 
-    if (!pendingEntries.length && drugTotal > 0 && !paidBill) {
+    // 收入流水按 billId 原位更新，避免修正处方后产生重复收费记录。
+    if (paidEntries.length) {
+        const revenue = await repo.readCollection(username, 'revenue');
+        let revenueChanged = false;
+        for (const entry of paidEntries) {
+            const bill = bills[entry.idx];
+            const amount = toNum(bill.actualAmount !== undefined ? bill.actualAmount : bill.amount);
+            const revenueIndex = revenue.findIndex(item => String(item.billId || '') === String(bill.id));
+            if (revenueIndex === -1) {
+                revenue.push({
+                    id: newId(),
+                    date: todayKey(),
+                    amount,
+                    originalAmount: bill.originalAmount,
+                    discountAmount: bill.discountAmount,
+                    adjustmentAmount: bill.adjustmentAmount,
+                    adjustmentReason: bill.adjustmentReason || '',
+                    desc: '门诊药品费',
+                    category: '门诊收费',
+                    payMethod: bill.payMethod || '',
+                    patient: savedOutpatient.name,
+                    billId: bill.id,
+                    billNo: bill.billNo,
+                    outpatientId: savedOutpatient.id,
+                    operator: bill.operator || username,
+                    paidAt: bill.paidAt || nowISO,
+                });
+            } else {
+                revenue[revenueIndex] = {
+                    ...revenue[revenueIndex],
+                    amount,
+                    originalAmount: bill.originalAmount,
+                    discountAmount: bill.discountAmount,
+                    adjustmentAmount: bill.adjustmentAmount,
+                    adjustmentReason: bill.adjustmentReason || '',
+                    payMethod: bill.payMethod || revenue[revenueIndex].payMethod || '',
+                    patient: savedOutpatient.name,
+                    billNo: bill.billNo || revenue[revenueIndex].billNo,
+                    outpatientId: savedOutpatient.id,
+                };
+            }
+            revenueChanged = true;
+        }
+        if (revenueChanged) await repo.writeCollection(username, 'revenue', revenue);
+    }
+
+    if (!pendingEntries.length && drugTotal > 0 && !paidEntries.length) {
         pendingBill = await billingService.createPendingBill(username, {
             outpatientId: savedOutpatient.id,
             patientName: savedOutpatient.name,
-            amount: +drugTotal.toFixed(2),
+            amount: drugTotal,
             items: cleanRx,
         });
     }
 
     let pharmacyPushed = 0;
-    if (!dispensedItems.length) {
-        const linkedIds = new Set(linkedPharmacy.map(item => String(item.id)));
-        const keptPharmacy = pharmacy.filter(item => !linkedIds.has(String(item.id)));
+    if (rxChanged) {
+        // 未发药记录可以原位替换；已发药记录已在上方回冲库存并标记为已撤销，不能删除。
+        const reusableIds = linkedPharmacy
+            .filter(item => item.status === '待发药')
+            .map(item => item.id);
+        const pendingIds = new Set(linkedPharmacy
+            .filter(item => item.status === '待发药')
+            .map(item => String(item.id)));
+        let keptPharmacy = pharmacy.filter(item => !pendingIds.has(String(item.id)));
+
+        if (dispensedItems.length) {
+            const dispensedIds = new Set(dispensedItems.map(item => String(item.id)));
+            keptPharmacy = keptPharmacy.map(item => dispensedIds.has(String(item.id))
+                ? {
+                    ...item,
+                    status: '已撤销',
+                    reversedAt: nowISO,
+                    reversalReason: '门诊病历处方修改回冲'
+                }
+                : item);
+        }
+
         const settings = await repo.readCollection(username, 'settings');
         if (settings.autoPharmacy !== false && cleanRx.length > 0) {
-            const reusableIds = linkedPharmacy
-                .filter(item => item.status === '待发药')
-                .map(item => item.id);
             cleanRx.forEach((drug, idx) => {
                 keptPharmacy.push({
                     id: reusableIds[idx] || newId(),
@@ -314,7 +463,8 @@ async function updateSavedVisitUnsafe(username, id, body) {
             });
             pharmacyPushed = cleanRx.length;
         }
-        if (linkedPharmacy.length || pharmacyPushed) {
+
+        if (linkedPharmacy.length || pharmacyPushed || dispensedItems.length) {
             await repo.writeCollection(username, 'pharmacy', keptPharmacy);
         }
     }
@@ -323,12 +473,14 @@ async function updateSavedVisitUnsafe(username, id, body) {
         data: savedOutpatient,
         updated: true,
         pharmacyPushed,
+        inventoryReversed,
         billingAmount: drugTotal,
         billId: pendingBill ? pendingBill.id : (paidBill ? paidBill.id : null),
         billNo: pendingBill ? pendingBill.billNo : (paidBill ? paidBill.billNo : null),
         billingStatus: pendingBill ? pendingBill.status : (paidBill ? paidBill.status : null),
     };
 }
+
 
 async function completeVisit(username, body) {
     return repo.transaction(() => completeVisitUnsafe(username, body));

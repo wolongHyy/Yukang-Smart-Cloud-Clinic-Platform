@@ -14,6 +14,7 @@ const ALL_INVENTORY_CATEGORIES = [...INVENTORY_CATEGORIES, UNCLASSIFIED_CATEGORY
 
 const LEGACY_CATEGORY_MAP = {
     '中药饮品': '中药饮片',
+    '保健品': '保健食品',
     '中药颗粒': '中药配方颗粒',
     '未分类': UNCLASSIFIED_CATEGORY,
     '': '',
@@ -121,7 +122,7 @@ function unclassifiedClassification(reason) {
 
 function classifyInventoryDrug(item = {}) {
     const name = String(item.name || item.drugName || '').trim();
-    const approvalNo = String(item.approvalNo || '').replace(/\s+/g, '').toUpperCase();
+    const approvalNo = String(item.approvalNo || '').replace(/[\s\u3000_\-—–－·•.]/g, '').toUpperCase();
     const evidenceText = [
         name,
         item.spec,
@@ -450,27 +451,34 @@ async function batchImportUnsafe(username, operator, body) {
     let added = 0;
     let updated = 0;
     let classified = 0;
+    let skipped = 0;
+    const failedItems = [];
     const seenNames = new Set();
 
     for (const item of items) {
         const name = String(item.name || '').trim();
-        if (!name) continue;
+        if (!name) {
+            skipped += 1;
+            failedItems.push({ name: '（空名称）', reason: '药品名称为空，已跳过' });
+            continue;
+        }
         const existing = inventory.find(d => d.name === name);
         const classification = resolveClassification(item, existing);
 
         if (classification.category === UNCLASSIFIED_CATEGORY) {
-            throw new HttpError(
-                400,
-                `药品“${name}”无法可靠归类：${classification.reason}。请在 Excel 中填写明确的药品类型。`,
-                'CATEGORY_REQUIRED'
-            );
+            failedItems.push({ name, reason: `无法可靠归类：${classification.reason}。请在 Excel 中填写明确的药品类型。` });
+            continue;
         }
         if (classification.confidence !== 'manual' && classification.confidence !== 'existing') {
             classified += 1;
         }
 
         const key = name.toLowerCase();
-        if (seenNames.has(key)) continue;
+        if (seenNames.has(key)) {
+            skipped += 1;
+            failedItems.push({ name, reason: '同一批次中药品名称重复，已跳过重复项' });
+            continue;
+        }
         seenNames.add(key);
 
         const supName = (item.supplier || '').trim();
@@ -562,7 +570,16 @@ async function batchImportUnsafe(username, operator, body) {
     await repo.writeCollection(username, 'drugInventory', inventory);
     await repo.writeCollection(username, 'suppliers', suppliers);
     await repo.writeCollection(username, 'drugInRecords', inRecords);
-    return { success: true, added, updated, classified, total: items.length };
+    return {
+        success: true,
+        added,
+        updated,
+        classified,
+        skipped,
+        failed: failedItems.length,
+        failedItems,
+        total: items.length,
+    };
 }
 
 async function deleteDrugsUnsafe(username, body) {

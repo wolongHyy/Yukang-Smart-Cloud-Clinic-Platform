@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>愈康云诊所</title>
+    <link rel="icon" href="assets/yukang-logo.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
     <script src="/vendor/xlsx.full.min.js"></script>
     <style>
@@ -634,6 +635,11 @@
     cursor: not-allowed;
     opacity: .5;
 }
+.clinic-center.readonly-view .clinic-section button.rx-print-btn {
+    pointer-events: auto;
+    cursor: pointer;
+    opacity: 1;
+}
 .clinic-center.readonly-view .label,
 .clinic-section.readonly-view .label { border-left-color: #8FB8AE; }
 .clinic-center.readonly-view input,
@@ -697,13 +703,14 @@
 .clinic-right > div:first-child { color: var(--text); }
 </style>
     <link rel="stylesheet" href="v5-pages.css">
+    <link rel="stylesheet" href="assets/yukang-workbench.css">
 </head>
 <body>
     <div class="loading-toast" id="loadingToast">同步中...</div>
     <div class="chart-tooltip" id="chartTooltip"></div>
     <header>
         <div class="brand">
-            <span class="brand-icon"><i class="fas fa-clinic-medical"></i></span>
+            <span class="brand-icon"><img src="assets/yukang-logo.svg" alt=""></span>
             <span class="brand-text">
                 <span class="brand-name">愈康云诊所</span>
                 <span class="brand-sub">智慧诊所管理系统</span>
@@ -725,6 +732,25 @@
 
     <div class="main-wrapper">
         <div id="page-home" class="page-content active">
+            <section class="clinic-hero" id="clinicHero" aria-labelledby="clinicHeroTitle">
+                <div class="clinic-hero-copy">
+                    <p class="hero-date" id="clinicHeroDate"></p>
+                    <h1 id="clinicHeroTitle">让每一次接诊，<span>都有据可循。</span></h1>
+                    <p class="hero-desc">从接诊、处方、药房到收费与经营统计，在本地安静运行，把每一步诊疗工作留在诊所自己手中。</p>
+                    <div class="hero-status" aria-label="系统特点">
+                        <span><i class="fas fa-database" aria-hidden="true"></i> 数据留在本机</span>
+                        <span><i class="fas fa-shield-halved" aria-hidden="true"></i> 业务按门店隔离</span>
+                        <span><i class="fas fa-wifi" aria-hidden="true"></i> 断网也可接诊</span>
+                    </div>
+                </div>
+                <div class="hero-emblem" aria-hidden="true">
+                    <span class="emblem-orbit"></span>
+                    <span class="emblem-orbit orbit-second"></span>
+                    <div class="emblem-core">
+                        <div class="emblem-face"><img src="assets/yukang-logo.svg" alt=""></div>
+                    </div>
+                </div>
+            </section>
             <div class="quick-actions">
                 <div class="quick-action" onclick="startQuickClinic()">
                     <span class="qa-icon" style="background:linear-gradient(135deg,#2F80ED,#5BA0F5);"><i class="fas fa-user-plus"></i></span>
@@ -2040,7 +2066,7 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
             right.push(`<button class="op-btn ${processed ? 'btn-cyan' : ''}" onclick="toggleHerbProcess()"><i class="fas fa-hammer"></i> ${processed ? '已加工' : '加工'}</button>`);
         }
         right.push(`<button class="op-btn" onclick="copyLastPrescription()"><i class="fas fa-copy"></i> 复制</button>`);
-        right.push(`<button class="op-btn" onclick="printClinic()"><i class="fas fa-print"></i> 打印</button>`);
+        right.push(`<button class="op-btn rx-print-btn" onclick="printPrescription()"><i class="fas fa-print"></i> 打印处方</button>`);
         return `<div class="rx-topbar"><div class="rx-topbar-left"><i class="fas ${opts.icon || 'fa-prescription-bottle'}"></i><b>${esc(title)}</b>${opts.leftExtra || ''}</div><div class="rx-topbar-right">${right.join('')}</div></div>`;
     }
     function rxAddRow(placeholder, onPlus, value, drugName) {
@@ -2448,7 +2474,11 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
             cf_diagnosis: 'diagnosis',
             cf_syndrome: 'syndrome',
             cf_advice: 'advice',
-            cf_visitType: 'visitType'
+            cf_visitType: 'visitType',
+            cf_name: 'name',
+            cf_gender: 'gender',
+            cf_age: 'age',
+            cf_phone: 'phone'
         };
         Object.entries(fields).forEach(([elementId, field]) => {
             const element = document.getElementById(elementId);
@@ -2482,19 +2512,27 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         area.classList.toggle('readonly-view', savedRecord && !editSavedVisit);
         const recordBanner = savedRecord
             ? (editSavedVisit
-                ? '<div class="clinic-view-banner editing"><div><b>修改病历 · 修改模式</b><div>可修改诊断、病史和未收费、未发药处方，保存后会同步更新收费和药房记录。</div></div><button type="button" class="op-btn" onclick="cancelEditSavedVisit()"><i class="fas fa-rotate-left"></i> 取消修改</button></div>'
+                ? '<div class="clinic-view-banner editing"><div><b>修改病历 · 修改模式</b><div>可修改诊断、病史和处方；已收费记录保留实收金额，已发药处方修改会自动回冲库存并保留审计记录。</div></div><button type="button" class="op-btn" onclick="cancelEditSavedVisit()"><i class="fas fa-rotate-left"></i> 取消修改</button></div>'
                 : '<div class="clinic-view-banner"><div><b>已保存接诊 · 查看模式</b><div>如需更正，请点击右侧“修改病历”。</div></div><button type="button" class="op-btn" onclick="startEditSavedVisit()"><i class="fas fa-pen"></i> 修改病历</button></div>')
             : '';
         area.innerHTML = `
         ${recordBanner}
         <div class="clinic-section">
             <div class="label">患者信息</div>
-            <div class="patient-summary"><b>${esc(p.name)}</b><span>${esc(p.gender || '-')} | ${esc(p.age || '-')}岁 | ${esc(p.phone || '-')}</span><div>接诊医师：${esc(p.doctor || '待分配')}　|　收费方式：自费</div></div>
+            <div class="form-row">
+                <div><label>姓名 <span style="color:#d94b4b;">*</span></label><input id="cf_name" value="${esc(p.name || '')}" placeholder="患者姓名" autocomplete="off"></div>
+                <div><label>性别</label><input id="cf_gender" value="${esc(p.gender || '')}" placeholder="男 / 女"></div>
+            </div>
+            <div class="form-row" style="margin-top:6px;">
+                <div><label>年龄</label><input id="cf_age" value="${esc(p.age || '')}" placeholder="年龄" inputmode="numeric"></div>
+                <div><label>电话</label><input id="cf_phone" value="${esc(p.phone || '')}" placeholder="联系电话" inputmode="tel" autocomplete="off"></div>
+            </div>
+            <div class="patient-summary" style="margin-top:8px;">接诊医师：${esc(p.doctor || '待分配')}　|　收费方式：自费</div>
         </div>
         <div class="clinic-section">
             <div class="label">病历信息</div>
             <div class="form-row"><div><label>初/复诊</label><select id="cf_visitType"><option value="初诊">初诊</option><option value="复诊" ${p.visitType === '复诊' ? 'selected' : ''}>复诊</option></select></div><div><label>收费方式</label><div class="readonly-field">自费</div></div></div>
-            <div style="display:flex;gap:6px;align-items:center;"><input id="cf_chief" placeholder="患者主诉" value="${esc(p.chief || '')}" readonly style="flex:1"><button type="button" class="op-btn" onclick="openChiefPicker('cf_chief','cf_history')"><i class="fas fa-list"></i> 症状点选</button></div>
+            <div style="display:flex;gap:6px;align-items:center;"><input id="cf_chief" placeholder="患者主诉" value="${esc(p.chief || '')}" style="flex:1"><button type="button" class="op-btn" onclick="openChiefPicker('cf_chief','cf_history')"><i class="fas fa-list"></i> 症状点选</button></div>
             <div style="display:flex;gap:6px;align-items:flex-start;"><textarea id="cf_history" rows="2" placeholder="现病史" style="flex:1;">${esc(p.history || '')}</textarea><button type="button" class="op-btn" onclick="openClinicalTermPicker('history','cf_history')"><i class="fas fa-list"></i> 分类点选</button></div>
             <div style="display:flex;gap:6px;align-items:flex-start;"><textarea id="cf_past" rows="2" placeholder="既往史（点击右侧关联历史档案）" style="flex:1;">${esc(p.past || '')}</textarea><button type="button" class="op-btn" onclick="openPastHistoryPicker()"><i class="fas fa-clock-rotate-left"></i> 历史档案</button></div>
             <div style="display:flex;gap:6px;align-items:center;"><input id="cf_allergy" placeholder="过敏史" value="${esc(p.allergy || '')}" style="flex:1"><button type="button" class="op-btn" onclick="openClinicalTermPicker('allergy','cf_allergy')"><i class="fas fa-list"></i> 分类点选</button></div>
@@ -2910,14 +2948,14 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
     async function saveClinicData() {
         if(!editingOutpatientId) return alert('请先选择患者');
         const op = dbOutpatient.find(i=>i.id===editingOutpatientId);
-        const patientName = op ? op.name : '';
-        if(!patientName) return alert('患者信息缺失，请重新选择');
+        const patientName = document.getElementById('cf_name')?.value.trim() || (op ? op.name : '');
+        if(!patientName) return alert('请填写患者姓名');
 
         const patient = {
             name: patientName,
-            gender: op ? op.gender : '',
-            age: op ? op.age : '',
-            phone: op ? op.phone : '',
+            gender: document.getElementById('cf_gender')?.value.trim() || (op ? op.gender : ''),
+            age: document.getElementById('cf_age')?.value.trim() || (op ? op.age : ''),
+            phone: document.getElementById('cf_phone')?.value.trim() || (op ? op.phone : ''),
             chief: document.getElementById('cf_chief')?.value || '',
             history: document.getElementById('cf_history')?.value || '',
             past: document.getElementById('cf_past')?.value || '',
@@ -3008,6 +3046,62 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
         (rx.patchGroups || []).forEach(g => { if (g.drug || (g.acupoints || []).length) parts.push(`贴敷：${g.name || '贴'}.${g.site ? '（' + g.site + '）' : ''}${g.drug || ''} ${(g.acupoints || []).join('、')}`.trim()); });
         (rx.treatmentGroups || []).forEach(g => { if (g.item || (g.acupoints || []).length) parts.push(`${rx.externalType || '外治'}：${g.item || ''} ${(g.acupoints || []).join('、')}${Number(g.times) > 1 ? '（' + g.times + '次）' : ''}`.trim()); });
         return parts.filter(Boolean).join('， ') || '无';
+    }
+
+
+    function printPrescription() {
+        const rx = rxDraft();
+        const items = rxAllItems(rx);
+        if (!items.length) return alert('当前处方没有可打印的药品明细，请先添加处方项目。');
+        const p = dbOutpatient.find(i => String(i.id) === String(editingOutpatientId)) || {};
+        const typePair = rxTypeDefs.find(([key]) => key === ((rx && rx.type) || 'western'));
+        let typeName = typePair ? typePair[1] : '处方';
+        if (rx && rx.type === 'external' && rx.externalType) typeName = `${rx.externalType}处方`;
+        const patientName = document.getElementById('cf_name')?.value.trim() || p.name || '-';
+        const doctor = p.doctor || '待分配';
+        const date = p.opDate || p.date || getTodayStr();
+        const advice = document.getElementById('cf_advice')?.value.trim() || '-';
+        const rows = items.map((d, index) => {
+            const specification = d.spec || '-';
+            const dosage = [d.dosage, d.dosageUnit].filter(Boolean).join('') || '-';
+            const usage = d.usage || '-';
+            const frequency = d.frequency || '-';
+            const qty = `${d.qty || 0}${d.qtyUnit || ''}`;
+            const price = (Number(d.price) || 0).toFixed(2);
+            const subtotal = (Number(d.subtotal) || 0).toFixed(2);
+            return `<tr><td>${index + 1}</td><td>${esc(d.name)}</td><td>${esc(specification)}</td><td>${esc(dosage)}</td><td>${esc(usage)}</td><td>${esc(frequency)}</td><td>${esc(qty)}</td><td style="text-align:right;">${price}</td><td style="text-align:right;">${subtotal}</td></tr>`;
+        }).join('');
+        const total = items.reduce((sum, d) => sum + (Number(d.subtotal) || 0), 0);
+        const win = window.open('', '_blank');
+        if (!win) return alert('浏览器阻止了打印窗口，请允许本站弹出窗口后重试。');
+        win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>处方笺 - ${esc(patientName)}</title>
+            <style>
+                @page { size: A4; margin: 12mm; }
+                body { font-family: "Microsoft YaHei", "SimSun", sans-serif; color: #222; font-size: 13px; }
+                h1 { text-align: center; font-size: 24px; margin: 0 0 4px; letter-spacing: 6px; }
+                .subtitle { text-align: center; color: #666; margin-bottom: 16px; }
+                .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; margin-bottom: 12px; }
+                table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+                th, td { border: 1px solid #555; padding: 6px 5px; vertical-align: top; word-break: break-all; }
+                th { background: #f2f2f2; font-weight: 700; text-align: center; }
+                .total { margin-top: 10px; text-align: right; font-size: 15px; font-weight: 700; }
+                .advice { margin-top: 14px; min-height: 48px; }
+                .sign { margin-top: 34px; display: flex; justify-content: space-between; }
+            </style></head><body>
+            <h1>愈康云诊所</h1>
+            <div class="subtitle">处 方 笺</div>
+            <div class="meta"><div><b>患者姓名：</b>${esc(patientName)}</div><div><b>处方类型：</b>${esc(typeName)}</div><div><b>接诊医师：</b>${esc(doctor)}</div><div><b>日期：</b>${esc(date)}</div></div>
+            <table><colgroup><col style="width:5%"><col style="width:17%"><col style="width:11%"><col style="width:10%"><col style="width:14%"><col style="width:9%"><col style="width:11%"><col style="width:11%"><col style="width:12%"></colgroup>
+                <thead><tr><th>序号</th><th>药品名称</th><th>规格</th><th>剂量</th><th>用法</th><th>频次</th><th>数量</th><th>单价(元)</th><th>金额(元)</th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+            <div class="total">合计：¥${total.toFixed(2)}</div>
+            <div class="advice"><b>用药说明／医嘱：</b>${esc(advice)}</div>
+            <div class="sign"><span>医师签名：________________</span><span>审核／调配：________________</span></div>
+            </body></html>`);
+        win.document.close();
+        win.focus();
+        win.print();
     }
 
     function tcmSummary() {
@@ -5196,5 +5290,6 @@ pinyin_dict_firstletter.polyphone = {"19969":"DZ","19975":"WM","19988":"QJ","200
     });
     </script>
     <script src="v5-pages.js"></script>
+    <script src="assets/yukang-interactions.js"></script>
 </body>
 </html>

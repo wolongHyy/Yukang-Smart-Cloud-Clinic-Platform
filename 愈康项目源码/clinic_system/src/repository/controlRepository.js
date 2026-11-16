@@ -26,22 +26,20 @@ function assertRegistration(body) {
     const phone = normalizeText(body && body.phone);
     const idCard = normalizeText(body && body.idCard).toUpperCase();
     const clinicName = normalizeText(body && body.clinicName);
-    const orgMode = normalizeText(body && body.orgMode);
-    const storeRole = normalizeText(body && body.storeRole) || 'headquarters';
+    const orgMode = normalizeText(body && body.orgMode) || 'single';
+    const storeRole = normalizeText(body && body.storeRole) || (orgMode === 'chain' ? 'headquarters' : 'single');
     const password = String((body && body.password) || '');
     const inviteCode = normalizeText(body && body.inviteCode).toUpperCase();
 
-    if (fullName.length < 2 || fullName.length > 30) throw Object.assign(new Error('姓名长度需为 2-30 个字符'), { status: 400, code: 'INVALID_FULL_NAME' });
-    if (!validatePhone(phone)) throw Object.assign(new Error('请输入有效的 11 位手机号'), { status: 400, code: 'INVALID_PHONE' });
-    if (!validateIdCard(idCard)) throw Object.assign(new Error('请输入有效的 18 位身份证号'), { status: 400, code: 'INVALID_ID_CARD' });
+    if (fullName && (fullName.length < 2 || fullName.length > 30)) throw Object.assign(new Error('姓名长度需为 2-30 个字符'), { status: 400, code: 'INVALID_FULL_NAME' });
+    if (phone && !validatePhone(phone)) throw Object.assign(new Error('请输入有效的 11 位手机号'), { status: 400, code: 'INVALID_PHONE' });
+    if (idCard && !validateIdCard(idCard)) throw Object.assign(new Error('请输入有效的 18 位身份证号'), { status: 400, code: 'INVALID_ID_CARD' });
     if (clinicName.length < 2 || clinicName.length > 50) throw Object.assign(new Error('诊所名称长度需为 2-50 个字符'), { status: 400, code: 'INVALID_CLINIC_NAME' });
     if (!['single', 'chain'].includes(orgMode)) throw Object.assign(new Error('请选择机构类型'), { status: 400, code: 'INVALID_ORG_MODE' });
     if (orgMode === 'chain' && !['headquarters', 'branch'].includes(storeRole)) throw Object.assign(new Error('请选择总店或分店'), { status: 400, code: 'INVALID_STORE_ROLE' });
     if (orgMode === 'chain' && storeRole === 'branch' && !inviteCode) throw Object.assign(new Error('分店注册必须填写总部邀请码'), { status: 400, code: 'INVITE_REQUIRED' });
     if (username.length < 2 || username.length > 32 || !/^[a-zA-Z0-9_]+$/.test(username)) throw Object.assign(new Error('用户名仅支持 2-32 位字母、数字和下划线'), { status: 400, code: 'INVALID_USERNAME' });
     if (password.length < 6) throw Object.assign(new Error('密码长度至少 6 位'), { status: 400, code: 'WEAK_PASSWORD' });
-    if (body.privacyAccepted !== true) throw Object.assign(new Error('请阅读并同意隐私与数据使用说明'), { status: 400, code: 'PRIVACY_CONSENT_REQUIRED' });
-
     return { username, fullName, phone, idCard, clinicName, orgMode, storeRole: orgMode === 'single' ? 'single' : storeRole, password, inviteCode };
 }
 
@@ -125,7 +123,8 @@ function createControlRepository(dataDir, options = {}) {
             );
             DROP INDEX IF EXISTS idx_users_phone;
             CREATE UNIQUE INDEX IF NOT EXISTS idx_users_phone ON users(phone) WHERE phone <> '';
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_users_id_card_hash ON users(id_card_hash);
+            DROP INDEX IF EXISTS idx_users_id_card_hash;
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_users_id_card_hash ON users(id_card_hash) WHERE id_card_hash <> '';
             CREATE INDEX IF NOT EXISTS idx_users_org ON users(org_id);
             CREATE INDEX IF NOT EXISTS idx_users_clinic ON users(clinic_id);
             CREATE TABLE IF NOT EXISTS invites (
@@ -217,11 +216,11 @@ function createControlRepository(dataDir, options = {}) {
             if (database.prepare('SELECT username FROM users WHERE username = ?').get(input.username)) {
                 throw Object.assign(new Error('该用户名已被注册'), { status: 409, code: 'USERNAME_TAKEN' });
             }
-            if (database.prepare('SELECT username FROM users WHERE phone = ?').get(input.phone)) {
+            if (input.phone && database.prepare('SELECT username FROM users WHERE phone = ?').get(input.phone)) {
                 throw Object.assign(new Error('该手机号已被注册'), { status: 409, code: 'PHONE_TAKEN' });
             }
-            const idHash = hashIdCard(input.idCard);
-            if (database.prepare('SELECT username FROM users WHERE id_card_hash = ?').get(idHash)) {
+            const idHash = input.idCard ? hashIdCard(input.idCard) : '';
+            if (idHash && database.prepare('SELECT username FROM users WHERE id_card_hash = ?').get(idHash)) {
                 throw Object.assign(new Error('该身份证号已被注册'), { status: 409, code: 'ID_CARD_TAKEN' });
             }
 
@@ -266,8 +265,8 @@ function createControlRepository(dataDir, options = {}) {
                 hashPassword(input.password, salt),
                 input.fullName,
                 input.phone,
-                encrypt(input.idCard),
-                input.idCard.slice(-4),
+                input.idCard ? encrypt(input.idCard) : '',
+                input.idCard ? input.idCard.slice(-4) : '',
                 idHash,
                 orgId,
                 clinicId,

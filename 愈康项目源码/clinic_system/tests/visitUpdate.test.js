@@ -87,7 +87,7 @@ test('v5 修改未收费未发药病历会原位同步且不重复新增', async
     }
 });
 
-test('v5 已收费病历禁止修改处方但允许修改诊断', async () => {
+test('v5 已收费病历可更正处方并保留实收金额与唯一营收流水', async () => {
     const server = await startV5Server('visit-update-paid');
     try {
         const auth = await registerOwner(server, 'paid', 502);
@@ -99,41 +99,54 @@ test('v5 已收费病历禁止修改处方但允许修改诊断', async () => {
         });
         assert.equal(paid.status, 200);
 
-        const blocked = await server.request(`/api/outpatients/${visit.data.id}/visit`, {
-            method: 'PUT',
-            token: auth.token,
-            body: {
-                patient: { name: '已收费修改患者', diagnosis: '新诊断' },
-                prescriptions: [{ name: '当归', qty: 3, price: 20, qtyUnit: '袋' }],
-            },
-        });
-        assert.equal(blocked.status, 409);
-        assert.equal(blocked.data.code, 'BILL_ALREADY_PAID');
-
-        const allowed = await server.request(`/api/outpatients/${visit.data.id}/visit`, {
+        const updated = await server.request(`/api/outpatients/${visit.data.id}/visit`, {
             method: 'PUT',
             token: auth.token,
             body: {
                 patient: { name: '已收费修改患者', diagnosis: '修正诊断', advice: '复诊提醒' },
-                prescriptions: [{ name: '当归', qty: 2, price: 25, qtyUnit: '袋' }],
+                prescriptions: [{ name: '当归', qty: 3, price: 20, qtyUnit: '袋' }],
             },
         });
-        assert.equal(allowed.status, 200);
+        assert.equal(updated.status, 200);
+        assert.equal(updated.data.updated, true);
+        assert.equal(updated.data.billingAmount, 60);
+        assert.equal(updated.data.billId, visit.billId);
+
         const bills = await server.request('/api/billing', { token: auth.token });
         assert.equal(bills.data.bills.length, 1);
+        assert.equal(bills.data.bills[0].id, visit.billId);
         assert.equal(bills.data.bills[0].status, 'paid');
+        assert.equal(bills.data.bills[0].amount, 60);
+        assert.equal(bills.data.bills[0].originalAmount, 60);
         assert.equal(bills.data.bills[0].actualAmount, 50);
+        assert.equal(bills.data.bills[0].discountAmount, 10);
+        assert.equal(bills.data.bills[0].items[0].qty, 3);
+
+        const revenue = await server.request('/api/revenue', { token: auth.token });
+        assert.equal(revenue.data.length, 1);
+        assert.equal(revenue.data[0].billId, visit.billId);
+        assert.equal(revenue.data[0].amount, 50);
+        assert.equal(revenue.data[0].originalAmount, 60);
+
         const outpatients = await server.request('/api/outpatients', { token: auth.token });
+        assert.equal(outpatients.data.length, 1);
         assert.equal(outpatients.data[0].diagnosis, '修正诊断');
+        assert.equal(outpatients.data[0].prescriptions[0].qty, 3);
     } finally {
         await server.stop();
     }
 });
-
-test('v5 已发药病历禁止修改处方内容', async () => {
+test('v5 已发药病历更正处方会回冲库存并保留撤销审计记录', async () => {
     const server = await startV5Server('visit-update-dispensed');
     try {
         const auth = await registerOwner(server, 'dispensed', 503);
+        const stocked = await server.request('/api/drugInventory', {
+            method: 'POST',
+            token: auth.token,
+            body: { name: '当归', stock: 10, quantity: 10, price: 25, unit: '盒' },
+        });
+        assert.equal(stocked.status, 201);
+
         const visit = await createVisit(server, auth.token, { name: '已发药修改患者' });
         const pharmacy = await server.request('/api/pharmacy', { token: auth.token });
         const dispensed = await server.request(`/api/pharmacy/dispense/${pharmacy.data[0].id}`, {
@@ -142,21 +155,43 @@ test('v5 已发药病历禁止修改处方内容', async () => {
         });
         assert.equal(dispensed.status, 200);
 
-        const blocked = await server.request(`/api/outpatients/${visit.data.id}/visit`, {
+        const stockAfterDispense = await server.request('/api/drugInventory', { token: auth.token });
+        assert.equal(stockAfterDispense.data[0].stock, 8);
+
+        const updated = await server.request(`/api/outpatients/${visit.data.id}/visit`, {
             method: 'PUT',
             token: auth.token,
             body: {
-                patient: { name: '已发药修改患者', diagnosis: '仍可修改诊断' },
+                patient: { name: '已发药修改患者', diagnosis: '复核后诊断' },
                 prescriptions: [{ name: '当归', qty: 3, price: 20, qtyUnit: '袋' }],
             },
         });
-        assert.equal(blocked.status, 409);
-        assert.equal(blocked.data.code, 'MEDICATION_ALREADY_DISPENSED');
+        assert.equal(updated.status, 200);
+        assert.equal(updated.data.inventoryReversed, 1);
+        assert.equal(updated.data.pharmacyPushed, 1);
+
+        const stockAfterCorrection = await server.request('/api/drugInventory', { token: auth.token });
+        assert.equal(stockAfterCorrection.data[0].stock, 10);
+
+        const correctedPharmacy = await server.request('/api/pharmacy', { token: auth.token });
+        assert.equal(correctedPharmacy.data.length, 2);
+        assert.equal(correctedPharmacy.data[0].status, '已撤销');
+        assert.equal(correctedPharmacy.data[0].reversalReason, '门诊病历处方修改回冲');
+        assert.equal(correctedPharmacy.data[1].status, '待发药');
+        assert.equal(correctedPharmacy.data[1].qty, 3);
+
+        const outRecords = await server.request('/api/drugOutRecords', { token: auth.token });
+        assert.equal(outRecords.data.length, 2);
+        assert.equal(outRecords.data[0].type, '发药');
+        assert.equal(outRecords.data[1].type, '发药回冲');
+
+        const outpatients = await server.request('/api/outpatients', { token: auth.token });
+        assert.equal(outpatients.data[0].diagnosis, '复核后诊断');
+        assert.equal(outpatients.data[0].prescriptions[0].qty, 3);
     } finally {
         await server.stop();
     }
 });
-
 test('v5 修改姓名电话不会产生重复患者档案', async () => {
     const server = await startV5Server('visit-update-patient-key');
     try {

@@ -80,6 +80,14 @@ desktop/update-config.json
 *.deb
 *.rpm
 
+# ---- GitHub Release public assets stay outside Git ----
+# 安装包通过 Release 上传，不提交进仓库，避免仓库膨胀和历史泄露。
+YuKangClinic-Setup-*.exe
+YuKangClinic-Setup-*.exe.sha256.txt
+*.exe.blockmap
+release-assets/
+delivery-output/
+
 # ---- Release signing and provisioning secrets ----
 **/*.pfx
 **/*.p12

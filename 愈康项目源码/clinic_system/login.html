@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#17352e">
 <title>愈康云诊所 · 登录</title>
+<link rel="icon" href="assets/yukang-logo.svg" type="image/svg+xml">
 <style>
 :root{
   --ink:#17352e; --pine:#245c4a; --jade:#2f6e59; --herb:#8fa88f;
@@ -105,11 +106,59 @@ select.control{appearance:none;background-image:linear-gradient(45deg,transparen
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
+<style>
+/* 既定愈康标识 + 采药画卷景深 */
+.landscape{
+  isolation:isolate;
+  background:#17352e;
+  --lg-x:0px;
+  --lg-y:0px;
+}
+.landscape::before{
+  content:"";
+  position:absolute;
+  inset:-14px;
+  z-index:0;
+  background:url("assets/login-photo-background.png") center top/cover no-repeat;
+  transform:translate3d(var(--lg-x),var(--lg-y),0) scale(1.02);
+  transition:transform .8s cubic-bezier(.16,1,.3,1);
+  will-change:transform;
+}
+.landscape::after{z-index:1}
+.brand-mark{perspective:800px}
+.brand-seal{
+  overflow:hidden;
+  padding:0;
+  border:1px solid rgba(255,250,237,.72);
+  background:#f7f1e4;
+  box-shadow:0 9px 20px rgba(5,27,20,.24),inset 0 1px 0 #fff;
+  transform-style:preserve-3d;
+  transition:transform .32s cubic-bezier(.16,1,.3,1),box-shadow .25s ease;
+}
+.brand-seal img{
+  width:100%;
+  height:100%;
+  display:block;
+  border-radius:inherit;
+  transform:translateZ(8px);
+  filter:drop-shadow(0 2px 2px rgba(7,30,23,.18));
+}
+.brand-mark:hover .brand-seal{
+  transform:translateY(-2px) rotateX(-7deg) rotateY(10deg);
+  box-shadow:0 13px 26px rgba(5,27,20,.34),inset 0 1px 0 #fff;
+}
+.auth-panel{
+  box-shadow:0 28px 80px rgba(24,50,42,.13),0 5px 14px rgba(24,50,42,.06);
+}
+@media (prefers-reduced-motion:reduce){
+  .landscape::before{transform:none!important}
+}
+</style>
 </head><body>
 <main class="auth-shell">
   <section class="landscape" aria-label="青绿山水视觉">
     <div class="brand-copy">
-      <div class="brand-mark"><span class="brand-seal">愈</span><span><span class="brand-name">愈康云诊所</span><span class="brand-sub">YUKANG CLOUD CLINIC</span></span></div>
+      <div class="brand-mark"><span class="brand-seal"><img src="assets/yukang-logo.svg" alt=""></span><span><span class="brand-name">愈康云诊所</span><span class="brand-sub">YUKANG CLOUD CLINIC</span></span></div>
       <h1>让每一次诊疗<br>都清晰有据</h1>
       <p>从接诊、处方、药房到收费与经营统计，一套在本地安静运行、数据自主可控的诊所工作台。</p>
     </div>
@@ -142,20 +191,13 @@ select.control{appearance:none;background-image:linear-gradient(45deg,transparen
 
       <form class="form-panel" id="registerForm" onsubmit="event.preventDefault();doRegister()" novalidate>
         <div class="form-grid">
-          <div class="field"><label for="regFullName">姓名<span class="required">*</span></label><input class="control" id="regFullName" name="fullName" autocomplete="name" placeholder="负责人姓名"></div>
-          <div class="field"><label for="regPhone">手机号<span class="required">*</span></label><input class="control" id="regPhone" name="phone" inputmode="numeric" autocomplete="tel" maxlength="11" placeholder="11 位手机号"></div>
-          <div class="field full"><label for="regIdCard">身份证号<span class="required">*</span></label><input class="control" id="regIdCard" name="idCard" autocomplete="off" maxlength="18" placeholder="18 位身份证号，加密保存"></div>
           <div class="field full"><label for="regClinicName">诊所名称<span class="required">*</span></label><input class="control" id="regClinicName" name="clinicName" autocomplete="organization" placeholder="例如：知微中医门诊"></div>
-          <div class="field"><label for="regOrgMode">机构类型<span class="required">*</span></label><select class="control" id="regOrgMode" name="orgMode" onchange="onOrgModeChange()"><option value="single">单体诊所</option><option value="chain">连锁诊所</option></select></div>
-          <div class="field dynamic-group" id="storeRoleField"><label for="regStoreRole">门店身份<span class="required">*</span></label><select class="control" id="regStoreRole" name="storeRole" onchange="onStoreRoleChange()"><option value="headquarters">总店</option><option value="branch">分店</option></select></div>
-          <div class="field full dynamic-group" id="inviteField"><label for="regInviteCode">总部邀请码<span class="required">*</span></label><input class="control" id="regInviteCode" name="inviteCode" autocomplete="off" placeholder="由连锁总店控制台生成"><div class="hint">邀请码仅可使用一次，有效期 24 小时。</div></div>
           <div class="field"><label for="regUsername">用户名<span class="required">*</span></label><input class="control" id="regUsername" name="username" autocomplete="username" maxlength="32" placeholder="字母、数字、下划线"></div>
           <div class="field"><label for="regPassword">密码<span class="required">*</span></label><div class="password-wrap"><input class="control" id="regPassword" name="password" type="password" autocomplete="new-password" placeholder="至少 6 位"><button class="password-toggle" type="button" onclick="togglePassword('regPassword',this)" aria-label="显示密码">◉</button></div></div>
           <div class="field full"><label for="regPassword2">确认密码<span class="required">*</span></label><input class="control" id="regPassword2" name="password2" type="password" autocomplete="new-password" placeholder="再次输入密码"></div>
-          <label class="inline-check full"><input type="checkbox" id="regPrivacy"><span>我已阅读并同意<a href="#" onclick="showPrivacy(event)">《隐私与数据使用说明》</a>，同意系统在本机加密保存身份证号等必要信息。</span></label>
           <div class="form-message" id="registerError" role="alert" aria-live="polite"></div>
           <div class="form-actions"><button class="primary-btn" id="registerSubmit" type="submit">创建诊所账号</button></div>
-          <div class="privacy-note">敏感身份信息仅保存在本地控制库中，其他账号不能跨门店读取。</div>
+          <div class="privacy-note">注册后直接进入工作台；系统数据仅保存在本机。</div>
         </div>
       </form>
       <div class="footer-note">愈康云诊所 · 本地部署 · 数据自管</div>
@@ -214,25 +256,11 @@ function switchLoginTab(tab) {
   document.getElementById('loginForm').classList.toggle('active', isLogin);
   document.getElementById('registerForm').classList.toggle('active', !isLogin);
   document.getElementById('authTitle').textContent = isLogin ? '欢迎回来' : '建立你的诊所';
-  document.getElementById('authSubtitle').textContent = isLogin ? '登录后继续今天的诊疗工作。' : '填写负责人信息，并选择单体或连锁机构。';
+  document.getElementById('authSubtitle').textContent = isLogin ? '登录后继续今天的诊疗工作。' : '只需填写诊所名称、用户名和密码即可创建。';
   setMessage('loginError', '');
   setMessage('registerError', '');
-  const focusId = isLogin ? 'loginUsername' : 'regFullName';
+  const focusId = isLogin ? 'loginUsername' : 'regClinicName';
   setTimeout(() => document.getElementById(focusId).focus(), 50);
-}
-
-function onOrgModeChange() {
-  const chain = document.getElementById('regOrgMode').value === 'chain';
-  document.getElementById('storeRoleField').classList.toggle('show', chain);
-  if (!chain) document.getElementById('regStoreRole').value = 'headquarters';
-  onStoreRoleChange();
-}
-
-function onStoreRoleChange() {
-  const chain = document.getElementById('regOrgMode').value === 'chain';
-  const branch = document.getElementById('regStoreRole').value === 'branch';
-  document.getElementById('inviteField').classList.toggle('show', chain && branch);
-  if (!chain || !branch) document.getElementById('regInviteCode').value = '';
 }
 
 function togglePassword(inputId, button) {
@@ -286,31 +314,20 @@ async function doLogin() {
 }
 
 function validateRegister(input) {
-  if (!input.fullName || input.fullName.length < 2) return '请输入真实姓名（至少 2 个字符）';
-  if (!/^1[3-9]\d{9}$/.test(input.phone)) return '请输入有效的 11 位手机号';
-  if (!/^\d{17}[\dXx]$/.test(input.idCard)) return '请输入有效的 18 位身份证号';
   if (!input.clinicName || input.clinicName.length < 2) return '请输入诊所名称';
   if (!/^[a-zA-Z0-9_]{2,32}$/.test(input.username)) return '用户名仅支持 2-32 位字母、数字或下划线';
   if (input.password.length < 6) return '密码长度至少 6 位';
   if (input.password !== document.getElementById('regPassword2').value) return '两次输入的密码不一致';
-  if (input.orgMode === 'chain' && input.storeRole === 'branch' && !input.inviteCode) return '分店注册必须填写总部邀请码';
-  if (!document.getElementById('regPrivacy').checked) return '请阅读并勾选隐私与数据使用说明';
   return '';
 }
 
 async function doRegister() {
-  const orgMode = document.getElementById('regOrgMode').value;
   const input = {
-    fullName: document.getElementById('regFullName').value.trim(),
-    phone: document.getElementById('regPhone').value.trim(),
-    idCard: document.getElementById('regIdCard').value.trim().toUpperCase(),
     clinicName: document.getElementById('regClinicName').value.trim(),
-    orgMode,
-    storeRole: orgMode === 'single' ? 'single' : document.getElementById('regStoreRole').value,
-    inviteCode: document.getElementById('regInviteCode').value.trim().toUpperCase(),
     username: document.getElementById('regUsername').value.trim(),
     password: document.getElementById('regPassword').value,
-    privacyAccepted: document.getElementById('regPrivacy').checked,
+    orgMode: 'single',
+    storeRole: 'single',
   };
   const button = document.getElementById('registerSubmit');
   setMessage('registerError', '');
@@ -332,7 +349,32 @@ async function doRegister() {
 
 document.getElementById('tabLogin').addEventListener('keydown', event => { if (event.key === 'Enter') switchLoginTab('login'); });
 document.getElementById('tabRegister').addEventListener('keydown', event => { if (event.key === 'Enter') switchLoginTab('register'); });
-onOrgModeChange();
+</script>
+<script>
+(() => {
+  const landscape = document.querySelector('.landscape');
+  const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (!landscape || !finePointer.matches || reduceMotion.matches) return;
+  let frame = 0;
+  let x = 0;
+  let y = 0;
+  landscape.addEventListener('pointermove', event => {
+    const rect = landscape.getBoundingClientRect();
+    x = (event.clientX - rect.left) / Math.max(rect.width, 1) - .5;
+    y = (event.clientY - rect.top) / Math.max(rect.height, 1) - .5;
+    if (frame) return;
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      landscape.style.setProperty('--lg-x', `${(x * -10).toFixed(2)}px`);
+      landscape.style.setProperty('--lg-y', `${(y * -7).toFixed(2)}px`);
+    });
+  }, { passive: true });
+  landscape.addEventListener('pointerleave', () => {
+    landscape.style.setProperty('--lg-x', '0px');
+    landscape.style.setProperty('--lg-y', '0px');
+  });
+})();
 </script>
 </body>
 </html>

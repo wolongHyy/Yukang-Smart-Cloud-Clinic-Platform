@@ -1,0 +1,114 @@
+:root {
+  --intro-ink: #f7efd8;
+  --intro-gold: #e5c77b;
+}
+
+body.intro-playing {
+  overflow: hidden;
+  background: #071f19;
+}
+
+.cinematic-intro[hidden] { display: none; }
+
+.cinematic-intro {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  isolation: isolate;
+  background: #071f19;
+  opacity: 1;
+  transition: opacity .62s cubic-bezier(.22, 1, .36, 1);
+}
+
+.cinematic-intro::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  box-shadow: inset 0 0 min(14vw, 150px) rgba(1, 17, 14, .28);
+}
+
+.cinematic-intro.is-leaving { opacity: 0; pointer-events: none; }
+
+.cinematic-intro__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  background: #071f19;
+}
+
+.cinematic-intro__skip {
+  position: absolute;
+  z-index: 3;
+  top: max(20px, env(safe-area-inset-top));
+  right: max(20px, env(safe-area-inset-right));
+  min-width: 86px;
+  min-height: 44px;
+  padding: 0 17px;
+  border: 1px solid rgba(250, 240, 211, .30);
+  border-radius: 999px;
+  color: var(--intro-ink);
+  background: rgba(7, 27, 23, .55);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, .14);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font-family: var(--sans, "Microsoft YaHei", sans-serif);
+  font-size: 13px;
+  letter-spacing: .08em;
+  cursor: pointer;
+  transition: color .2s ease, border-color .2s ease, background .2s ease, transform .2s ease;
+}
+
+.cinematic-intro__skip:hover {
+  color: #fff9e9;
+  border-color: rgba(250, 240, 211, .55);
+  background: rgba(15, 49, 40, .78);
+  transform: translateY(-1px);
+}
+
+.cinematic-intro__skip:focus-visible {
+  outline-color: var(--intro-gold);
+  outline-offset: 3px;
+}
+
+.brand-logo {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border: 1px solid rgba(23, 61, 52, .10);
+  border-radius: 11px;
+  object-fit: cover;
+  box-shadow: 0 5px 14px rgba(23, 61, 52, .12);
+}
+
+.brand-footer .brand-logo {
+  border-color: rgba(231, 212, 156, .24);
+  box-shadow: 0 7px 20px rgba(0, 0, 0, .18);
+}
+
+@media (max-width: 820px) {
+  .cinematic-intro__skip {
+    top: max(14px, env(safe-area-inset-top));
+    right: max(14px, env(safe-area-inset-right));
+    min-width: 78px;
+    min-height: 42px;
+    padding-inline: 15px;
+    font-size: 12px;
+  }
+
+  .brand-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cinematic-intro { transition: none; }
+  .cinematic-intro__skip { transition: none; }
+}

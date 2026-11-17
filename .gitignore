@@ -110,3 +110,6 @@ website/downloads/
 # ---- Website local preview artifacts ----
 website/.preview/
 website/*.preview.*
+
+# 首屏短片 web-intro 已压缩为桌面/竖屏两份生产素材，合计约 2 MiB，需随官网源码入库。
+# 原始录屏、未压缩导出和编辑工程仍放 D:\，不要用 *.mp4 规则误伤 website/assets/intro-film*.mp4。

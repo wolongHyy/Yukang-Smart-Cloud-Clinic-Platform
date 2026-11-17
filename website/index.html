@@ -10,25 +10,29 @@
   <meta property="og:title" content="愈康云诊所｜让每一次接诊，都有据可循">
   <meta property="og:description" content="保留最初版温润的东方视觉，同时用真实软件截图呈现接诊、处方、药房、收费、统计与 AI 辅助诊疗。">
   <title>愈康云诊所｜让每一次接诊，都有据可循</title>
-  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/yukang-app-logo.png" type="image/png">
   <link rel="stylesheet" href="styles.css?v=20261117c">
   <link rel="stylesheet" href="gallery.css?v=20261117c">
   <link rel="stylesheet" href="workbench-preview.css?v=20261117d">
+  <link rel="stylesheet" href="intro.css?v=20261117a">
   <script src="script.js?v=20261117c" defer></script>
   <script src="workbench-preview.js?v=20261117d" defer></script>
   <script src="gallery.js?v=20261117c" defer></script>
+  <script src="intro.js?v=20261117a" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
 
+  <div class="cinematic-intro" data-cinematic-intro hidden role="dialog" aria-modal="true" aria-label="愈康云诊所开场">
+    <video class="cinematic-intro__video" data-intro-video autoplay data-intro-wide="assets/intro-film.mp4" data-intro-portrait="assets/intro-film-portrait.mp4" muted playsinline preload="auto" poster="assets/intro-film-poster.jpg" aria-hidden="true"></video>
+    <button class="cinematic-intro__skip" type="button" data-intro-skip aria-label="跳过开场">跳过开场</button>
+    <p class="sr-only">欢迎使用愈康云诊所管理平台。让每一次接诊，都有据可循。</p>
+  </div>
+
   <header class="site-header" data-header>
     <div class="nav-shell">
       <a class="brand" href="#top" aria-label="愈康云诊所首页">
-        <svg class="brand-mark" viewBox="0 0 42 42" aria-hidden="true">
-          <rect x="1" y="1" width="40" height="40" rx="12" fill="currentColor"/>
-          <path d="M12 25c4.8-1 7.7-4.1 9-9.4 1.1 4.7 3.7 7.6 8 8.7" fill="none" stroke="#f6f1e6" stroke-width="2.1" stroke-linecap="round"/>
-          <path d="M21 14.5v13.2M17.2 23.2h7.6" fill="none" stroke="#f6f1e6" stroke-width="2.1" stroke-linecap="round"/>
-        </svg>
+        <img class="brand-logo" src="assets/yukang-app-logo.png" alt="" width="44" height="44">
         <span class="brand-copy"><strong>愈康</strong><small>YU KANG CLINIC</small></span>
       </a>
 
@@ -508,11 +512,7 @@
       <div class="footer-main">
         <div class="footer-brand">
           <a class="brand brand-footer" href="#top" aria-label="返回顶部">
-            <svg class="brand-mark" viewBox="0 0 42 42" aria-hidden="true">
-              <rect x="1" y="1" width="40" height="40" rx="12" fill="currentColor"/>
-              <path d="M12 25c4.8-1 7.7-4.1 9-9.4 1.1 4.7 3.7 7.6 8 8.7" fill="none" stroke="#f6f1e6" stroke-width="2.1" stroke-linecap="round"/>
-              <path d="M21 14.5v13.2M17.2 23.2h7.6" fill="none" stroke="#f6f1e6" stroke-width="2.1" stroke-linecap="round"/>
-            </svg>
+            <img class="brand-logo" src="assets/yukang-app-logo.png" alt="" width="44" height="44">
             <span class="brand-copy"><strong>愈康</strong><small>YU KANG CLINIC</small></span>
           </a>
           <p>让诊所的日常业务<br>更清楚，也更从容。</p>

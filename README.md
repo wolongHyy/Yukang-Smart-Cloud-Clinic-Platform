@@ -248,7 +248,7 @@ python -m http.server 4173 --directory website
 
 启动后访问 <http://127.0.0.1:4173/>。官网不连接诊所数据库，不提供业务登录入口，也不会上传患者数据。诊所业务系统仍应只部署在本机或可信局域网，不能通过公网反向代理直接暴露。
 
-阿里云 ECS、DNS、安全组、HTTPS 和 ICP 备案的完整上线步骤见 [`deploy/README.md`](deploy/README.md)。正式静态官网已通过 HTTPS 上线：<https://yukangclinic.cn/>，当前发布目录为 `/var/www/yukang-site/releases/20261117T070024Z`（源码提交 `bdb442c`），`www.yukangclinic.cn` 同样通过证书校验并返回 200，HTTP 会自动跳转到 HTTPS。页脚已展示备案号 `蜀ICP备2026061069号` 并链接至工信部备案查询系统。诊所业务系统、患者数据、SQLite、登录入口和 `3002` 端口仍未部署到公网。
+阿里云 ECS、DNS、安全组、HTTPS 和 ICP 备案的完整上线步骤见 [`deploy/README.md`](deploy/README.md)。正式静态官网和 v5.1.0 Windows 安装包已通过 HTTPS 上线：<https://yukangclinic.cn/>，当前发布目录为 `/var/www/yukang-site/releases/20261117T080602Z`（源码提交 `5a65792`）；上一版 `releases/20261117T070024Z` 保留用于回滚。官网、`ai.html` 和 `download.html` 均返回 200，`www.yukangclinic.cn` 同样通过证书校验，HTTP 会自动跳转到 HTTPS；安装包直链支持 Range 下载，大小 `258,904,900` 字节，SHA256 为 `8549DEB884709E45A759124D7F3586767449B704C2EE20D2FFCB2EB4098B5841`。安装包是**未签名内部预览版**，Windows 可能提示未知发布者。页脚已展示备案号 `蜀ICP备2026061069号` 并链接至工信部备案查询系统。诊所业务系统、患者数据、SQLite、登录入口和 `3002` 端口仍未部署到公网。
 
 准备服务器公网 IP、SSH 私钥、域名和证书邮箱后，可在项目根目录执行：
 

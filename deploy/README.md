@@ -12,15 +12,34 @@
 | --- | --- | --- |
 | 阿里云 ECS | 运行中 | 实例 `i-bp196vs9fbel20xdzi7p`，华东1（杭州），Alibaba Cloud Linux 3，2 vCPU / 2 GiB，到期日 2027-11-12 |
 | Nginx | 已安装并开机启动 | 监听 HTTP 80 与 HTTPS 443；配置测试通过 |
-| 发布目录 | 已发布 GitHub `bdb442c` 展示页 | `/var/www/yukang-site/current` 指向 `/var/www/yukang-site/releases/20261117T070024Z`；旧版本保留用于回滚 |
-| HTTPS 正式访问 | 已实测返回 200 | <https://yukangclinic.cn/> 与 <https://www.yukangclinic.cn/> 均通过证书校验；HTTP 请求返回 301 跳转到 HTTPS |
+| 发布版本 | 已发布 GitHub `5a65792` | `/var/www/yukang-site/current` 指向 `/var/www/yukang-site/releases/20261117T080602Z`；上一版 `releases/20261117T070024Z` 保留用于回滚 |
+| 官网页面 | 已上线并实测返回 200 | 首页展示真实产品界面截屏；`/ai.html` 为 AI 辅助诊疗详细介绍页；`/download.html` 为 v5.1.0 下载与校验说明页 |
+| Windows 安装包 | 已上线并可断点下载 | `/var/www/yukang-site/shared/downloads/YuKangClinic-Setup-5.1.0-x64.exe`，`258,904,900` 字节；公网 HEAD 200，Range 请求返回 206 |
+| 安装包校验 | 已提供独立 SHA256 文件 | `YuKangClinic-Setup-5.1.0-x64.exe.sha256.txt`；安装包 SHA256 为 `8549DEB884709E45A759124D7F3586767449B704C2EE20D2FFCB2EB4098B5841` |
+| HTTPS 正式访问 | 已实测返回 200 | <https://yukangclinic.cn/>、<https://yukangclinic.cn/ai.html>、<https://yukangclinic.cn/download.html> 与 <https://www.yukangclinic.cn/> 均通过证书校验；HTTP 请求返回 301 跳转到 HTTPS |
 | ICP 备案 | 已完成 | 备案号 `蜀ICP备2026061069号`，官网页脚已展示并链接至工信部备案查询系统 |
 | DNS A 记录 | 已完成 | `@` 与 `www` 均解析到 `120.55.116.160`，TTL 600 秒 |
 | HTTPS 证书 | 已签发并启用 | Let's Encrypt 证书覆盖 `yukangclinic.cn`、`www.yukangclinic.cn`；到期时间 `2027-02-15 06:03:34 UTC`；`certbot-renew.timer` 已启用并运行 |
 | 安全边界 | 已隔离 | 公网仅开放官网所需端口；诊所业务系统、患者数据、SQLite、登录入口和 `3002` 端口均未部署到公网 |
 | 旧 ECS | 保留未释放 | 新服务器和 HTTPS 全链路验收前，不停止或释放旧实例 |
 
-> 结论：正式静态官网已通过 HTTPS 上线；诊所业务系统仍未公开部署，后续如需上云应单独做安全评估和访问控制。
+> 结论：正式静态官网和 v5.1.0 Windows 安装包均已通过 HTTPS 上线。安装包是**未签名内部预览版**（Authenticode `NotSigned`），Windows 首次运行时可能出现 SmartScreen 提示；它不等同于已签名的正式商用发行版。诊所业务系统仍未公开部署，后续如需上云应单独做安全评估和访问控制。
+
+### 本次官网内容与事实边界
+
+- 首页各业务组件卡片使用项目实际产品界面的截屏，不再只放文字占位。
+- AI 辅助诊疗独立页说明了录入、规划、药典检索、风险提示、建议生成和医生复核流程，并展示对应界面截屏。
+- AI 页面中的演示响应用于展示界面交互，不能表述为“已由真实大模型完成医学诊断”；实际功能边界应以当前产品版本和医生复核流程为准。
+- 公网发布目录只包含静态 HTML、CSS、JS、图片和安装包，不包含业务登录、SQLite、患者数据或公网管理后台。
+
+### 安装包正式直链
+
+- 下载页：<https://yukangclinic.cn/download.html>
+- 安装包：<https://yukangclinic.cn/downloads/YuKangClinic-Setup-5.1.0-x64.exe>
+- SHA256 文件：<https://yukangclinic.cn/downloads/YuKangClinic-Setup-5.1.0-x64.exe.sha256.txt>
+- 文件大小：`258,904,900` 字节
+- SHA256：`8549DEB884709E45A759124D7F3586767449B704C2EE20D2FFCB2EB4098B5841`
+- 验收结果：安装包与 SHA 文件的本地、服务端完整哈希一致；公网不支持目录列表，也不再保留临时上传入口。
 
 ---
 
@@ -238,7 +257,10 @@ https://www.example.com/
 
 确认：
 
-- 页面标题是“愈康云诊所｜本地优先的诊所数字化工作台”；
+- 首页标题是“愈康云诊所｜真实接诊场景，看得见的工作流”；
+- 首页业务卡片能看到实际产品界面截屏；
+- `ai.html` 标题是“AI 辅助诊疗｜愈康云诊所”，并展示完整说明和流程截屏；
+- `download.html` 标题是“下载 YuKangClinic v5.1.0｜愈康云诊所”，安装包和 SHA256 链接可打开；
 - 页面样式、动画和手机菜单正常；
 - 地址栏显示有效 HTTPS 证书；
 - HTTP 会自动跳转到 HTTPS。
@@ -400,7 +422,7 @@ Windows OpenSSH 可能拒绝权限过宽的私钥。右键私钥 → 属性 → 
 | `/var/www/yukang-site/shared/downloads/` | 跨 release 保留的安装包与 SHA256 直链文件 |
 | `/etc/nginx/sites-available/yukang-site.conf` | Debian/Ubuntu 配置 |
 | `/etc/nginx/sites-enabled/yukang-site.conf` | Debian/Ubuntu 启用链接 |
-| `/etc/nginx/conf.d/yukang-site.conf` | RHEL 系配置 |
+| `/etc/nginx/conf.d/yukang-site.conf` | **当前生产环境实际配置**（Alibaba Cloud Linux 3）；Debian/Ubuntu 才使用上面的 `sites-available` / `sites-enabled` 路径 |
 | `/var/log/nginx/yukang-site.access.log` | 访问日志 |
 | `/var/log/nginx/yukang-site.error.log` | 错误日志 |
 

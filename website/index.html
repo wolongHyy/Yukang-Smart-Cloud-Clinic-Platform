@@ -11,10 +11,12 @@
   <meta property="og:description" content="保留最初版温润的东方视觉，同时用真实软件截图呈现接诊、处方、药房、收费、统计与 AI 辅助诊疗。">
   <title>愈康云诊所｜让每一次接诊，都有据可循</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=20261117b">
-  <link rel="stylesheet" href="gallery.css?v=20261117b">
-  <script src="script.js?v=20261117b" defer></script>
-  <script src="gallery.js?v=20261117b" defer></script>
+  <link rel="stylesheet" href="styles.css?v=20261117c">
+  <link rel="stylesheet" href="gallery.css?v=20261117c">
+  <link rel="stylesheet" href="workbench-preview.css?v=20261117c">
+  <script src="script.js?v=20261117c" defer></script>
+  <script src="workbench-preview.js?v=20261117c" defer></script>
+  <script src="gallery.js?v=20261117c" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
@@ -46,7 +48,7 @@
   </header>
 
   <main id="main">
-    <section class="hero" id="top">
+    <section class="hero" id="top" data-hero>
       <div class="hero-landscape" aria-hidden="true">
         <svg viewBox="0 0 1440 760" preserveAspectRatio="xMidYMax slice">
           <defs>
@@ -70,7 +72,7 @@
         <div class="hero-copy">
           <span class="hero-eyebrow">YUKANG CLINIC · WINDOWS v5.1.0</span>
           <h1>让每一次接诊，<br><em>都有据可循。</em></h1>
-          <p class="hero-lead">愈康云诊所把接诊、病历、处方、药房、收费与经营统计收进一张安静的工作台。右侧不是概念图，而是软件真实运行界面；本地优先，断网也能完成核心业务，AI 只做辅助，最终决定始终在医生手里。</p>
+          <p class="hero-lead">愈康云诊所把接诊、病历、处方、药房、收费与经营统计收进一张安静的工作台。本地优先，断网也能完成核心业务；AI 只做辅助，最终决定始终在医生手里。</p>
           <div class="hero-actions">
             <a class="button button-primary" href="download.html">
               下载 Windows 版
@@ -89,21 +91,61 @@
           </ul>
         </div>
 
-        <div class="hero-visual" aria-label="愈康软件真实工作台界面">
+        <div class="hero-visual workbench-preview" data-workbench-preview aria-label="愈康诊疗工作台界面示意">
           <div class="visual-orbit orbit-one" aria-hidden="true"></div>
           <div class="visual-orbit orbit-two" aria-hidden="true"></div>
-          <figure class="hero-screen screen-frame">
-            <div class="screen-bar">
-              <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
-              <span class="screen-bar-title">今日工作台</span>
-              <span class="screen-bar-label">真实界面</span>
+          <div class="workspace-card">
+            <div class="workspace-top">
+              <div>
+                <span class="workspace-kicker">今日工作台</span>
+                <h2>上午好，林医生</h2>
+              </div>
+              <div class="avatar" aria-hidden="true">林</div>
             </div>
-            <img src="assets/screens/01-dashboard.jpg" data-gallery-src="assets/screens/01-dashboard.jpg" data-gallery-title="今日工作台 · 门诊经营总览" data-gallery-caption="愈康云诊所真实工作台截屏 · 今日门诊、待发药、待收费、库存预警与营收统计 · 演示诊所数据" alt="愈康云诊所工作台真实界面：今日门诊 9 次、待发药 8 条、5 笔待收费及营收统计" width="1600" height="1000" loading="eager" fetchpriority="high">
-            <figcaption><span>接诊到经营，一张桌面看清</span><small>界面截屏 · 演示数据</small></figcaption>
-          </figure>
-          <div class="floating-note note-one"><span>数据留在门店</span><strong>本地优先</strong></div>
+            <div class="workspace-metrics">
+              <div><strong>18</strong><span>今日门诊</span></div>
+              <div><strong>04</strong><span>待发药</span></div>
+              <div><strong>02</strong><span>待收费</span></div>
+            </div>
+            <div class="workspace-body">
+              <div class="queue-card">
+                <div class="queue-title"><span>候诊队列</span><small>按挂号顺序</small></div>
+                <div class="patient-row active">
+                  <span class="patient-number">01</span>
+                  <div><strong>林女士</strong><small>复诊 · 咳嗽</small></div>
+                  <span class="status-tag">接诊中</span>
+                </div>
+                <div class="patient-row">
+                  <span class="patient-number">02</span>
+                  <div><strong>周先生</strong><small>初诊 · 头晕</small></div>
+                  <span class="status-tag muted">候诊</span>
+                </div>
+                <div class="patient-row">
+                  <span class="patient-number">03</span>
+                  <div><strong>陈女士</strong><small>复诊 · 调理</small></div>
+                  <span class="status-tag muted">候诊</span>
+                </div>
+              </div>
+              <div class="record-card">
+                <div class="record-head"><span>本次病历</span><span class="record-live">记录中</span></div>
+                <div class="record-line"><small>主诉</small><p>反复咳嗽 5 天，夜间加重</p></div>
+                <div class="record-line"><small>诊断</small><p>风寒咳嗽</p></div>
+                <div class="record-line"><small>处置</small><p>中药 3 剂 · 每日 1 剂</p></div>
+                <div class="ai-hint">
+                  <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m10 2 1.8 5.2L17 9l-5.2 1.8L10 16l-1.8-5.2L3 9l5.2-1.8L10 2Z"/></svg>
+                  <span>已完成过敏与配伍检查</span>
+                </div>
+              </div>
+            </div>
+            <div class="workspace-bottom">
+              <span>接诊完成后进入待收费</span>
+              <a class="workspace-flow-link" href="#workflow">查看完整流程 <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+          <div class="floating-note note-one"><span>数据留在门店</span><strong>本地 SQLite</strong></div>
           <div class="floating-note note-two"><span>AI 辅助检查</span><strong>医生确认后生效</strong></div>
-        </div>      </div>
+        </div>
+      </div>
     </section>
 
     <section class="principle-strip" aria-label="愈康产品原则">

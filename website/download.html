@@ -11,10 +11,12 @@
   <meta property="og:description" content="Windows 10/11 x64 安装包与 SHA256 校验说明。未签名内部预览版，请先核对文件再安装。">
   <title>下载 YuKangClinic v5.1.0｜愈康云诊所</title>
   <link rel="icon" href="assets/yukang-app-logo.png" type="image/png">
-  <link rel="stylesheet" href="site.css?v=20261117b">
-  <link rel="stylesheet" href="gallery.css?v=20261117b">
-  <script src="site.js?v=20261117b" defer></script>
-  <script src="gallery.js?v=20261117b" defer></script>
+  <link rel="stylesheet" href="site.css?v=20261117c">
+  <link rel="stylesheet" href="gallery.css?v=20261117c">
+  <link rel="stylesheet" href="workbench-preview.css?v=20261117c">
+  <script src="site.js?v=20261117c" defer></script>
+  <script src="workbench-preview.js?v=20261117c" defer></script>
+  <script src="gallery.js?v=20261117c" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
@@ -38,7 +40,7 @@
   </header>
 
   <main id="main">
-    <section class="hero sub-hero download-hero">
+    <section class="hero sub-hero download-hero" data-hero>
       <div class="hero-grid page-shell">
         <div class="download-panel reveal">
           <span class="eyebrow">WINDOWS INSTALLER · INTERNAL PREVIEW</span>
@@ -56,11 +58,59 @@
           <div class="download-alternatives"><span>文件：YuKangClinic-Setup-5.1.0-x64.exe</span><a class="text-link" href="#checksum">先看 SHA256 校验</a></div>
           <p class="warning-inline"><strong>未签名内部预览版：</strong>Windows SmartScreen 可能提示“未知发布者”。请只从本官网或项目 GitHub Release 下载，并在运行前核对 SHA256。当前版本不应作为完成商业签名和正式验收的大规模正式版分发。</p>
         </div>
-        <div class="download-shot-wrap reveal">
-          <figure class="product-frame">
-            <img src="assets/screens/01-dashboard.jpg" alt="安装后进入的愈康真实工作台界面：今日门诊、待发药、待收费与营收统计" width="1600" height="1000" loading="eager" fetchpriority="high">
-            <figcaption class="screen-caption"><b>安装后的真实工作台</b><span>界面截屏 · YuKangClinic v5.1.0 · 演示数据</span></figcaption>
-          </figure>
+        <div class="hero-visual workbench-preview download-workbench reveal" data-workbench-preview aria-label="愈康诊疗工作台界面示意">
+          <div class="visual-orbit orbit-one" aria-hidden="true"></div>
+          <div class="visual-orbit orbit-two" aria-hidden="true"></div>
+          <div class="workspace-card">
+            <div class="workspace-top">
+              <div>
+                <span class="workspace-kicker">今日工作台</span>
+                <h2>上午好，林医生</h2>
+              </div>
+              <div class="avatar" aria-hidden="true">林</div>
+            </div>
+            <div class="workspace-metrics">
+              <div><strong>18</strong><span>今日门诊</span></div>
+              <div><strong>04</strong><span>待发药</span></div>
+              <div><strong>02</strong><span>待收费</span></div>
+            </div>
+            <div class="workspace-body">
+              <div class="queue-card">
+                <div class="queue-title"><span>候诊队列</span><small>按挂号顺序</small></div>
+                <div class="patient-row active">
+                  <span class="patient-number">01</span>
+                  <div><strong>林女士</strong><small>复诊 · 咳嗽</small></div>
+                  <span class="status-tag">接诊中</span>
+                </div>
+                <div class="patient-row">
+                  <span class="patient-number">02</span>
+                  <div><strong>周先生</strong><small>初诊 · 头晕</small></div>
+                  <span class="status-tag muted">候诊</span>
+                </div>
+                <div class="patient-row">
+                  <span class="patient-number">03</span>
+                  <div><strong>陈女士</strong><small>复诊 · 调理</small></div>
+                  <span class="status-tag muted">候诊</span>
+                </div>
+              </div>
+              <div class="record-card">
+                <div class="record-head"><span>本次病历</span><span class="record-live">记录中</span></div>
+                <div class="record-line"><small>主诉</small><p>反复咳嗽 5 天，夜间加重</p></div>
+                <div class="record-line"><small>诊断</small><p>风寒咳嗽</p></div>
+                <div class="record-line"><small>处置</small><p>中药 3 剂 · 每日 1 剂</p></div>
+                <div class="ai-hint">
+                  <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m10 2 1.8 5.2L17 9l-5.2 1.8L10 16l-1.8-5.2L3 9l5.2-1.8L10 2Z"/></svg>
+                  <span>已完成过敏与配伍检查</span>
+                </div>
+              </div>
+            </div>
+            <div class="workspace-bottom">
+              <span>接诊完成后进入待收费</span>
+              <a class="workspace-flow-link" href="index.html#workflow">查看完整流程 <span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+          <div class="floating-note note-one"><span>数据留在门店</span><strong>本地 SQLite</strong></div>
+          <div class="floating-note note-two"><span>AI 辅助检查</span><strong>医生确认后生效</strong></div>
         </div>
       </div>
     </section>

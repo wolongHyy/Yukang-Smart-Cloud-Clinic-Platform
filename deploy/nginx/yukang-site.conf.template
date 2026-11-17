@@ -31,6 +31,13 @@ server {
         return 200 "ok\n";
     }
 
+    # 安装包位于跨 release 保留的 shared 目录，不纳入静态站 Git 历史。
+    location ^~ /downloads/ {
+        alias /var/www/yukang-site/shared/downloads/;
+        autoindex off;
+        access_log off;
+    }
+
     location = / {
         try_files /index.html =404;
         expires -1;

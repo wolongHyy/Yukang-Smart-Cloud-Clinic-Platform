@@ -140,7 +140,7 @@ try {
   Write-Step "打包静态官网"
   Push-Location $websiteDir
   try {
-    Invoke-Native "tar" @("-C", $websiteDir, "-czf", $archivePath, ".")
+    Invoke-Native "tar" @("-C", $websiteDir, "-czf", $archivePath, "--exclude=./downloads", "--exclude=./downloads/*", "--exclude=./.preview", ".")
   }
   finally {
     Pop-Location

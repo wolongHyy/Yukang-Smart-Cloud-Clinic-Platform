@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173d34">
+  <meta name="description" content="下载愈康云诊所 v5.1.0 Windows 10/11 x64 安装包，查看文件大小、SHA256、安装步骤、未签名提示和本地数据边界。">
+  <meta name="keywords" content="愈康云诊所下载,诊所管理系统安装包,Windows诊所软件,Electron诊所系统">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="下载 YuKangClinic v5.1.0｜愈康云诊所">
+  <meta property="og:description" content="Windows 10/11 x64 安装包与 SHA256 校验说明。未签名内部预览版，请先核对文件再安装。">
+  <title>下载 YuKangClinic v5.1.0｜愈康云诊所</title>
+  <link rel="icon" href="assets/yukang-app-logo.png" type="image/png">
+  <link rel="stylesheet" href="site.css">
+  <script src="site.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <header class="site-header" data-header>
+    <div class="nav-shell">
+      <a class="brand" href="index.html" aria-label="愈康云诊所首页">
+        <img src="assets/yukang-app-logo.png" alt="愈康云诊所标志" width="44" height="44">
+        <span class="brand-copy"><strong>愈康</strong><small>YU KANG CLINIC</small></span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-menu-toggle>
+        <i></i><i></i><i></i><span class="sr-only">打开导航</span>
+      </button>
+      <nav class="site-nav" id="site-nav" data-nav aria-label="主要导航">
+        <a href="index.html#workflow">工作流</a>
+        <a href="ai.html">AI 辅助诊疗</a>
+        <a href="index.html#knowledge">药典知识</a>
+        <a href="index.html#security">数据与部署</a>
+        <a class="nav-download" href="download.html" aria-current="page">下载 v5.1.0</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero sub-hero download-hero">
+      <div class="hero-grid page-shell">
+        <div class="download-panel reveal">
+          <span class="eyebrow">WINDOWS INSTALLER · INTERNAL PREVIEW</span>
+          <h1>愈康云诊所<br>v5.1.0</h1>
+          <p>Windows 10/11 x64 本地安装包。安装后在诊所自己的电脑上运行，业务数据不依赖官网在线；同一局域网内的手机和平板可访问。</p>
+          <div class="download-meta" aria-label="安装包信息">
+            <div><small>版本</small><strong>v5.1.0</strong></div>
+            <div><small>文件大小</small><strong>246.9 MiB</strong></div>
+            <div><small>签名状态</small><strong>未签名</strong></div>
+          </div>
+          <a class="button button-primary" href="downloads/YuKangClinic-Setup-5.1.0-x64.exe" download>
+            下载 Windows 安装包
+            <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M9 2v10M5 8l4 4 4-4M3 16h12"/></svg>
+          </a>
+          <div class="download-alternatives"><span>文件：YuKangClinic-Setup-5.1.0-x64.exe</span><a class="text-link" href="#checksum">先看 SHA256 校验</a></div>
+          <p class="warning-inline"><strong>未签名内部预览版：</strong>Windows SmartScreen 可能提示“未知发布者”。请只从本官网或项目 GitHub Release 下载，并在运行前核对 SHA256。当前版本不应作为完成商业签名和正式验收的大规模正式版分发。</p>
+        </div>
+        <div class="download-shot-wrap reveal">
+          <figure class="product-frame">
+            <img src="assets/screens/01-dashboard.jpg" alt="安装后进入的愈康真实工作台界面：今日门诊、待发药、待收费与营收统计" width="1600" height="1000" loading="eager" fetchpriority="high">
+            <figcaption class="screen-caption"><b>安装后的真实工作台</b><span>界面截屏 · YuKangClinic v5.1.0 · 演示数据</span></figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <div class="download-strip">
+      <div class="page-shell">
+        <div><strong>Windows 10/11 x64 · 258,904,900 bytes</strong><p>SHA256：8549DEB884709E45A759124D7F3586767449B704C2EE20D2FFCB2EB4098B5841</p></div>
+        <a class="text-link" href="downloads/YuKangClinic-Setup-5.1.0-x64.exe.sha256.txt" download>下载 SHA256 文件 <span aria-hidden="true">↓</span></a>
+      </div>
+    </div>
+
+    <section class="section" id="install">
+      <div class="page-shell">
+        <div class="section-heading reveal">
+          <div><span class="section-number">01 / INSTALL</span><h2>三步装好，数据留在本机。</h2></div>
+          <p>安装过程不会连接诊所数据库，也不会把患者资料上传到官网。首次启动后按向导创建诊所、账号和本地数据目录。</p>
+        </div>
+        <div class="install-grid">
+          <article class="install-step reveal"><span>STEP 01</span><h3>下载并核对文件</h3><p>下载 EXE 与 SHA256 文件，用 PowerShell 计算实际哈希。只有两者完全一致时再运行安装程序。</p></article>
+          <article class="install-step reveal"><span>STEP 02</span><h3>运行安装向导</h3><p>双击 EXE，选择 D 盘等有足够空间的安装目录。若 Windows 提示未知发布者，先确认来源和校验结果，再决定是否继续。</p></article>
+          <article class="install-step reveal"><span>STEP 03</span><h3>启动并完成本机配置</h3><p>从桌面或开始菜单启动，创建诊所与医生账号。需要手机访问时，在设置页开启局域网访问并扫描页面展示的地址或二维码。</p></article>
+        </div>
+        <div class="not-public"><strong>重要：</strong>安装完成后，诊所业务系统运行在你的电脑上。不要为了“远程访问”直接把 3002 端口或 SQLite 数据库暴露到公网；异地访问应先做 VPN、反向代理鉴权、TLS 和独立安全评估。</div>
+      </div>
+    </section>
+
+    <section class="section section-soft" id="checksum">
+      <div class="page-shell checksum-layout">
+        <div class="checksum-copy reveal">
+          <span class="section-number">02 / VERIFY</span>
+          <h2>安装前，先确认文件没有被替换。</h2>
+          <p>SHA256 像文件的“数字指纹”。官网、GitHub Release 和下载后的实际文件应得到同一个哈希值。任何一个字符不同，都不要运行。</p>
+          <p>官方文件大小：258,904,900 bytes（246.9 MiB）。文件名为 YuKangClinic-Setup-5.1.0-x64.exe。</p>
+          <a class="text-link" href="downloads/YuKangClinic-Setup-5.1.0-x64.exe.sha256.txt" download>下载官方 SHA256 文本 <span aria-hidden="true">↓</span></a>
+        </div>
+        <div class="reveal">
+          <div class="code-block"><b>POWERSHELL · 计算下载文件哈希</b><code>Get-FileHash -Algorithm SHA256 "$HOME\Downloads\YuKangClinic-Setup-5.1.0-x64.exe"</code></div>
+          <div class="code-block" style="margin-top:14px"><b>OFFICIAL SHA256 · v5.1.0</b><code>8549DEB884709E45A759124D7F3586767449B704C2EE20D2FFCB2EB4098B5841</code></div>
+          <p class="ai-download-note">如果 PowerShell 显示另一条路径，请把命令中的文件名替换为实际下载位置。哈希不区分大小写，但每个十六进制字符都必须一致。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="security">
+      <div class="page-shell">
+        <div class="section-heading reveal">
+          <div><span class="section-number">03 / LOCAL DATA</span><h2>官网只提供安装包，不承载诊所业务。</h2></div>
+          <p>公开下载站与诊所业务系统严格分开。患者档案、病历、处方、库存、收费、SQLite 数据库、登录入口和业务 API 都不部署在本官网。</p>
+        </div>
+        <div class="download-security">
+          <article class="security-fact reveal"><h3>数据默认在本机</h3><p>核心业务由安装后的程序在诊所电脑上处理，官网只负责静态页面与安装包下载。</p></article>
+          <article class="security-fact reveal"><h3>没有公网登录入口</h3><p>官网不提供医生端或患者端登录，不公开业务管理后台，也不暴露诊所数据库。</p></article>
+          <article class="security-fact reveal"><h3>AI 可以关闭</h3><p>第三方 AI 是可选功能。关闭 AI、断网或模型服务不可用时，病历、处方、药房、收费和统计仍可继续。</p></article>
+        </div>
+        <div class="not-public"><strong>适合谁：</strong>当前 v5.1.0 适合功能验收、开发测试和无真实患者数据的受控试用。正式用于真实患者前，还应完成临床验收、数据合规评估、药典授权确认、Windows 代码签名和备份恢复演练。</div>
+      </div>
+    </section>
+
+    <section class="faq-section" id="download-faq">
+      <div class="page-shell faq-layout">
+        <div class="faq-intro reveal"><span class="section-number">04 / DOWNLOAD FAQ</span><h2>安装前后，最容易遇到的四个问题。</h2><p>如果下载或安装失败，先保留错误截图、文件名和哈希结果，不要反复运行来源不明的修复工具。</p></div>
+        <div class="faq-list reveal">
+          <details><summary>Windows 提示“未知发布者”怎么办？</summary><p>v5.1.0 的 Authenticode 状态是 NotSigned，因此浏览器和 Windows 无法验证发布者。先核对官网 SHA256；只有哈希完全一致时，才由你决定是否继续安装。正式商用版必须使用受信任的代码签名证书重新构建。</p></details>
+          <details><summary>下载后的哈希不一致怎么办？</summary><p>不要运行该文件。删除后重新从本官网或 GitHub Release 下载，再次计算哈希。如果仍不一致，先检查网络、代理和下载工具，不要通过关闭杀毒软件来强行运行。</p></details>
+          <details><summary>为什么安装包不在 GitHub 源码目录里？</summary><p>安装包约 247 MiB，不进入 Git 历史，避免仓库膨胀。源码放在 Git 仓库，可供下载的安装包放在 GitHub Release，并由官网的独立下载目录提供相同版本。</p></details>
+          <details><summary>可以在多台电脑上写同一份数据吗？</summary><p>不要直接复制或同时使用同一个 SQLite 数据库文件。需要多端访问时，应让手机或平板通过同一局域网访问运行在主机上的同一套程序；需要换机时使用系统内提供的备份与恢复流程。</p></details>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-section">
+      <div class="page-shell cta-panel reveal">
+        <div><span class="section-number" style="color:#e4cb98">READY TO INSTALL</span><h2>下载、校验，再在你的 Windows 电脑上试用。</h2><p>Windows 10/11 x64 · v5.1.0 · 246.9 MiB · 未签名内部预览版</p></div>
+        <div class="cta-actions"><a class="button button-light" href="downloads/YuKangClinic-Setup-5.1.0-x64.exe" download>下载安装包</a><a class="button button-ghost" href="https://github.com/wolongHyy/Yukang-Smart-Cloud-Clinic-Platform/releases/tag/v5.1.0" target="_blank" rel="noopener" style="color:#fff;border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.06)">GitHub Release 备用入口</a></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-main page-shell">
+      <div class="footer-brand">
+        <a class="brand" href="index.html"><img src="assets/yukang-app-logo.png" alt="" width="44" height="44"><span class="brand-copy"><strong>愈康</strong><small>YU KANG CLINIC</small></span></a>
+        <p>本地优先的诊所数字化工作台。让接诊、处方、药房、收费和经营统计留在一条可追溯的业务链里。</p>
+      </div>
+      <div class="footer-links">
+        <div><strong>产品</strong><a href="index.html#workflow">真实工作流</a><a href="index.html#capabilities">产品界面</a><a href="ai.html">AI 辅助诊疗</a><a href="index.html#knowledge">药典知识</a></div>
+        <div><strong>开始使用</strong><a href="download.html">Windows 下载</a><a href="download.html#install">安装步骤</a><a href="download.html#checksum">SHA256 校验</a><a href="https://github.com/wolongHyy/Yukang-Smart-Cloud-Clinic-Platform/releases/tag/v5.1.0" target="_blank" rel="noopener">GitHub Release</a></div>
+        <div><strong>边界</strong><a href="index.html#security">数据安全</a><a href="ai.html#data-boundary">AI 数据边界</a><a href="download.html#download-faq">下载问题</a><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">ICP 备案</a></div>
+      </div>
+    </div>
+    <div class="footer-bottom page-shell"><span>© <span data-year>2026</span> 愈康云诊所 · YuKangClinic v5.1.0</span><a class="icp" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">蜀ICP备2026061069号</a></div>
+  </footer>
+</body>
+</html>

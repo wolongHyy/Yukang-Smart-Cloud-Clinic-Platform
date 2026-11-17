@@ -35,14 +35,17 @@
   │             │
   │             └─ 阿里云 ECS
   │                    └─ Nginx
-  │                         └─ /var/www/yukang-site/current
-  │                              ├─ index.html
-  │                              ├─ styles.css
-  │                              ├─ script.js
-  │                              ├─ showcase.css
-  │                              ├─ showcase.js
-  │                              ├─ favicon.svg
-  │                              └─ assets/
+  │                         ├─ /var/www/yukang-site/current
+  │                         │    ├─ index.html
+  │                         │    ├─ ai.html
+  │                         │    ├─ download.html
+  │                         │    ├─ site.css
+  │                         │    ├─ site.js
+  │                         │    ├─ favicon.svg
+  │                         │    └─ assets/
+  │                         └─ /var/www/yukang-site/shared/downloads/
+  │                              ├─ YuKangClinic-Setup-5.1.0-x64.exe
+  │                              └─ YuKangClinic-Setup-5.1.0-x64.exe.sha256.txt
   │
   └─ 诊所业务系统：继续留在本机 / 可信局域网，不在此次公网部署范围内
 ```
@@ -200,13 +203,15 @@ powershell -ExecutionPolicy Bypass -File .\deploy\deploy.ps1 `
 3. 通过 SSH/SCP 上传到 ECS 的 `/tmp/yukang-site-时间戳/`；
 4. 在服务器安装 Nginx、rsync、curl 和 Certbot（按系统包管理器）；
 5. 把站点发布到 `/var/www/yukang-site/releases/时间戳/`；
-6. 把 `/var/www/yukang-site/current` 原子切换到最新版本；
-7. 只新增 `yukang-site.conf`，不覆盖服务器上的其他站点；
-8. 执行 `nginx -t`，通过后重载 Nginx；
-9. 检查域名是否解析到服务器公网 IP；
-10. 调用 Certbot 申请证书并启用 HTTP→HTTPS 跳转；
-11. 在服务器本机检查 HTTP/HTTPS 健康状态；
-12. 清理本机与服务器的临时上传目录。
+6. 创建并保留 `/var/www/yukang-site/shared/downloads/`，该目录不随 release 切换；
+7. 把 `/var/www/yukang-site/current` 原子切换到最新版本；
+8. 由 Nginx 将 `/downloads/` 映射到持久下载目录；
+9. 只新增 `yukang-site.conf`，不覆盖服务器上的其他站点；
+10. 执行 `nginx -t`，通过后重载 Nginx；
+11. 检查域名是否解析到服务器公网 IP；
+12. 调用 Certbot 申请证书并启用 HTTP→HTTPS 跳转；
+13. 在服务器本机检查 HTTP/HTTPS 健康状态；
+14. 清理本机与服务器的临时上传目录。
 
 ### 脚本不会做什么
 
@@ -391,7 +396,8 @@ Windows OpenSSH 可能拒绝权限过宽的私钥。右键私钥 → 属性 → 
 | 路径 | 用途 |
 | --- | --- |
 | `/var/www/yukang-site/current` | 当前官网版本 |
-| `/var/www/yukang-site/releases/` | 历次发布版本 |
+| `/var/www/yukang-site/releases/` | 历次发布版本，可回滚 |
+| `/var/www/yukang-site/shared/downloads/` | 跨 release 保留的安装包与 SHA256 直链文件 |
 | `/etc/nginx/sites-available/yukang-site.conf` | Debian/Ubuntu 配置 |
 | `/etc/nginx/sites-enabled/yukang-site.conf` | Debian/Ubuntu 启用链接 |
 | `/etc/nginx/conf.d/yukang-site.conf` | RHEL 系配置 |

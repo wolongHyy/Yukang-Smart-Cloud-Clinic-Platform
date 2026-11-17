@@ -13,11 +13,13 @@
 
 ## 下载安装包
 
-- **公网下载入口**：[GitHub Releases · v5.1.0](https://github.com/wolongHyy/Yukang-Smart-Cloud-Clinic-Platform/releases/tag/v5.1.0)
+- **官网下载入口**：[YuKangClinic-Setup-5.1.0-x64.exe](https://yukangclinic.cn/downloads/YuKangClinic-Setup-5.1.0-x64.exe)
+- **官网校验文件**：[YuKangClinic-Setup-5.1.0-x64.exe.sha256.txt](https://yukangclinic.cn/downloads/YuKangClinic-Setup-5.1.0-x64.exe.sha256.txt)
+- **GitHub 备用入口**：[GitHub Releases · v5.1.0](https://github.com/wolongHyy/Yukang-Smart-Cloud-Clinic-Platform/releases/tag/v5.1.0)
 - **适用系统**：Windows 10 / 11 x64。
 - **当前发布通道**：`internal-preview-unsigned`，即未签名内部预览包。Windows 可能显示“未知发布者”或 SmartScreen 提示。
 - **用途边界**：适合开发验收、功能演示和无真实患者数据的受控测试；不是正式商业版，不应录入真实患者资料后长期运行。
-- **完整性校验**：Release 同时提供 SHA-256 文件。下载后先核对哈希，再运行安装程序。
+- **完整性校验**：官网与 Release 均提供 SHA256 文件。下载后先核对哈希，再运行安装程序。
 
 ---
 
@@ -238,7 +240,7 @@ macOS 安装包当前暂缓，构建源码保留。生成文件写入 `desktop/a
 
 公开产品官网位于 [`website/`](website/)，采用独立的静态 HTML/CSS/JavaScript 实现，展示愈康的产品定位、业务流程、核心能力、数据安全边界和部署方式。
 
-当前展示页采用愈康 App 最初的透明切角“愈”Logo，并将登录页的采药背景延展为官网首屏。桌面端提供首屏背景视差、卡片 3D 倾斜与高光、滚动进度和工作流自动轮播；移动端提供简化动效，并遵循系统的“减少动态效果”设置。
+当前官网以真实软件截图为主要展示素材：首页覆盖工作台、病历、AI 辅助诊疗、药房、收费、患者档案、经营统计与设置；[`website/ai.html`](website/ai.html) 用六步流程、四组局部放大图和 AI 数据边界详细说明“证据检索、规则审查、医生确认”的完整机制；[`website/download.html`](website/download.html) 提供 Windows 安装包、SHA256 校验、安装步骤和未签名预览版提示。所有业务界面均标注 `界面截屏 · YuKangClinic v5.1.0 · 演示数据`，AI 演示响应单独标注，不把演示截图描述成真实模型诊断结果。
 
 ```powershell
 python -m http.server 4173 --directory website
@@ -260,7 +262,7 @@ powershell -ExecutionPolicy Bypass -File .\deploy\deploy.ps1 `
   -IncludeWww
 ```
 
-部署脚本只上传 `website/`，使用独立 Nginx 站点和 `/var/www/yukang-site/current` 发布目录，不覆盖服务器上已有站点。
+部署脚本只上传 `website/` 静态源码，使用独立 Nginx 站点和 `/var/www/yukang-site/current` 发布目录，不覆盖服务器上已有站点。约 247 MiB 的安装包不进入 Git，也不随静态站发布；服务器从 GitHub Release 下载后放在持久目录 `/var/www/yukang-site/shared/downloads/`，由 Nginx 的 `/downloads/` 路径提供直链。
 
 ---
 

@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173d34">
+  <meta name="description" content="愈康云诊所 AI 辅助诊疗：基于本地药典、门店库存、过敏史和相互作用检查生成待医生确认的处方建议，不自动保存，不替代医生诊断。">
+  <meta name="keywords" content="AI辅助诊疗,AI审方,药典RAG,诊所AI,处方检查,Human Review">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="AI 辅助诊疗｜愈康云诊所">
+  <meta property="og:description" content="先查证据与风险，再给候选建议；医生逐条确认，系统不自动开方。">
+  <title>AI 辅助诊疗｜愈康云诊所</title>
+  <link rel="icon" href="assets/yukang-app-logo.png" type="image/png">
+  <link rel="stylesheet" href="site.css">
+  <script src="site.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <header class="site-header" data-header>
+    <div class="nav-shell">
+      <a class="brand" href="index.html" aria-label="愈康云诊所首页">
+        <img src="assets/yukang-app-logo.png" alt="愈康云诊所标志" width="44" height="44">
+        <span class="brand-copy"><strong>愈康</strong><small>YU KANG CLINIC</small></span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-menu-toggle>
+        <i></i><i></i><i></i><span class="sr-only">打开导航</span>
+      </button>
+      <nav class="site-nav" id="site-nav" data-nav aria-label="主要导航">
+        <a href="index.html#workflow">工作流</a>
+        <a href="ai.html" aria-current="page">AI 辅助诊疗</a>
+        <a href="index.html#knowledge">药典知识</a>
+        <a href="index.html#security">数据与部署</a>
+        <a class="nav-download" href="download.html">下载 v5.1.0</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero sub-hero">
+      <div class="hero-grid page-shell">
+        <div class="hero-copy reveal">
+          <span class="demo-badge">界面截屏 + 演示响应</span>
+          <span class="eyebrow" style="margin-top:16px">AI ASSIST · 医生最终确认</span>
+          <h1>先查证据与风险，<br><em>再给候选建议。</em></h1>
+          <p class="hero-lead">愈康的 AI 辅助诊疗不是“一键自动开方”。它先规划检查项，再检索本地药典、本店库存、过敏史和药物相互作用，最后生成带证据与风险提示的候选建议。建议不会自动进入正式处方，必须由医生逐条应用、修改并保存。</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#process">查看六步工作流
+              <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M3 9h12M10 4l5 5-5 5"/></svg>
+            </a>
+            <a class="button button-ghost" href="download.html">下载 Windows 版</a>
+          </div>
+          <div class="hero-facts" aria-label="AI 使用边界"><span>医生最终确认</span><span>可逐条应用</span><span>AI 可关闭</span><span>不阻断接诊</span></div>
+        </div>
+        <div class="hero-shot reveal">
+          <figure class="product-frame">
+            <img src="assets/screens/03-ai-assist.jpg" alt="愈康 AI 辅助诊疗真实界面：Planner 检查清单、本地药典证据摘要、Verifier 风险审查、候选处方及 Human Review 按钮" width="1600" height="1000" loading="eager" fetchpriority="high">
+            <figcaption class="screen-caption"><b>AI 辅助诊疗弹窗 · 实际界面结构</b><span>界面截屏 + 演示响应 · 当前未配置真实模型 Key</span></figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="principle-strip" aria-label="AI 辅助诊疗原则">
+      <div class="principle-row page-shell">
+        <p>AI 负责把资料和风险摆到桌面上，<strong>诊断与处方权始终属于医生。</strong></p>
+        <div class="principle-tags"><span>检查</span><i></i><span>检索</span><i></i><span>建议</span><i></i><span>审查</span><i></i><span>人工确认</span></div>
+      </div>
+    </section>
+
+    <section class="process-section" id="process">
+      <div class="page-shell">
+        <div class="section-heading reveal">
+          <div><span class="section-number">01 / SIX-STEP FLOW</span><h2>从病历输入到正式处方，中间有六道明确的检查。</h2></div>
+          <p>流程不是把整份病历直接丢给模型就结束。系统把规划、知识检索、规则审查、模型建议和人工确认拆开，便于核对每一步到底用了什么资料、给出了什么结果。</p>
+        </div>
+        <div class="process-grid">
+          <article class="process-step reveal">
+            <figure class="process-shot shot-emr">
+              <img src="assets/screens/process-01-emr.jpg" alt="愈康软件真实界面截屏：患者信息、主诉、现病史和过敏史录入" width="1120" height="500" loading="lazy" decoding="async">
+              <figcaption>界面截屏 · 病历与过敏史 · 演示数据</figcaption>
+            </figure>
+            <span>STEP 01</span><h3>采集症状与病史</h3><p>医生先完成主诉、现病史、既往史、过敏史、望闻问切、体格检查、诊断和辨证等病历内容。未填写的关键项不会被系统擅自补成事实。</p>
+          </article>
+          <article class="process-step reveal">
+            <figure class="process-shot shot-plan">
+              <img src="assets/screens/process-02-planner.jpg" alt="愈康软件真实界面截屏：Planner 已规划本次检查清单" width="720" height="322" loading="lazy" decoding="async">
+              <figcaption>界面截屏 · Planner 检查清单 · 演示响应</figcaption>
+            </figure>
+            <span>STEP 02</span><h3>Planner 规划检查清单</h3><p>Agent 根据当前病例决定要查哪些工具和检索方向，例如过敏史、库存、药典条目或相互作用；模型无法正常规划时回退到固定检查清单。</p>
+          </article>
+          <article class="process-step reveal">
+            <figure class="process-shot shot-knowledge">
+              <img src="assets/screens/process-03-knowledge.jpg" alt="愈康软件真实界面截屏：本地药典知识库检索结果" width="1400" height="625" loading="lazy" decoding="async">
+              <figcaption>界面截屏 · 本地药典知识库 · 演示数据</figcaption>
+            </figure>
+            <span>STEP 03</span><h3>本地药典与库存检索</h3><p>系统在本地知识库中检索相关单药、方剂、病症证型和药典原文，同时读取本店当前药品目录与库存。工具按固定顺序执行，避免模型自由触发副作用。</p>
+          </article>
+          <article class="process-step reveal">
+            <figure class="process-shot shot-risk">
+              <img src="assets/screens/process-04-risk.jpg" alt="愈康软件真实界面截屏：Verifier 风险审查和相互作用提示" width="720" height="322" loading="lazy" decoding="async">
+              <figcaption>界面截屏 · Verifier 风险审查 · 演示响应</figcaption>
+            </figure>
+            <span>STEP 04</span><h3>过敏、配伍与相互作用检查</h3><p>把病历中的过敏史、候选药品、本店库存与相互作用知识放到同一张证据面板中，优先暴露超库存、非本店药品、严重相互作用和证据不足等问题。</p>
+          </article>
+          <article class="process-step reveal">
+            <figure class="process-shot shot-suggestion">
+              <img src="assets/screens/process-05-suggestion.jpg" alt="愈康软件真实界面截屏：待医生确认的候选药品与用法" width="720" height="322" loading="lazy" decoding="async">
+              <figcaption>界面截屏 · 候选药品与用法 · 演示响应</figcaption>
+            </figure>
+            <span>STEP 05</span><h3>生成待确认建议并审查</h3><p>模型只从本店药品目录中给出候选药、数量、用量、频次、天数和理由；Verifier 再检查药品白名单、严重风险与知识证据，结果状态固定为待医生审核。</p>
+          </article>
+          <article class="process-step reveal">
+            <figure class="process-shot shot-review">
+              <img src="assets/screens/process-06-review.jpg" alt="愈康软件真实界面截屏：Human Review 人工确认区" width="720" height="322" loading="lazy" decoding="async">
+              <figcaption>界面截屏 · Human Review 确认区 · 演示响应</figcaption>
+            </figure>
+            <span>STEP 06</span><h3>Human Review 逐条应用</h3><p>医生核对药名、剂型、剂量、频次、疗程和禁忌，逐条应用、修改或放弃建议，最后点击保存。AI 建议本身不会自动写入或自动保存为正式处方。</p>
+          </article>
+        </div>
+        <p class="ai-download-note">说明：本页展示软件真实界面与完整流程结构；“演示响应”表示当前演示环境未配置真实模型 Key，截图内容不作为真实诊断能力或模型效果证明。</p>
+      </div>
+    </section>
+
+    <section class="section section-soft" id="evidence">
+      <div class="page-shell">
+        <div class="section-heading reveal">
+          <div><span class="section-number">02 / EVIDENCE PANEL</span><h2>弹窗里具体展示了什么？</h2></div>
+          <p>以下四张局部放大图都截取自同一张真实软件界面，分别对应检查清单、证据摘要、风险审查和人工确认区域。</p>
+        </div>
+        <div class="evidence-grid">
+          <article class="evidence-card reveal">
+            <div class="screen-crop crop-top"><img src="assets/screens/03-ai-assist.jpg" alt="AI 检查清单局部放大：Planner 规划本次需要执行的检查项" width="1600" height="1000" loading="lazy" decoding="async"></div>
+            <div class="evidence-copy"><h3>检查清单：先明确查什么</h3><p>显示本次病例规划出的检查项与原因，让医生在阅读建议前就知道系统是否真的核对了过敏、库存、药典和相互作用。</p></div>
+          </article>
+          <article class="evidence-card reveal">
+            <div class="screen-crop crop-mid"><img src="assets/screens/03-ai-assist.jpg" alt="AI 证据摘要局部放大：本地药典检索命中和知识来源" width="1600" height="1000" loading="lazy" decoding="async"></div>
+            <div class="evidence-copy"><h3>证据摘要：结论从哪里来</h3><p>汇总检索到的知识条目及其来源。证据不足时明确显示“建议线下进一步评估”，而不是用看似确定的语气补全结论。</p></div>
+          </article>
+          <article class="evidence-card reveal">
+            <div class="screen-crop crop-risk"><img src="assets/screens/03-ai-assist.jpg" alt="AI 风险审查局部放大：过敏、库存、相互作用和白名单风险提示" width="1600" height="1000" loading="lazy" decoding="async"></div>
+            <div class="evidence-copy"><h3>Verifier：把风险单独拎出来</h3><p>规则审方与白名单核查独立于模型建议。严重风险、非本店药品和关键证据缺口都会被显式标出，避免隐藏在长段建议里。</p></div>
+          </article>
+          <article class="evidence-card reveal">
+            <div class="screen-crop crop-review"><img src="assets/screens/03-ai-assist.jpg" alt="Human Review 局部放大：医生应用、修改或放弃 AI 候选建议" width="1600" height="1000" loading="lazy" decoding="async"></div>
+            <div class="evidence-copy"><h3>Human Review：最后由医生落笔</h3><p>候选建议与正式处方分离。医生逐条确认后才会进入处方区，保存动作仍由医生完成；关闭 AI 或模型失败也不会阻断正常接诊。</p></div>
+          </article>
+        </div>
+        <p class="screenshot-note">局部截图均来自 YuKangClinic v5.1.0 实际运行界面 · 演示诊所数据</p>
+      </div>
+    </section>
+
+    <section class="boundary-section" id="data-boundary">
+      <div class="page-shell">
+        <div class="boundary-head reveal">
+          <span class="section-number" style="color:#e4cb98">03 / DATA BOUNDARY</span>
+          <h2>启用第三方 AI 时，哪些资料会发送出去？</h2>
+          <p>边界必须能核对。愈康只在启用 AI 且配置了服务商密钥时调用第三方模型；请求内容用于本次辅助诊疗，不把患者姓名、手机号或身份证号放入第三方提示词。</p>
+        </div>
+        <div class="data-boundary">
+          <article class="boundary-box reveal">
+            <h3>会发送给第三方 AI</h3>
+            <ul>
+              <li>性别、年龄、过敏史、初诊/复诊、收费类型</li>
+              <li>主诉、现病史、既往史、望闻问切、体格检查</li>
+              <li>诊断、辨证、医生已选药品</li>
+              <li>本店药品目录、库存及价格上下文</li>
+              <li>相关药典知识、方剂、药典原文和相互作用</li>
+            </ul>
+          </article>
+          <article class="boundary-box private reveal">
+            <h3>不放进第三方提示词</h3>
+            <ul>
+              <li>患者姓名</li>
+              <li>手机号码</li>
+              <li>身份证号码</li>
+              <li>官网与第三方 AI 不接收诊所 SQLite 数据库</li>
+              <li>官网不保存任何患者业务数据</li>
+            </ul>
+          </article>
+        </div>
+        <p class="boundary-note">技术说明：本机前端请求体可能包含内部患者 ID，用于本机接口定位就诊记录和写入日志；该 ID 不进入第三方模型提示词。第三方服务商仍可能按其隐私政策记录请求元数据，对数据出域有硬性要求时，应关闭第三方 AI 或改用本地模型。</p>
+      </div>
+    </section>
+
+    <section class="scope-section" id="scope">
+      <div class="page-shell">
+        <div class="section-heading reveal">
+          <div><span class="section-number">04 / SCOPE</span><h2>能帮你检查，但不能替你负责。</h2></div>
+          <p>AI 适合作为病历整理、知识检索、风险核对和候选方案生成工具；它不适合独立诊断、替代临床判断或绕过医生审核。</p>
+        </div>
+        <div class="scope-grid">
+          <article class="scope-box reveal">
+            <h3>它实际能做什么</h3>
+            <ul>
+              <li>根据病历规划本次需要核对的检查项</li>
+              <li>检索本地药典单药、方剂、证型和原文</li>
+              <li>提示过敏史、库存不足、配伍禁忌与相互作用风险</li>
+              <li>只从本店现有药品中生成候选药与用法建议</li>
+              <li>展示证据与风险，等待医生逐条确认</li>
+              <li>在 AI 关闭、断网或模型失败时继续正常接诊</li>
+            </ul>
+          </article>
+          <article class="scope-box no reveal">
+            <h3>它不会做什么</h3>
+            <ul>
+              <li>不会自动诊断，不替代线下面诊和医生判断</li>
+              <li>不会自动保存或自动提交正式处方</li>
+              <li>不会凭空补出病历里没有的症状或检查结果</li>
+              <li>不会推荐本店目录之外、无法核对库存的药品</li>
+              <li>不会保证建议一定正确或覆盖全部临床风险</li>
+              <li>不能因为出现 AI 建议就跳过药典、说明书和人工审方</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="faq-section" id="ai-faq">
+      <div class="page-shell faq-layout">
+        <div class="faq-intro reveal"><span class="section-number">05 / AI FAQ</span><h2>使用前，需要知道的边界。</h2><p>当前演示响应没有接入真实模型 Key；软件流程与界面来自真实运行版本，AI 输出质量则取决于所配置服务商、模型、知识库和具体病例。</p></div>
+        <div class="faq-list reveal">
+          <details><summary>这条流程能保证处方正确吗？</summary><p>不能。检查清单、药典检索、规则审方和模型白名单只能降低遗漏风险，不能替代医生诊断、临床经验、药品说明书和正式审方责任。</p></details>
+          <details><summary>模型调用失败时还能接诊吗？</summary><p>可以。AI 是可选辅助功能。关闭 AI、断网、额度不足或模型返回异常时，患者建档、病历、手工开方、药房、收费和统计仍可继续使用。</p></details>
+          <details><summary>为什么强调“建议不自动保存”？</summary><p>模型输出可能遗漏、过时或产生错误。系统把建议放在待审核状态，只有医生逐条应用、修改并主动保存后，才会进入正式处方，从而保留人工决策点。</p></details>
+          <details><summary>怎么彻底避免诊疗数据离开本机？</summary><p>在设置中关闭第三方 AI，不填写任何外部服务商 API Key；对必须使用 AI 的场景，应选择符合机构数据要求的本地模型部署方案，并另行完成安全评估。</p></details>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-section">
+      <div class="page-shell cta-panel reveal">
+        <div><span class="section-number" style="color:#e4cb98">TRY THE WORKFLOW</span><h2>安装真实工作台，再验证 AI 辅助流程是否适合你的诊所。</h2><p>Windows 10/11 x64 · v5.1.0 · 未签名内部预览版 · 当前 AI 截图为演示响应</p></div>
+        <div class="cta-actions"><a class="button button-light" href="download.html">下载 Windows 版</a><a class="button button-ghost" href="index.html#workflow" style="color:#fff;border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.06)">返回真实工作流</a></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-main page-shell">
+      <div class="footer-brand">
+        <a class="brand" href="index.html"><img src="assets/yukang-app-logo.png" alt="" width="44" height="44"><span class="brand-copy"><strong>愈康</strong><small>YU KANG CLINIC</small></span></a>
+        <p>本地优先的诊所数字化工作台。让接诊、处方、药房、收费和经营统计留在一条可追溯的业务链里。</p>
+      </div>
+      <div class="footer-links">
+        <div><strong>产品</strong><a href="index.html#workflow">真实工作流</a><a href="index.html#capabilities">产品界面</a><a href="ai.html">AI 辅助诊疗</a><a href="index.html#knowledge">药典知识</a></div>
+        <div><strong>开始使用</strong><a href="download.html">Windows 下载</a><a href="download.html#install">安装步骤</a><a href="download.html#checksum">SHA256 校验</a><a href="https://github.com/wolongHyy/Yukang-Smart-Cloud-Clinic-Platform/releases/tag/v5.1.0" target="_blank" rel="noopener">GitHub Release</a></div>
+        <div><strong>边界</strong><a href="index.html#security">数据安全</a><a href="#data-boundary">AI 数据边界</a><a href="#ai-faq">AI 常见问题</a><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">ICP 备案</a></div>
+      </div>
+    </div>
+    <div class="footer-bottom page-shell"><span>© <span data-year>2026</span> 愈康云诊所 · YuKangClinic v5.1.0</span><a class="icp" href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">蜀ICP备2026061069号</a></div>
+  </footer>
+</body>
+</html>
+

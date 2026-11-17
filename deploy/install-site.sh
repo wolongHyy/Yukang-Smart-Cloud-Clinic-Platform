@@ -131,14 +131,15 @@ trap 'rm -rf -- "$stage" "${config_backup:-}" 2>/dev/null || true' EXIT
 
 log "解压并检查静态站点。"
 tar -xzf "$ARCHIVE" -C "$stage"
-for required in index.html styles.css script.js favicon.svg; do
+for required in index.html ai.html download.html site.css site.js favicon.svg; do
   [[ -f "$stage/$required" ]] || die "压缩包缺少必要文件：$required"
 done
 if find "$stage" -type l -print -quit | grep -q .; then
   die "压缩包内包含符号链接，已停止安装。"
 fi
 
-install -d -m 0755 "$SITE_BASE" "$SITE_BASE/releases"
+# 安装包体量大且不进入 Git，单独放在 shared 下，发布切换时不复制、不删除。
+install -d -m 0755 "$SITE_BASE" "$SITE_BASE/releases" "$SITE_BASE/shared/downloads"
 release="$SITE_BASE/releases/$(date -u +%Y%m%dT%H%M%SZ)"
 install -d -m 0755 "$release"
 cp -a "$stage"/. "$release"/

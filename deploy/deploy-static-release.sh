@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-COMMIT='4b130a0af9f6e34f24ac7b6c2498e12c3b87b479'
+COMMIT='7f2b9f9'
 RELEASE_TS="$(date -u +%Y%m%dT%H%M%SZ)"
 SITE_ROOT='/var/www/yukang-site'
 RELEASE_DIR="$SITE_ROOT/releases/$RELEASE_TS"
@@ -89,7 +89,8 @@ grep -Fq 'data-workbench-preview' "$RELEASE_DIR/index.html"
 grep -Fq 'data-workbench-preview' "$RELEASE_DIR/download.html"
 grep -Fq 'code-block-spaced' "$RELEASE_DIR/download.html"
 grep -Fq 'intro.css?v=20261117a' "$RELEASE_DIR/index.html"
-grep -Fq 'intro.js?v=20261117a' "$RELEASE_DIR/index.html"
+grep -Fq 'intro.js?v=20261117b' "$RELEASE_DIR/index.html"
+grep -Fq 'let playbackStarted = false;' "$RELEASE_DIR/intro.js"
 grep -Fq 'data-cinematic-intro' "$RELEASE_DIR/index.html"
 grep -Fq 'data-intro-wide="assets/intro-film.mp4"' "$RELEASE_DIR/index.html"
 grep -Fq 'data-intro-portrait="assets/intro-film-portrait.mp4"' "$RELEASE_DIR/index.html"
@@ -162,7 +163,7 @@ grep -Fq 'workbench-preview.js?v=20261117d' "$TMP_DIR/download.html"
 grep -Fq 'data-workbench-preview' "$TMP_DIR/home.html"
 grep -Fq 'data-workbench-preview' "$TMP_DIR/download.html"
 grep -Fq 'intro.css?v=20261117a' "$TMP_DIR/home.html"
-grep -Fq 'intro.js?v=20261117a' "$TMP_DIR/home.html"
+grep -Fq 'intro.js?v=20261117b' "$TMP_DIR/home.html"
 grep -Fq 'data-cinematic-intro' "$TMP_DIR/home.html"
 grep -Fq 'img class="brand-logo" src="assets/yukang-app-logo.png"' "$TMP_DIR/home.html"
 test -f "$DOWNLOAD_DIR/$ASSET"

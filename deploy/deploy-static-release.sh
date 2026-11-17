@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-COMMIT='a54b7c98448c4685f5ccf3ffb00434fde3da1620'
+COMMIT='a8d79415a9481a1ba842d204bf9f12ae354d21ef'
 RELEASE_TS="$(date -u +%Y%m%dT%H%M%SZ)"
 SITE_ROOT='/var/www/yukang-site'
 RELEASE_DIR="$SITE_ROOT/releases/$RELEASE_TS"
@@ -69,10 +69,10 @@ grep -Fq 'styles.css?v=20261117c' "$RELEASE_DIR/index.html"
 grep -Fq 'script.js?v=20261117c' "$RELEASE_DIR/index.html"
 grep -Fq 'site.css?v=20261117b' "$RELEASE_DIR/ai.html"
 grep -Fq 'site.js?v=20261117b' "$RELEASE_DIR/ai.html"
-grep -Fq 'workbench-preview.css?v=20261117c' "$RELEASE_DIR/index.html"
-grep -Fq 'workbench-preview.js?v=20261117c' "$RELEASE_DIR/index.html"
-grep -Fq 'workbench-preview.css?v=20261117c' "$RELEASE_DIR/download.html"
-grep -Fq 'workbench-preview.js?v=20261117c' "$RELEASE_DIR/download.html"
+grep -Fq 'workbench-preview.css?v=20261117d' "$RELEASE_DIR/index.html"
+grep -Fq 'workbench-preview.js?v=20261117d' "$RELEASE_DIR/index.html"
+grep -Fq 'workbench-preview.css?v=20261117d' "$RELEASE_DIR/download.html"
+grep -Fq 'workbench-preview.js?v=20261117d' "$RELEASE_DIR/download.html"
 grep -Fq 'data-workbench-preview' "$RELEASE_DIR/index.html"
 grep -Fq 'data-workbench-preview' "$RELEASE_DIR/download.html"
 grep -Fq 'code-block-spaced' "$RELEASE_DIR/download.html"
@@ -125,10 +125,10 @@ grep -Fq 'AI 辅助诊疗' "$TMP_DIR/ai.html"
 grep -Fq 'styles.css?v=20261117c' "$TMP_DIR/home.html"
 grep -Fq 'script.js?v=20261117c' "$TMP_DIR/home.html"
 grep -Fq 'site.css?v=20261117b' "$TMP_DIR/ai.html"
-grep -Fq 'workbench-preview.css?v=20261117c' "$TMP_DIR/home.html"
-grep -Fq 'workbench-preview.js?v=20261117c' "$TMP_DIR/home.html"
-grep -Fq 'workbench-preview.css?v=20261117c' "$TMP_DIR/download.html"
-grep -Fq 'workbench-preview.js?v=20261117c' "$TMP_DIR/download.html"
+grep -Fq 'workbench-preview.css?v=20261117d' "$TMP_DIR/home.html"
+grep -Fq 'workbench-preview.js?v=20261117d' "$TMP_DIR/home.html"
+grep -Fq 'workbench-preview.css?v=20261117d' "$TMP_DIR/download.html"
+grep -Fq 'workbench-preview.js?v=20261117d' "$TMP_DIR/download.html"
 grep -Fq 'data-workbench-preview' "$TMP_DIR/home.html"
 grep -Fq 'data-workbench-preview' "$TMP_DIR/download.html"
 test -f "$DOWNLOAD_DIR/$ASSET"

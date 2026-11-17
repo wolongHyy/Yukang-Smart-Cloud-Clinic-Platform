@@ -18,6 +18,40 @@
   isolation: isolate;
 }
 
+/* Restore the original herb-gathering hero background without changing page layout. */
+.hero.classic-hero {
+  isolation: isolate;
+  background: #e9eee5;
+  perspective: 1700px;
+}
+
+.hero.classic-hero::before {
+  content: "";
+  position: absolute;
+  z-index: -2;
+  inset: -2.5%;
+  opacity: 1;
+  pointer-events: none;
+  background: url("assets/login-photo-background.png") 61% center / cover no-repeat;
+  filter: saturate(.86) contrast(.93) brightness(.96) blur(.15px);
+  transform: scale(1.055);
+}
+
+.hero.classic-hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 78% 24%, rgba(226, 202, 143, .32), transparent 25%),
+    linear-gradient(90deg, rgba(247, 243, 233, .97) 0%, rgba(247, 243, 233, .89) 35%, rgba(244, 241, 232, .63) 58%, rgba(20, 56, 45, .24) 100%),
+    linear-gradient(180deg, rgba(255, 253, 247, .16), rgba(18, 53, 44, .08));
+}
+
+.hero.classic-hero .hero-landscape {
+  display: none;
+}
 .workbench-preview .visual-orbit {
   position: absolute;
   border: 1px solid rgba(78, 140, 117, .14);
@@ -46,24 +80,49 @@
   z-index: 2;
   width: min(560px, 100%);
   padding: 27px;
-  overflow: hidden;
-  border: 1px solid rgba(23, 53, 46, .11);
-  border-radius: 22px;
-  background: rgba(255, 253, 248, .91);
-  box-shadow: 0 34px 80px rgba(24, 50, 42, .12);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  transform: rotate(.6deg);
-  transition: transform .45s cubic-bezier(.16, 1, .3, 1), box-shadow .45s ease;
+  overflow: visible;
+  border: 1px solid rgba(255, 255, 255, .76);
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(255, 253, 248, .98), rgba(244, 240, 230, .93));
+  box-shadow: 0 44px 95px rgba(5, 28, 21, .28), 0 10px 27px rgba(5, 28, 21, .15), inset 0 1px 0 #fff;
+  backdrop-filter: blur(18px) saturate(112%);
+  -webkit-backdrop-filter: blur(18px) saturate(112%);
+  transform: perspective(1300px) rotateX(var(--tilt-rx, 1.4deg)) rotateY(var(--tilt-ry, -4.5deg)) translateZ(28px);
+  transform-style: preserve-3d;
+  transition: transform .55s cubic-bezier(.16, 1, .3, 1), box-shadow .35s ease;
+  will-change: transform;
 }
 
 .workbench-preview .workspace-card::before {
   content: "";
   position: absolute;
-  inset: 12px;
-  border: 1px solid rgba(23, 53, 46, .06);
-  border-radius: 16px;
+  z-index: -2;
+  inset: 13px -12px -13px 14px;
+  border: 1px solid rgba(80, 67, 40, .16);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(228, 218, 193, .78), rgba(246, 241, 229, .66));
+  box-shadow: 8px 12px 26px rgba(10, 34, 26, .15);
+  transform: translateZ(-18px) rotate(.7deg);
   pointer-events: none;
+}
+
+.workbench-preview .workspace-card::after {
+  content: "";
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at var(--shine-x, 76%) var(--shine-y, 24%), rgba(255, 255, 255, .48), transparent 35%);
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+  opacity: .55;
+}
+
+.workbench-preview .workspace-top,
+.workbench-preview .workspace-metrics,
+.workbench-preview .workspace-body,
+.workbench-preview .workspace-bottom {
+  transform: translateZ(5px);
 }
 
 .workbench-preview .workspace-top,
@@ -350,8 +409,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .workbench-preview .workspace-card:hover {
-    transform: rotate(.15deg) translateY(-4px);
-    box-shadow: 0 42px 92px rgba(24, 50, 42, .17);
+    box-shadow: 0 50px 105px rgba(5, 28, 21, .32), 0 12px 30px rgba(5, 28, 21, .17), inset 0 1px 0 #fff;
   }
 }
 
@@ -368,6 +426,7 @@
 
   .workbench-preview .workspace-card {
     padding: 23px;
+    transform: perspective(1300px) rotateX(var(--tilt-rx, 1deg)) rotateY(var(--tilt-ry, -2.5deg)) translateZ(22px);
   }
 
   .workbench-preview .note-one {
@@ -422,8 +481,8 @@
   }
 
   .workbench-preview .workspace-card::before {
-    inset: 8px;
-    border-radius: 13px;
+    inset: 9px -6px -9px 10px;
+    border-radius: 15px;
   }
 
   .workbench-preview .workspace-kicker {

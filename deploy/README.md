@@ -12,9 +12,9 @@
 | --- | --- | --- |
 | 阿里云 ECS | 运行中 | 实例 `i-bp196vs9fbel20xdzi7p`，华东1（杭州），Alibaba Cloud Linux 3，2 vCPU / 2 GiB，到期日 2027-11-12 |
 | Nginx | 已安装并开机启动 | 监听 HTTP 80 与 HTTPS 443；配置测试通过 |
-| 发布版本 | 已发布 GitHub `8cc7847` | `/var/www/yukang-site/current` 指向 `/var/www/yukang-site/releases/20261117T095237Z`；上一版 `releases/20261117T093420Z` 保留用于回滚 |
-| 静态资源与 CSP | 已修复并线上验收 | CSS/JS 使用 `?v=20261117b` 强制刷新缓存；AI 页和下载页的内联 `style` 已迁移到 CSS 类。线上 5 个工作流截图切换、三种弹窗退出方式、390px 手机适配、坏图检查和 CSP 控制台检查均通过 |
-| 官网页面 | 已上线并实测返回 200 | 首页展示真实产品界面截屏；`/ai.html` 为 AI 辅助诊疗详细介绍页；`/download.html` 为 v5.1.0 下载与校验说明页 |
+| 发布版本 | 已发布 GitHub `a54b7c9` | `/var/www/yukang-site/current` 指向 `/var/www/yukang-site/releases/20261117T102904Z`；上一版 `releases/20261117T095237Z` 保留用于回滚 |
+| 静态资源与 CSP | 已修复并线上验收 | CSS/JS 使用 `?v=20261117c` 强制刷新缓存；AI 页和下载页的内联 `style` 已迁移到 CSS 类。线上 5 个工作流截图切换、桌面 1440px 与手机 390px 视觉回归、三种弹窗退出方式、坏图检查和 CSP 控制台检查均通过 |
+| 官网页面 | 已上线并实测返回 200 | 首页与下载页顶部恢复最初版淡色示意诊疗工作台；`/ai.html` 为 AI 辅助诊疗详细介绍页；`/download.html` 为 v5.1.0 下载与校验说明页 |
 | Windows 安装包 | 已上线并可断点下载 | `/var/www/yukang-site/shared/downloads/YuKangClinic-Setup-5.1.0-x64.exe`，`258,904,900` 字节；公网 HEAD 200，Range 请求返回 206 |
 | 安装包校验 | 已提供独立 SHA256 文件 | `YuKangClinic-Setup-5.1.0-x64.exe.sha256.txt`；安装包 SHA256 为 `8549DEB884709E45A759124D7F3586767449B704C2EE20D2FFCB2EB4098B5841` |
 | HTTPS 正式访问 | 已实测返回 200 | <https://yukangclinic.cn/>、<https://yukangclinic.cn/ai.html>、<https://yukangclinic.cn/download.html> 与 <https://www.yukangclinic.cn/> 均通过证书校验；HTTP 请求返回 301 跳转到 HTTPS |
@@ -31,7 +31,7 @@
 - 首页与下载页顶部恢复最初版淡色示意诊疗工作台，并恢复圆环旋转、信息浮层上下浮动和桌面卡片轻抬动效；离屏自动暂停，遵循系统“减少动态效果”设置，`540px` 以下按最初布局隐藏候诊队列。
 - 首页下方的工作流、能力卡、药典、数据安全和部署区域仍使用项目实际产品界面截屏，不以纯文字卡片占位。
 - 首页、AI 详细页和下载页均支持站内大图查看；桌面与手机上的“关闭 ×”、遮罩点击、Escape 退出、滚动锁恢复和焦点返回均已验收。
-- 浏览器缓存导致工作流截图停留在首图的已修复：所有 CSS/JS 使用 `?v=20261117b`；AI 页和下载页的内联样式改为 CSS 类，消除 CSP `style-src 'self'` 报错。生产环境已禁用缓存复验，5 个步骤分别加载 `02-emr.jpg`、`03-ai-assist.jpg`、`04-pharmacy.jpg`、`06-billing.jpg`、`07-analytics.jpg`，且每次只有一个选中状态。
+- 浏览器缓存导致工作流截图停留在首图的已修复：所有 CSS/JS 使用 `?v=20261117c`；AI 页和下载页的内联样式改为 CSS 类，消除 CSP `style-src 'self'` 报错。生产环境已禁用缓存复验，5 个步骤分别加载 `02-emr.jpg`、`03-ai-assist.jpg`、`04-pharmacy.jpg`、`06-billing.jpg`、`07-analytics.jpg`，且每次只有一个选中状态。
 - AI 辅助诊疗独立页说明了录入、规划、药典检索、风险提示、建议生成和医生复核流程，并展示对应界面截屏。
 - AI 页面中的演示响应用于展示界面交互，不能表述为“已由真实大模型完成医学诊断”；实际功能边界应以当前产品版本和医生复核流程为准。
 - 公网发布目录只包含静态 HTML、CSS、JS、图片和安装包，不包含业务登录、SQLite、患者数据或公网管理后台。

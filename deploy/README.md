@@ -4,23 +4,23 @@
 
 > 重要边界：这里部署的是**公开静态官网**，不是诊所业务系统。`website/` 不含患者数据、SQLite、账号密码、医生端或患者端登录入口。诊所业务系统仍应只部署在本机或可信局域网，不能因为买了服务器就把它直接暴露到公网。
 
-## 当前部署状态（2026-11-11）
+## 当前部署状态（2026-11-17）
 
 本次上线对象为 `yukangclinic.cn`，只部署 `website/` 静态产品官网，不部署诊所业务系统。
 
 | 项目 | 当前状态 | 证据 / 说明 |
 | --- | --- | --- |
 | 阿里云 ECS | 运行中 | 实例 `i-bp196vs9fbel20xdzi7p`，华东1（杭州），Alibaba Cloud Linux 3，2 vCPU / 2 GiB，到期日 2027-11-12 |
-| Nginx | 已安装并开机启动 | 监听 HTTP 80；配置测试通过 |
-| 发布目录 | 已发布 GitHub `c780285` 展示页 | `/var/www/yukang-site/current` 指向 `/var/www/yukang-site/releases/20261111T101710Z`；旧版本保留用于回滚 |
-| HTTP 临时验证 | 已实测返回 200 | <http://120.55.116.160/>；首页、新 Logo、采药背景及 `showcase.css/js` 已验证 |
-| 安全组 | 已放行 80、443 | 443/TCP 入方向已复查；22、3389 的现有规则未改动 |
-| ICP 备案 | 阿里云初审中 | 订单 `2031878284929` 已于 2026-11-11 16:44 提交；审核通过前不添加 A 记录、不宣称备案完成 |
-| DNS A 记录 | 尚未添加 | 等待 ICP 备案审核通过后再执行第 4 节 |
-| HTTPS 证书 | 尚未签发 | `certbot 1.22.0` 与 `certbot-renew.timer` 已安装；等待 DNS 生效后申请 |
+| Nginx | 已安装并开机启动 | 监听 HTTP 80 与 HTTPS 443；配置测试通过 |
+| 发布目录 | 已发布 GitHub `bdb442c` 展示页 | `/var/www/yukang-site/current` 指向 `/var/www/yukang-site/releases/20261117T070024Z`；旧版本保留用于回滚 |
+| HTTPS 正式访问 | 已实测返回 200 | <https://yukangclinic.cn/> 与 <https://www.yukangclinic.cn/> 均通过证书校验；HTTP 请求返回 301 跳转到 HTTPS |
+| ICP 备案 | 已完成 | 备案号 `蜀ICP备2026061069号`，官网页脚已展示并链接至工信部备案查询系统 |
+| DNS A 记录 | 已完成 | `@` 与 `www` 均解析到 `120.55.116.160`，TTL 600 秒 |
+| HTTPS 证书 | 已签发并启用 | Let's Encrypt 证书覆盖 `yukangclinic.cn`、`www.yukangclinic.cn`；到期时间 `2027-02-15 06:03:34 UTC`；`certbot-renew.timer` 已启用并运行 |
+| 安全边界 | 已隔离 | 公网仅开放官网所需端口；诊所业务系统、患者数据、SQLite、登录入口和 `3002` 端口均未部署到公网 |
 | 旧 ECS | 保留未释放 | 新服务器和 HTTPS 全链路验收前，不停止或释放旧实例 |
 
-> 结论：目前只有 HTTP 预部署已经完成，**ICP 备案、DNS 和 HTTPS 还没有完成**。临时 IP 地址不能替代正式域名上线。
+> 结论：正式静态官网已通过 HTTPS 上线；诊所业务系统仍未公开部署，后续如需上云应单独做安全评估和访问控制。
 
 ---
 

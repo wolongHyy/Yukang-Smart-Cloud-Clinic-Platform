@@ -56,6 +56,8 @@ ul { margin: 0; padding: 0; list-style: none; }
 .button-primary:hover { box-shadow: 0 18px 34px rgba(18,55,45,.28); }
 .button-ghost { border-color: rgba(22,56,47,.20); background: rgba(255,253,248,.64); }
 .button-ghost:hover { background: var(--white); }
+.button-on-dark { color: #fff; border-color: rgba(255,255,255,.22); background: rgba(255,255,255,.06); }
+.button-on-dark:hover { color: var(--pine-deep); background: var(--white); }
 .button-light { color: var(--pine-deep); background: var(--white); }
 .text-link { display: inline-flex; align-items: center; gap: 7px; color: var(--pine); font-size: 13px; font-weight: 750; }
 .text-link:hover { color: var(--cinnabar); }
@@ -65,6 +67,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 .hero-grid { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0,.82fr) minmax(0,1.18fr); align-items: center; gap: clamp(38px,5vw,76px); }
 .eyebrow { display: inline-flex; align-items: center; gap: 9px; color: var(--pine); font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
 .eyebrow::before { content: ""; width: 24px; height: 1px; background: var(--gold); }
+.eyebrow-spaced { margin-top: 16px; }
 .hero h1 { margin-top: 22px; font: 600 clamp(50px,5vw,76px)/1.1 var(--serif); letter-spacing: -.045em; text-wrap: balance; }
 .hero h1 em { color: var(--cinnabar); font-style: normal; }
 .hero-lead { max-width: 585px; margin-top: 25px; padding-left: 18px; color: var(--ink-soft); border-left: 2px solid rgba(173,136,73,.62); font-size: 16px; line-height: 1.95; }
@@ -94,6 +97,8 @@ ul { margin: 0; padding: 0; list-style: none; }
 .section-heading h2, .split-copy h2, .cta-panel h2 { font: 600 clamp(38px,4.2vw,58px)/1.17 var(--serif); letter-spacing: -.04em; text-wrap: balance; }
 .section-heading > p { max-width: 540px; justify-self: end; color: var(--muted); font-size: 14px; line-height: 1.9; }
 .section-dark .section-number { color: #d9bc84; }
+.section-number-light { color: #e4cb98; }
+.code-block-spaced { margin-top: 14px; }
 .section-dark .section-heading > p, .section-dark .split-copy > p { color: rgba(255,253,248,.7); }
 
 .workflow-grid { margin-top: 52px; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 22px; }

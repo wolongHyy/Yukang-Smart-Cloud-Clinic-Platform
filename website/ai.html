@@ -12,7 +12,9 @@
   <title>AI 辅助诊疗｜愈康云诊所</title>
   <link rel="icon" href="assets/yukang-app-logo.png" type="image/png">
   <link rel="stylesheet" href="site.css">
+  <link rel="stylesheet" href="gallery.css">
   <script src="site.js" defer></script>
+  <script src="gallery.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
@@ -53,8 +55,8 @@
         </div>
         <div class="hero-shot reveal">
           <figure class="product-frame">
-            <img src="assets/screens/03-ai-assist.jpg" alt="愈康 AI 辅助诊疗真实界面：Planner 检查清单、本地药典证据摘要、Verifier 风险审查、候选处方及 Human Review 按钮" width="1600" height="1000" loading="eager" fetchpriority="high">
-            <figcaption class="screen-caption"><b>AI 辅助诊疗弹窗 · 实际界面结构</b><span>界面截屏 + 演示响应 · 当前未配置真实模型 Key</span></figcaption>
+            <img src="assets/screens/03-ai-assist.jpg" data-gallery-src="assets/screens/03-ai-assist.jpg" data-gallery-title="AI 辅助诊疗 · 界面截屏 + 演示响应" data-gallery-caption="演示诊所数据 · 当前未配置真实模型 Key · 建议不自动保存" alt="愈康 AI 辅助诊疗真实界面：Planner 检查清单、本地药典证据摘要、Verifier 风险审查、候选处方及 Human Review 按钮" width="1600" height="1000" loading="eager" fetchpriority="high">
+            <figcaption class="screen-caption"><b>AI 辅助诊疗弹窗 · 界面截屏 + 演示响应</b><span>演示诊所数据 · 当前未配置真实模型 Key</span></figcaption>
           </figure>
         </div>
       </div>
@@ -125,23 +127,23 @@
       <div class="page-shell">
         <div class="section-heading reveal">
           <div><span class="section-number">02 / EVIDENCE PANEL</span><h2>弹窗里具体展示了什么？</h2></div>
-          <p>以下四张局部放大图都截取自同一张真实软件界面，分别对应检查清单、证据摘要、风险审查和人工确认区域。</p>
+          <p>以下四张界面截屏分别展示检查清单、本地药典检索、风险审查与人工确认环节；点击可在站内查看大图。</p>
         </div>
         <div class="evidence-grid">
           <article class="evidence-card reveal">
-            <div class="screen-crop crop-top"><img src="assets/screens/03-ai-assist.jpg" alt="AI 检查清单局部放大：Planner 规划本次需要执行的检查项" width="1600" height="1000" loading="lazy" decoding="async"></div>
+            <div class="screen-crop crop-top"><img src="assets/screens/process-02-planner.jpg" data-gallery-src="assets/screens/process-02-planner.jpg" data-gallery-title="AI 检查清单 · Planner" data-gallery-caption="真实界面截屏 · 检查清单与证据摘要 · 当前演示环境使用演示响应" alt="AI 检查清单真实界面：Planner 规划本次需要执行的检查项" width="720" height="322" loading="lazy" decoding="async"></div>
             <div class="evidence-copy"><h3>检查清单：先明确查什么</h3><p>显示本次病例规划出的检查项与原因，让医生在阅读建议前就知道系统是否真的核对了过敏、库存、药典和相互作用。</p></div>
           </article>
           <article class="evidence-card reveal">
-            <div class="screen-crop crop-mid"><img src="assets/screens/03-ai-assist.jpg" alt="AI 证据摘要局部放大：本地药典检索命中和知识来源" width="1600" height="1000" loading="lazy" decoding="async"></div>
+            <div class="screen-crop crop-mid"><img src="assets/screens/process-03-knowledge.jpg" data-gallery-src="assets/screens/process-03-knowledge.jpg" data-gallery-title="本地药典知识库 · 检索来源" data-gallery-caption="真实界面截屏 · 药典条目、类别、功能适应症与来源 · 演示诊所数据" alt="本地药典知识库真实界面：药品条目、功能适应症与来源列" width="1400" height="625" loading="lazy" decoding="async"></div>
             <div class="evidence-copy"><h3>证据摘要：结论从哪里来</h3><p>汇总检索到的知识条目及其来源。证据不足时明确显示“建议线下进一步评估”，而不是用看似确定的语气补全结论。</p></div>
           </article>
           <article class="evidence-card reveal">
-            <div class="screen-crop crop-risk"><img src="assets/screens/03-ai-assist.jpg" alt="AI 风险审查局部放大：过敏、库存、相互作用和白名单风险提示" width="1600" height="1000" loading="lazy" decoding="async"></div>
+            <div class="screen-crop crop-risk"><img src="assets/screens/process-04-risk.jpg" data-gallery-src="assets/screens/process-04-risk.jpg" data-gallery-title="Verifier · 风险审查" data-gallery-caption="真实界面截屏 · 证据摘要、风险提示与开方思路 · 当前演示环境使用演示响应" alt="Verifier 风险审查真实界面：证据摘要、药物风险提示与开方思路" width="720" height="322" loading="lazy" decoding="async"></div>
             <div class="evidence-copy"><h3>Verifier：把风险单独拎出来</h3><p>规则审方与白名单核查独立于模型建议。严重风险、非本店药品和关键证据缺口都会被显式标出，避免隐藏在长段建议里。</p></div>
           </article>
           <article class="evidence-card reveal">
-            <div class="screen-crop crop-review"><img src="assets/screens/03-ai-assist.jpg" alt="Human Review 局部放大：医生应用、修改或放弃 AI 候选建议" width="1600" height="1000" loading="lazy" decoding="async"></div>
+            <div class="screen-crop crop-review"><img src="assets/screens/process-06-review.jpg" data-gallery-src="assets/screens/process-06-review.jpg" data-gallery-title="Human Review · 人工确认" data-gallery-caption="真实界面截屏 · 候选建议与应用按钮、人工确认边界 · 当前演示环境使用演示响应" alt="Human Review 真实界面：候选建议、应用按钮和人工确认提示" width="720" height="322" loading="lazy" decoding="async"></div>
             <div class="evidence-copy"><h3>Human Review：最后由医生落笔</h3><p>候选建议与正式处方分离。医生逐条确认后才会进入处方区，保存动作仍由医生完成；关闭 AI 或模型失败也不会阻断正常接诊。</p></div>
           </article>
         </div>

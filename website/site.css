@@ -373,3 +373,211 @@ ul { margin: 0; padding: 0; list-style: none; }
 }
 
 
+
+/* 2026-11-17 · Real-screenshot presentation for AI and download pages */
+.product-frame {
+  padding: 9px;
+  border: 1px solid rgba(255,255,255,.92);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(255,253,248,.96), rgba(239,237,228,.88));
+  box-shadow: 0 30px 68px rgba(13,47,37,.2), 0 5px 16px rgba(13,47,37,.09);
+}
+.product-frame::after {
+  inset: 9px;
+  border-radius: 12px;
+}
+.product-frame img {
+  border-radius: 12px;
+  background: #f5f7f2;
+}
+.hero-shot,
+.sub-hero .hero-shot,
+.hero-shot:hover {
+  transform: none;
+}
+.hero-shot {
+  transition: transform .35s ease;
+}
+.hero-shot:hover {
+  transform: translateY(-4px);
+}
+.screen-caption {
+  align-items: flex-start;
+  flex-wrap: wrap;
+  padding: 9px 4px 1px;
+  line-height: 1.45;
+}
+.screen-caption span {
+  margin-left: auto;
+  text-align: right;
+}
+.product-frame .gallery-trigger {
+  background: #e8eee7;
+}
+
+.process-grid {
+  border-radius: 24px;
+  background: rgba(255,253,248,.72);
+  box-shadow: 0 22px 58px rgba(17,53,43,.07);
+}
+.process-step {
+  min-height: 0;
+  padding: 0 25px 28px;
+}
+.process-shot {
+  height: auto;
+  aspect-ratio: 2.24 / 1;
+  margin: 16px 0 22px;
+  overflow: hidden;
+  border: 1px solid rgba(23,53,46,.13);
+  border-radius: 14px;
+  background: #edf2eb;
+  box-shadow: 0 12px 28px rgba(17,53,43,.1);
+}
+.process-shot .gallery-trigger {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #edf2eb;
+}
+.process-shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+.process-shot figcaption {
+  left: 10px;
+  bottom: 10px;
+  max-width: calc(100% - 20px);
+  padding: 5px 9px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 8px;
+  background: rgba(12,43,35,.88);
+  box-shadow: 0 5px 18px rgba(4,24,17,.18);
+  font-size: 9px;
+}
+
+.evidence-grid {
+  gap: 22px;
+}
+.evidence-card {
+  border-radius: 22px;
+  background: rgba(255,253,248,.9);
+  box-shadow: 0 16px 40px rgba(17,53,43,.075);
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.evidence-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 22px 48px rgba(17,53,43,.12);
+}
+.screen-crop {
+  height: auto;
+  aspect-ratio: 2.24 / 1;
+  margin: 10px 10px 0;
+  overflow: hidden;
+  border: 1px solid rgba(23,53,46,.12);
+  border-radius: 14px;
+  background: #edf2eb;
+  box-shadow: 0 8px 22px rgba(17,53,43,.08);
+}
+.screen-crop .gallery-trigger {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #edf2eb;
+}
+.screen-crop img,
+.crop-top img,
+.crop-mid img,
+.crop-risk img,
+.crop-review img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  transform: none;
+}
+.evidence-copy {
+  padding: 18px 24px 24px;
+}
+.evidence-copy p {
+  font-size: 12.5px;
+}
+
+@media (max-width: 820px) {
+  .process-step {
+    padding-inline: 22px;
+  }
+  .process-shot {
+    margin-top: 14px;
+  }
+  .screen-caption span {
+    margin-left: 0;
+    text-align: left;
+  }
+}
+
+@media (max-width: 560px) {
+  .product-frame {
+    padding: 7px;
+    border-radius: 16px;
+  }
+  .product-frame::after {
+    inset: 7px;
+    border-radius: 9px;
+  }
+  .process-grid {
+    border-radius: 20px;
+  }
+  .process-step,
+  .process-step:nth-child(3n),
+  .process-step:nth-child(2n) {
+    padding-inline: 17px;
+    padding-bottom: 23px;
+  }
+  .process-shot {
+    height: auto;
+    aspect-ratio: 2.24 / 1;
+    margin: 14px 0 18px;
+    border-radius: 11px;
+  }
+  .process-shot figcaption {
+    left: 7px;
+    bottom: 7px;
+    max-width: calc(100% - 14px);
+    padding: 4px 7px;
+    font-size: 8px;
+  }
+  .screen-crop {
+    height: auto;
+    aspect-ratio: 2.24 / 1;
+    margin: 8px 8px 0;
+    border-radius: 11px;
+  }
+  .evidence-copy,
+  .scope-box {
+    padding: 18px 20px 22px;
+  }
+  .screen-caption span {
+    width: 100%;
+  }
+}
+
+@media (max-width: 390px) {
+  .process-step,
+  .process-step:nth-child(3n),
+  .process-step:nth-child(2n) {
+    padding-inline: 14px;
+    padding-bottom: 21px;
+  }
+  .process-shot {
+    margin-left: -2px;
+    margin-right: -2px;
+  }
+  .evidence-grid {
+    gap: 16px;
+  }
+}

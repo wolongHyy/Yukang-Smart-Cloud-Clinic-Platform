@@ -264,7 +264,7 @@ powershell -ExecutionPolicy Bypass -File .\deploy\deploy.ps1 `
   -IncludeWww
 ```
 
-部署脚本只上传 `website/` 静态源码，使用独立 Nginx 站点和 `/var/www/yukang-site/current` 发布目录，不覆盖服务器上已有站点。约 247 MiB 的安装包不进入 Git，也不随静态站发布；服务器从 GitHub Release 下载后放在持久目录 `/var/www/yukang-site/shared/downloads/`，由 Nginx 的 `/downloads/` 路径提供直链。
+部署脚本只上传 `website/` 静态源码，使用独立 Nginx 站点和 `/var/www/yukang-site/current` 发布目录，不覆盖服务器上已有站点。已经完成首次装机的生产环境，可用 [`deploy/deploy-static-release.sh`](deploy/deploy-static-release.sh) 按固定源码提交构建新 release、校验后原子切换并在失败时自动回滚。约 247 MiB 的安装包不进入 Git，也不随静态站发布；服务器从 GitHub Release 下载后放在持久目录 `/var/www/yukang-site/shared/downloads/`，由 Nginx 的 `/downloads/` 路径提供直链。
 
 ---
 

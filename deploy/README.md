@@ -219,6 +219,16 @@ powershell -ExecutionPolicy Bypass -File .\deploy\deploy.ps1 `
   -PlanOnly
 ```
 
+### 现有生产环境的可复现静态发布
+
+首次装机使用上面的 PowerShell 脚本。对已经运行 Nginx 和 HTTPS 的现有生产环境做静态站点刷新时，使用版本固定的 Bash 脚本：
+
+```bash
+bash deploy/deploy-static-release.sh
+```
+
+该脚本从 GitHub 下载脚本中写明的源码提交，保留 `/var/www/yukang-site/shared/downloads/` 中的安装包，先构建完整 release 并校验关键文件，再原子切换 `current`；任一线上检查失败会自动切回上一版。脚本不会重启诊所业务系统，也不会修改安装包。
+
 ### 脚本会做什么
 
 1. 在 `D:\CodexTemp\yukang-site-deploy` 建立临时打包目录；

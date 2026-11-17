@@ -30,6 +30,8 @@
   ].filter(Boolean);
   let finished = false;
   let safetyTimer = 0;
+  let startTimer = 0;
+  let playbackStarted = false;
 
   const setPageInert = (isInert) => {
     inertTargets.forEach((element) => {
@@ -51,6 +53,7 @@
     if (finished) return;
     finished = true;
     window.clearTimeout(safetyTimer);
+    window.clearTimeout(startTimer);
     document.removeEventListener('keydown', onKeyDown);
     overlay.classList.add('is-leaving');
     document.body.classList.remove('intro-playing');
@@ -79,13 +82,22 @@
     video.src = usePortrait ? video.dataset.introPortrait : video.dataset.introWide;
     video.muted = true;
     video.playsInline = true;
+    const markPlaybackStarted = () => {
+      playbackStarted = true;
+      window.clearTimeout(startTimer);
+    };
+    ['loadeddata', 'canplay', 'playing'].forEach((eventName) => {
+      video.addEventListener(eventName, markPlaybackStarted, { once: true });
+    });
     video.addEventListener('ended', () => finishIntro(), { once: true });
     video.addEventListener('error', () => finishIntro(), { once: true });
 
     const playAttempt = video.play();
     if (playAttempt && typeof playAttempt.catch === 'function') {
       playAttempt.catch(() => {
-        safetyTimer = window.setTimeout(() => finishIntro(), 1800);
+        startTimer = window.setTimeout(() => {
+          if (!playbackStarted && video.readyState < 2) finishIntro();
+        }, 3000);
       });
     }
   }
@@ -93,5 +105,5 @@
   skipButton?.addEventListener('click', () => finishIntro(), { once: true });
   document.addEventListener('keydown', onKeyDown);
   window.setTimeout(() => skipButton?.focus({ preventScroll: true }), 80);
-  safetyTimer = window.setTimeout(() => finishIntro(), 3900);
+  safetyTimer = window.setTimeout(() => finishIntro(), 6500);
 })();
